@@ -542,7 +542,6 @@ function initWellness() {
 function initSmart() {
   if (platform === "macos") {
     $("#meetNote").textContent = t("Detected while a Zoom meeting is running. Add other call apps under Focus apps.");
-    $("#fsNote").textContent = t("Not available on macOS yet. Add specific apps below instead.");
   } else if (platform === "linux") {
     $("#meetNote").textContent = t("When any app is recording from your microphone.");
     $("#fsNote").textContent = t("Not available on Linux yet. Add specific apps below instead.");

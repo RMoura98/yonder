@@ -116,7 +116,6 @@
   "Add": "Adicionar",
   "Breaks wait while any of these apps is open. Use the name from Task Manager (Details), Activity Monitor or <code>ps</code>.": "As pausas esperam enquanto alguma destas apps estiver aberta. Usa o nome do Gestor de Tarefas (Detalhes), do Monitor de Atividade ou do <code>ps</code>.",
   "Detected while a Zoom meeting is running. Add other call apps under Focus apps.": "Detetado enquanto decorre uma reunião no Zoom. Adiciona outras apps de chamadas em Apps de foco.",
-  "Not available on macOS yet. Add specific apps below instead.": "Ainda não disponível no macOS. Adiciona apps específicas abaixo.",
   "When any app is recording from your microphone.": "Quando alguma app está a gravar do microfone.",
   "Not available on Linux yet. Add specific apps below instead.": "Ainda não disponível no Linux. Adiciona apps específicas abaixo.",
   "No focus apps yet.": "Ainda sem apps de foco.",

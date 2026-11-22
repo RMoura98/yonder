@@ -92,6 +92,7 @@ pub fn idle_secs() -> u64 {
 // ------------------------------------------------------- fullscreen detection
 
 /// Apps whose fullscreen mode means "watching something" rather than "working".
+#[cfg_attr(not(windows), allow(dead_code))]
 const MEDIA_APPS: &[&str] = &[
     "chrome", "msedge", "firefox", "brave", "opera", "vivaldi", "arc", "zen",
     "vlc", "mpv", "mpc-hc64", "mpc-hc", "potplayermini64", "wmplayer", "video.ui",
@@ -125,9 +126,90 @@ pub fn fullscreen_app_active(scanner: &mut ProcessScanner) -> bool {
     }
 }
 
-#[cfg(not(windows))]
+/// macOS: the frontmost normal (layer 0) window that isn't ours covers a whole display.
+/// Real fullscreen hides the menu bar, so the window spans the full display rect. Only
+/// window bounds / owner / layer are read, which needs no Screen Recording permission.
+#[cfg(target_os = "macos")]
 pub fn fullscreen_app_active(_scanner: &mut ProcessScanner) -> bool {
-    let _ = MEDIA_APPS;
+    use core_foundation::base::{CFType, TCFType};
+    use core_foundation::dictionary::{CFDictionary, CFDictionaryRef};
+    use core_foundation::number::CFNumber;
+    use core_foundation::string::CFString;
+    use core_graphics::display::CGDisplay;
+    use core_graphics::geometry::CGRect;
+    use core_graphics::window::{
+        copy_window_info, kCGNullWindowID, kCGWindowBounds, kCGWindowLayer,
+        kCGWindowListExcludeDesktopElements, kCGWindowListOptionOnScreenOnly, kCGWindowOwnerPID,
+    };
+
+    const TOLERANCE: f64 = 2.0;
+    const MIN_SIZE: f64 = 100.0;
+
+    let displays: Vec<CGRect> = match CGDisplay::active_displays() {
+        Ok(ids) => ids.into_iter().map(|id| CGDisplay::new(id).bounds()).collect(),
+        Err(_) => return false,
+    };
+    if displays.is_empty() {
+        return false;
+    }
+    let Some(windows) = copy_window_info(
+        kCGWindowListOptionOnScreenOnly | kCGWindowListExcludeDesktopElements,
+        kCGNullWindowID,
+    ) else {
+        return false;
+    };
+
+    // The keys are CoreGraphics-owned constants; wrap with the get rule (retain + release on drop).
+    let (key_layer, key_pid, key_bounds) = unsafe {
+        (
+            CFString::wrap_under_get_rule(kCGWindowLayer),
+            CFString::wrap_under_get_rule(kCGWindowOwnerPID),
+            CFString::wrap_under_get_rule(kCGWindowBounds),
+        )
+    };
+    let own_pid = std::process::id() as i64;
+
+    // The list is ordered front to back; the first eligible layer-0 window decides.
+    for item in windows.iter() {
+        let ptr = *item;
+        if ptr.is_null() {
+            continue;
+        }
+        let dict: CFDictionary<CFString, CFType> =
+            unsafe { CFDictionary::wrap_under_get_rule(ptr as CFDictionaryRef) };
+
+        let number = |key: &CFString| -> Option<i64> {
+            dict.find(key)?.downcast::<CFNumber>()?.to_i64()
+        };
+        if number(&key_layer) != Some(0) {
+            continue;
+        }
+        if number(&key_pid) == Some(own_pid) {
+            continue;
+        }
+        let Some(rect) = dict
+            .find(&key_bounds)
+            .and_then(|v| v.downcast::<CFDictionary>())
+            .and_then(|d| CGRect::from_dict_representation(&d))
+        else {
+            continue;
+        };
+        // Tiny helper windows (status items, invisible panels) don't count.
+        if rect.size.width < MIN_SIZE || rect.size.height < MIN_SIZE {
+            continue;
+        }
+        return displays.iter().any(|d| {
+            (rect.origin.x - d.origin.x).abs() <= TOLERANCE
+                && (rect.origin.y - d.origin.y).abs() <= TOLERANCE
+                && (rect.size.width - d.size.width).abs() <= TOLERANCE
+                && (rect.size.height - d.size.height).abs() <= TOLERANCE
+        });
+    }
+    false
+}
+
+#[cfg(not(any(windows, target_os = "macos")))]
+pub fn fullscreen_app_active(_scanner: &mut ProcessScanner) -> bool {
     false
 }
 

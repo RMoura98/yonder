@@ -98,7 +98,7 @@ with or endorsed by LookAway or Mystical Bits; product names belong to their own
 | Breaks, reminders, stats, shortcuts | ✓ | ✓ | ✓ |
 | Blurred desktop & split-screen | ✓ | ✓ (needs Screen Recording permission) | — |
 | Meeting detection | mic/camera in use | Zoom meeting helper | mic recording (PulseAudio/PipeWire) |
-| Fullscreen detection | ✓ | — | — |
+| Fullscreen detection | ✓ | ✓ | — |
 | Focus apps (by process name) | ✓ | ✓ | ✓ |
 | Countdown next to tray icon | — (tooltip) | ✓ | panel-dependent |
 

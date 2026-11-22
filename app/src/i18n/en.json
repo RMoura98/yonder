@@ -116,7 +116,6 @@
   "Add": "Add",
   "Breaks wait while any of these apps is open. Use the name from Task Manager (Details), Activity Monitor or <code>ps</code>.": "Breaks wait while any of these apps is open. Use the name from Task Manager (Details), Activity Monitor or <code>ps</code>.",
   "Detected while a Zoom meeting is running. Add other call apps under Focus apps.": "Detected while a Zoom meeting is running. Add other call apps under Focus apps.",
-  "Not available on macOS yet. Add specific apps below instead.": "Not available on macOS yet. Add specific apps below instead.",
   "When any app is recording from your microphone.": "When any app is recording from your microphone.",
   "Not available on Linux yet. Add specific apps below instead.": "Not available on Linux yet. Add specific apps below instead.",
   "No focus apps yet.": "No focus apps yet.",

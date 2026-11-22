@@ -6273,6 +6273,8 @@ version = "1.0.1"
 dependencies = [
  "base64 0.22.1",
  "chrono",
+ "core-foundation",
+ "core-graphics",
  "image",
  "serde",
  "serde_json",
