@@ -328,6 +328,53 @@
 
     </div>
   </main>
+
+  <!-- ================================================================ SETUP (first run) -->
+  <div class="setup" id="setup" hidden>
+    <div class="setup-drag" data-tauri-drag-region></div>
+    <div class="setup-card">
+      <div class="setup-brand"><img src="assets/logo.svg" alt="" /><span class="wordmark" data-no-i18n>yonder<i></i></span></div>
+
+      <div class="setup-step" data-step="1">
+        <h2>Look up. Look far. Get back to it.</h2>
+        <p class="lede">Every 20 minutes, look at something 20 feet (6 m) away for 20 seconds. Your eyes get a rest, and Yonder takes care of the timing.</p>
+        <div class="list setup-list">
+          <div class="row"><span class="tile" data-tile="slate" data-ic="settings"></span><label>Language</label><span class="stepper"><select id="setupLang"></select></span></div>
+        </div>
+      </div>
+
+      <div class="setup-step" data-step="2" hidden>
+        <h2>How often should we nudge you?</h2>
+        <p class="lede">Pick a rhythm. You can fine-tune everything later in Screen Breaks.</p>
+        <div class="modes" id="setupModes"></div>
+        <h4>How strict should breaks be?</h4>
+        <div class="enforce" id="setupEnforce"></div>
+      </div>
+
+      <div class="setup-step" data-step="3" hidden>
+        <h2>How should breaks feel?</h2>
+        <p class="lede">Choose a look, and tell Yonder when to stay out of your way.</p>
+        <div class="styles" id="setupStyles"></div>
+        <div class="list setup-list">
+          <div class="row"><span class="tile" data-tile="blue" data-ic="pause"></span><label>Smart pause<small>Hold breaks while you are busy with something else.</small></label><input type="checkbox" class="switch" data-bind="smart.enabled" /></div>
+          <div data-show="smart.enabled">
+            <div class="row"><span class="tile" data-tile="blue" data-ic="headphones"></span><label>Meetings &amp; calls</label><input type="checkbox" class="switch" data-bind="smart.meetings" /></div>
+            <div class="row"><span class="tile" data-tile="violet" data-ic="desktop_windows"></span><label>Fullscreen apps</label><input type="checkbox" class="switch" data-bind="smart.fullscreen" /></div>
+          </div>
+          <div class="row"><span class="tile" data-tile="green" data-ic="bolt"></span><label>Launch Yonder at login</label><input type="checkbox" class="switch" data-bind="launch_at_login" /></div>
+        </div>
+      </div>
+
+      <div class="setup-foot">
+        <button class="link" id="setupSkip">Skip setup</button>
+        <div class="dots" id="setupDots"><i></i><i></i><i></i></div>
+        <div class="setup-nav">
+          <button class="btn" id="setupBack">Back</button>
+          <button class="btn primary" id="setupNext">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 <script type="module" src="js/settings.js"></script>
 </body>

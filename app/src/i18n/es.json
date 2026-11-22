@@ -337,5 +337,21 @@
   "Gentle": "Suave",
   "The screen dims; you can keep working": "La pantalla se atenúa; puedes seguir trabajando",
   "Skip from the tray or press {keys}": "Omite desde la bandeja o pulsa {keys}",
-  "Skip from the tray menu": "Omite desde el menú de la bandeja"
+  "Skip from the tray menu": "Omite desde el menú de la bandeja",
+  "Every 20 minutes, look at something 20 feet (6 m) away for 20 seconds. Your eyes get a rest, and Yonder takes care of the timing.": "Cada 20 minutos, mira algo a 6 m de distancia durante 20 segundos. Tus ojos descansan y Yonder se encarga de medir el tiempo.",
+  "How often should we nudge you?": "¿Cada cuánto te avisamos?",
+  "Pick a rhythm. You can fine-tune everything later in Screen Breaks.": "Elige un ritmo. Podrás ajustarlo todo después en Descansos de pantalla.",
+  "The classic 20-20-20 rhythm.": "El clásico ritmo 20-20-20.",
+  "Longer stretches, fewer interruptions.": "Tramos más largos, menos interrupciones.",
+  "Short, frequent rests for tired eyes.": "Descansos breves y frecuentes para ojos cansados.",
+  "Longer breaks and more long breaks.": "Descansos más largos y más descansos largos.",
+  "{mins} min · {secs} s break": "{mins} min · descanso de {secs} s",
+  "How strict should breaks be?": "¿Qué tan estrictos deben ser los descansos?",
+  "How should breaks feel?": "¿Cómo deben ser los descansos?",
+  "Choose a look, and tell Yonder when to stay out of your way.": "Elige un aspecto y dile a Yonder cuándo no molestar.",
+  "Hold breaks while you are busy with something else.": "Retrasa los descansos mientras estás ocupado con otra cosa.",
+  "Skip setup": "Omitir configuración",
+  "Back": "Atrás",
+  "Next": "Siguiente",
+  "Get started": "Empezar"
 }

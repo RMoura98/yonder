@@ -337,5 +337,21 @@
   "Gentle": "Sanft",
   "The screen dims; you can keep working": "Der Bildschirm dimmt; du kannst weiterarbeiten",
   "Skip from the tray or press {keys}": "Überspringe über das Tray oder drücke {keys}",
-  "Skip from the tray menu": "Überspringe über das Tray-Menü"
+  "Skip from the tray menu": "Überspringe über das Tray-Menü",
+  "Every 20 minutes, look at something 20 feet (6 m) away for 20 seconds. Your eyes get a rest, and Yonder takes care of the timing.": "Schau alle 20 Minuten 20 Sekunden lang auf etwas, das 6 m entfernt ist. Deine Augen ruhen sich aus, und Yonder übernimmt das Timing.",
+  "How often should we nudge you?": "Wie oft sollen wir dich erinnern?",
+  "Pick a rhythm. You can fine-tune everything later in Screen Breaks.": "Wähle einen Rhythmus. Alles lässt sich später unter Bildschirmpausen anpassen.",
+  "The classic 20-20-20 rhythm.": "Der klassische 20-20-20-Rhythmus.",
+  "Longer stretches, fewer interruptions.": "Längere Phasen, weniger Unterbrechungen.",
+  "Short, frequent rests for tired eyes.": "Kurze, häufige Pausen für müde Augen.",
+  "Longer breaks and more long breaks.": "Längere Pausen und häufigere lange Pausen.",
+  "{mins} min · {secs} s break": "{mins} Min. · {secs} Sek. Pause",
+  "How strict should breaks be?": "Wie streng sollen Pausen sein?",
+  "How should breaks feel?": "Wie sollen sich Pausen anfühlen?",
+  "Choose a look, and tell Yonder when to stay out of your way.": "Wähle ein Aussehen und sag Yonder, wann es sich zurückhalten soll.",
+  "Hold breaks while you are busy with something else.": "Hält Pausen zurück, solange du anderweitig beschäftigt bist.",
+  "Skip setup": "Einrichtung überspringen",
+  "Back": "Zurück",
+  "Next": "Weiter",
+  "Get started": "Los geht's"
 }

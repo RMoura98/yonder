@@ -274,6 +274,37 @@ button.on > .pv { outline-color: var(--accent); }
 .toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 8px 14px; border-radius: 999px; font-size: 12px; opacity: 0; transition: opacity .2s; pointer-events: none; }
 .toast.on { opacity: 1; }
 
+/* ------------------------------------------------------------ first-run setup */
+.setup { position: fixed; inset: 0; z-index: 50; background: var(--bg); overflow-y: auto; display: flex; padding: 40px 24px 28px;
+  background-image: radial-gradient(60% 50% at 50% -10%, var(--accent-soft), transparent 70%); }
+.setup-drag { position: fixed; top: 0; left: 0; right: 0; height: 32px; }
+.setup-card { margin: auto; width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 4px; animation: setup-in .35s ease-out; }
+@keyframes setup-in { from { opacity: 0; transform: translateY(8px); } }
+.setup-brand { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 18px; }
+.setup-brand img { width: 48px; height: 48px; border-radius: 13px; box-shadow: var(--shadow); }
+.setup-brand .wordmark { font-size: 30px; }
+.setup-brand .wordmark i { width: 11px; height: 3.5px; margin-bottom: 8px; }
+.setup-step { animation: setup-in .3s ease-out; min-height: 430px; }
+.setup-step h2 { font-size: 24px; letter-spacing: -.02em; margin: 0 0 8px; text-align: center; }
+.setup-step h4 { margin: 20px 0 10px; font-size: 12px; font-weight: 650; color: var(--ink-3); text-transform: uppercase; letter-spacing: .04em; }
+.lede { text-align: center; color: var(--ink-2); margin: 0 auto 22px; max-width: 480px; font-size: 14px; }
+.setup-list { margin-top: 16px; }
+.modes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.modes button { text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; box-shadow: var(--shadow); transition: border-color .15s, transform .12s; }
+.modes button:hover { transform: translateY(-1px); }
+.modes button.on { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent), var(--shadow); }
+.modes b { font-size: 14px; }
+.modes .when { color: var(--accent); font-weight: 600; font-variant-numeric: tabular-nums; }
+.modes .why { color: var(--ink-3); font-size: 12.5px; }
+.setup .enforce, .setup .styles { padding: 4px 4px 0; }
+.setup-foot { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; margin-top: 22px; }
+.setup-nav { display: flex; gap: 8px; justify-content: flex-end; }
+.setup-foot .link { justify-self: start; border: 0; background: none; color: var(--ink-3); font-weight: 600; font-size: 12.5px; padding: 6px 2px; }
+.setup-foot .link:hover { color: var(--ink); }
+.dots { display: flex; gap: 7px; }
+.dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); transition: background .2s, width .2s; }
+.dots i.on { background: var(--accent); width: 20px; border-radius: 4px; }
+
 @media (max-width: 860px) {
   .app { grid-template-columns: 200px 1fr; }
   .tiles { grid-template-columns: repeat(2, 1fr); }

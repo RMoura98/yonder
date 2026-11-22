@@ -834,6 +834,90 @@ function initLanguage() {
   $$("select[data-bind='long_every'] option").forEach((o) => (o.textContent = t("{nth} break", { nth: ordinal(Number(o.value)) })));
 }
 
+// ------------------------------------------------------------ first-run setup
+let setupStep = 1;
+const SETUP_MODES = [
+  ["balanced", "Balanced", "The classic 20-20-20 rhythm."],
+  ["deep_focus", "Deep focus", "Longer stretches, fewer interruptions."],
+  ["eye_care", "Eye care", "Short, frequent rests for tired eyes."],
+  ["wellness", "Wellness", "Longer breaks and more long breaks."],
+];
+
+function initSetup() {
+  const root = $("#setup");
+  root.hidden = S.onboarded;
+  if (S.onboarded) return;
+
+  // language
+  const sel = $("#setupLang");
+  sel.innerHTML =
+    `<option value="system">${esc(t("System default"))}</option>` + LANGUAGES.map((l) => `<option value="${l.code}">${esc(l.name)}</option>`).join("");
+  sel.value = S.language || "system";
+  sel.addEventListener("change", async () => {
+    S.language = sel.value;
+    clearTimeout(saveTimer);
+    await invoke("save_settings", { settings: S });
+    await relocalize(); // rebuilds this overlay and stays on the same step
+  });
+
+  // timing modes
+  const modes = $("#setupModes");
+  modes.innerHTML = SETUP_MODES.map(([id, name, why]) => {
+    const p = PRESETS[id];
+    return `<button data-v="${id}"><b>${esc(t(name))}</b><span class="when">${esc(t("{mins} min · {secs} s break", { mins: p.work_mins, secs: p.break_secs }))}</span><span class="why">${esc(t(why))}</span></button>`;
+  }).join("");
+  const paintModes = () => $$("button", modes).forEach((b) => b.classList.toggle("on", b.dataset.v === S.mode));
+  $$("button", modes).forEach((b) =>
+    b.addEventListener("click", () => {
+      Object.assign(S, PRESETS[b.dataset.v]);
+      S.mode = b.dataset.v;
+      paintModes();
+      save();
+    })
+  );
+  paintModes();
+
+  // skip difficulty and break style reuse the real pages' cards (previews included)
+  const enforce = $("#setupEnforce");
+  enforce.innerHTML = $("#enforce").innerHTML;
+  const paintEnf = () => $$("button", enforce).forEach((b) => b.classList.toggle("on", b.dataset.v === S.skip_difficulty));
+  $$("button", enforce).forEach((b) => b.addEventListener("click", () => { S.skip_difficulty = b.dataset.v; paintEnf(); save(); }));
+  paintEnf();
+  const styles = $("#setupStyles");
+  styles.innerHTML = $("#styleCards").innerHTML.replace(/ id="[^"]*"/g, "");
+  styles.style.gridTemplateColumns = `repeat(${styles.children.length}, 1fr)`;
+  const paintStyles = () => $$("button", styles).forEach((b) => b.classList.toggle("on", b.dataset.v === S.break_style));
+  $$("button", styles).forEach((b) =>
+    b.addEventListener("click", () => {
+      if (b.disabled) return;
+      S.break_style = b.dataset.v;
+      paintStyles();
+      save();
+    })
+  );
+  paintStyles();
+
+  // navigation
+  const finish = () => {
+    S.onboarded = true;
+    save();
+    root.hidden = true;
+    go("today");
+  };
+  const show = (n) => {
+    setupStep = n;
+    $$(".setup-step", root).forEach((s) => (s.hidden = Number(s.dataset.step) !== n));
+    $$("#setupDots i").forEach((d, i) => d.classList.toggle("on", i === n - 1));
+    $("#setupBack").hidden = n === 1;
+    $("#setupNext").textContent = t(n === 3 ? "Get started" : "Next");
+    root.scrollTop = 0;
+  };
+  $("#setupBack").onclick = () => show(setupStep - 1);
+  $("#setupNext").onclick = () => (setupStep === 3 ? finish() : show(setupStep + 1));
+  $("#setupSkip").onclick = finish;
+  show(setupStep);
+}
+
 // ------------------------------------------------------------------- init
 // An untouched copy of the window's markup, taken before anything is rendered,
 // so a language change can rebuild every page in place instead of reloading.
@@ -876,6 +960,7 @@ function renderAll() {
   initShortcuts();
   initStats();
   initUpdates();
+  initSetup();
   refreshVisibility();
   refreshSummaries();
 }
@@ -891,9 +976,5 @@ async function init() {
   refreshToday();
   setInterval(refreshToday, 30000);
   listen("state", (s) => renderState(s));
-  if (!S.onboarded) {
-    S.onboarded = true;
-    save();
-  }
 }
 init();
