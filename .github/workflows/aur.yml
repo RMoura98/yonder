@@ -1,0 +1,93 @@
+name: Update AUR package
+
+# When a release is published, bump packaging/aur/yonder-bin (pkgver, checksums,
+# .SRCINFO), commit it to main, and push to the AUR if AUR_SSH_PRIVATE_KEY is set.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to package (e.g. v1.0.1)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  aur:
+    runs-on: ubuntu-latest
+    env:
+      AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Resolve version
+        id: v
+        run: |
+          TAG="${{ github.event.release.tag_name || inputs.tag }}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Update PKGBUILD and .SRCINFO
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          VER="${{ steps.v.outputs.version }}"
+          TAG="${{ steps.v.outputs.tag }}"
+          DIR=packaging/aur/yonder-bin
+
+          mkdir -p dist
+          gh release download "$TAG" --pattern "Yonder_${VER}_amd64.deb" --dir dist
+          curl -fsSL -o dist/LICENSE "https://raw.githubusercontent.com/RMoura98/yonder/${TAG}/LICENSE"
+          DEB_SHA=$(sha256sum "dist/Yonder_${VER}_amd64.deb" | cut -d' ' -f1)
+          LIC_SHA=$(sha256sum dist/LICENSE | cut -d' ' -f1)
+
+          sed -i \
+            -e "s/^pkgver=.*/pkgver=${VER}/" \
+            -e "s/^pkgrel=.*/pkgrel=1/" \
+            -e "s/^sha256sums=.*/sha256sums=('${LIC_SHA}')/" \
+            -e "s/^sha256sums_x86_64=.*/sha256sums_x86_64=('${DEB_SHA}')/" \
+            "$DIR/PKGBUILD"
+
+          # No makepkg on Ubuntu: edit the same fields in .SRCINFO.
+          sed -i \
+            -e "s/^\(\tpkgver = \).*/\1${VER}/" \
+            -e "s/^\(\tpkgrel = \).*/\11/" \
+            -e "s#/yonder/v[^/]*/LICENSE#/yonder/${TAG}/LICENSE#" \
+            -e "s#/download/v[^/]*/Yonder_[^/]*_amd64.deb#/download/${TAG}/Yonder_${VER}_amd64.deb#" \
+            -e "s/^\(\tsha256sums = \).*/\1${LIC_SHA}/" \
+            -e "s/^\(\tsha256sums_x86_64 = \).*/\1${DEB_SHA}/" \
+            "$DIR/.SRCINFO"
+
+      - name: Commit to the repo
+        run: |
+          if git diff --quiet -- packaging/aur; then
+            echo "AUR files already up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add packaging/aur
+          git commit -m "chore(aur): yonder-bin ${{ steps.v.outputs.version }}"
+          git push origin HEAD:main || echo "::warning::Could not push to main (branch protection?); skipping."
+
+      - name: Publish to the AUR
+        if: ${{ env.AUR_SSH_PRIVATE_KEY != '' }}
+        continue-on-error: true
+        uses: KSXGitHub/github-actions-deploy-aur@v3.0.1
+        with:
+          pkgname: yonder-bin
+          pkgbuild: packaging/aur/yonder-bin/PKGBUILD
+          updpkgsums: true
+          commit_username: RMoura98
+          commit_email: noreply@users.noreply.github.com
+          ssh_private_key: ${{ env.AUR_SSH_PRIVATE_KEY }}
+          commit_message: "Update to ${{ steps.v.outputs.version }}"
+
+      - name: Note missing secret
+        if: ${{ env.AUR_SSH_PRIVATE_KEY == '' }}
+        run: echo "AUR_SSH_PRIVATE_KEY not set; updated files in the repo only."

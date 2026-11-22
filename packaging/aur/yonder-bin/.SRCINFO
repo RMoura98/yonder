@@ -1,0 +1,23 @@
+pkgbase = yonder-bin
+	pkgdesc = Free, open-source break reminder: 20-20-20 breaks, posture and blink reminders
+	pkgver = 1.0.1
+	pkgrel = 1
+	url = https://rmoura98.github.io/yonder/
+	arch = x86_64
+	license = MIT
+	depends = webkit2gtk-4.1
+	depends = gtk3
+	depends = libayatana-appindicator
+	optdepends = xprintidle: idle detection on X11
+	optdepends = libpulse: pactl, used for meeting (microphone) detection
+	optdepends = pipewire-pulse: pactl, used for meeting (microphone) detection on PipeWire systems
+	provides = yonder
+	conflicts = yonder
+	options = !strip
+	options = !debug
+	source = LICENSE::https://raw.githubusercontent.com/RMoura98/yonder/v1.0.1/LICENSE
+	sha256sums = b6e666b0bdeae772a73732a5d411aeff155aeea945654a8e80f17303e57f825b
+	source_x86_64 = https://github.com/RMoura98/yonder/releases/download/v1.0.1/Yonder_1.0.1_amd64.deb
+	sha256sums_x86_64 = 6fc733e1d87ca93a94c488147d85f3730e26d5216edb4b3ae4acc6f0f7e6bed1
+
+pkgname = yonder-bin

@@ -1,0 +1,27 @@
+# Maintainer: RMoura98 <https://github.com/RMoura98>
+pkgname=yonder-bin
+pkgver=1.0.1
+pkgrel=1
+pkgdesc="Free, open-source break reminder: 20-20-20 breaks, posture and blink reminders"
+arch=('x86_64')
+url="https://rmoura98.github.io/yonder/"
+license=('MIT')
+depends=('webkit2gtk-4.1' 'gtk3' 'libayatana-appindicator')
+optdepends=('xprintidle: idle detection on X11'
+            'libpulse: pactl, used for meeting (microphone) detection'
+            'pipewire-pulse: pactl, used for meeting (microphone) detection on PipeWire systems')
+provides=('yonder')
+conflicts=('yonder')
+options=('!strip' '!debug')
+source=("LICENSE::https://raw.githubusercontent.com/RMoura98/yonder/v${pkgver}/LICENSE")
+source_x86_64=("https://github.com/RMoura98/yonder/releases/download/v${pkgver}/Yonder_${pkgver}_amd64.deb")
+sha256sums=('b6e666b0bdeae772a73732a5d411aeff155aeea945654a8e80f17303e57f825b')
+sha256sums_x86_64=('6fc733e1d87ca93a94c488147d85f3730e26d5216edb4b3ae4acc6f0f7e6bed1')
+
+package() {
+  # The .deb is an ar archive; makepkg (bsdtar) extracts it into $srcdir,
+  # leaving data.tar.* with the installed files.
+  bsdtar -xf "${srcdir}"/data.tar.* -C "${pkgdir}"
+
+  install -Dm644 "${srcdir}/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}
