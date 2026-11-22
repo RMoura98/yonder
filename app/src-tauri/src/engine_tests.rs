@@ -472,3 +472,41 @@ fn start_now_begins_a_scheduled_break() {
     assert_eq!(starts(&fx), 1);
     assert_eq!(c.e.brk.as_ref().unwrap().kind, "short");
 }
+
+#[test]
+fn manual_break_that_lasted_a_normal_break_resets_the_countdown() {
+    let mut c = core(test_settings());
+    tick_n(&mut c, 45, 0); // 45 of 60 s worked
+    c.take_break_now(Some(5)); // a 5-minute manual break
+    tick_n(&mut c, 25, 0); // longer than the normal 20 s break
+    let fx = c.skip_or_end_break(); // end it early
+    assert_eq!(ends(&fx), 1);
+    assert_eq!(c.e.work_secs, 0, "a break you actually took restarts the countdown");
+    assert_eq!(taken(&mut c), 1);
+    // and the next heads-up is a full interval away, not seconds away
+    assert_eq!(shows(&tick_n(&mut c, 30, 0)), 0);
+}
+
+#[test]
+fn manual_break_ended_right_away_resumes_the_countdown() {
+    let mut c = core(test_settings());
+    tick_n(&mut c, 45, 0);
+    c.take_break_now(Some(5));
+    tick_n(&mut c, 3, 0); // ended almost immediately
+    c.skip_or_end_break();
+    assert_eq!(c.e.work_secs, 45, "a break abandoned after 3 s keeps the old countdown");
+}
+
+#[test]
+fn snapshot_reports_holding_while_typing() {
+    let mut s = test_settings();
+    s.wait_while_typing = true;
+    let mut c = core(s);
+    tick_n(&mut c, 59, 5); // not typing
+    assert!(!c.snapshot().holding);
+    tick_n(&mut c, 3, 0); // due, but typing (idle 0)
+    let snap = c.snapshot();
+    assert!(snap.holding, "the UI should know the break is held for typing");
+    assert!(snap.next_break_in <= 0);
+    assert!(c.e.brk.is_none());
+}

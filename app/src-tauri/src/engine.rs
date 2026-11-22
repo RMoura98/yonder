@@ -65,6 +65,8 @@ pub struct Snapshot {
     pub skip_in: u64,
     pub can_end: bool,
     pub skip_difficulty: String,
+    /// The break is due but waiting for a pause in typing (up to MAX_TYPING_WAIT seconds).
+    pub holding: bool,
 }
 
 #[derive(Default)]
@@ -195,6 +197,7 @@ impl Core {
             skip_in,
             can_end,
             skip_difficulty: self.settings.skip_difficulty.clone(),
+            holding: phase == "working" && next_in <= 0 && self.e.typing_wait > 0,
         }
     }
 
@@ -515,8 +518,13 @@ impl Core {
         let (can_skip, _, can_end) = self.skip_rules();
         if can_end {
             let deliberate = matches!(self.e.brk.as_ref().map(|b| b.kind.as_str()), Some("planned" | "custom"));
+            // A deliberate break counts as taken (and resets the countdown) once it lasted
+            // at least a normal break, or most of its own length.
+            let normal = self.settings.break_secs.max(5) as u64;
             let taken = !deliberate
-                || self.e.brk.as_ref().map(|b| b.elapsed_secs as f64 >= b.total_secs as f64 * END_EARLY_FRACTION).unwrap_or(false);
+                || self.e.brk.as_ref().map(|b| {
+                    b.elapsed_secs >= normal || b.elapsed_secs as f64 >= b.total_secs as f64 * END_EARLY_FRACTION
+                }).unwrap_or(false);
             self.finish_break(taken, &mut fx);
         } else if can_skip {
             self.finish_break(false, &mut fx);
