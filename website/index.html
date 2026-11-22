@@ -22,7 +22,7 @@
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
 
-  <a class="banner" href="https://github.com/RMoura98/yonder/releases/latest"><strong>Yonder 1.0.4 is out</strong> — gentle breaks, music that pauses itself, a three-step setup, and 中文 + 日本語 — free and open source<span class="arrow" aria-hidden="true">→</span></a>
+  <a class="banner" href="https://github.com/RMoura98/yonder/releases/latest"><strong>Yonder 1.0.5 is out</strong> — focus sessions, a tray popover, Do Not Disturb support and notification-only breaks — free and open source<span class="arrow" aria-hidden="true">→</span></a>
 
   <!-- ============ NAV ============ -->
   <header class="nav">
@@ -73,7 +73,7 @@
         <p class="platform-links reveal d2" data-other-os>Available for <a href="https://github.com/RMoura98/yonder/releases/latest">Windows</a>, <a href="#install-snippet">macOS (Homebrew)</a> and <a href="https://github.com/RMoura98/yonder/releases/latest">Linux</a> — or build from source.</p>
 
         <div class="badges reveal d3" aria-label="Release info">
-          <span class="badge accent"><i class="dot"></i>v1.0.4</span>
+          <span class="badge accent"><i class="dot"></i>v1.0.5</span>
           <span class="badge">Windows 10+</span>
           <span class="badge">macOS 10.15+</span>
           <span class="badge">Linux</span>
@@ -249,6 +249,14 @@
             <video src="assets/media/setup.mp4" poster="assets/media/setup-poster.png" autoplay muted loop playsinline preload="metadata" aria-label="First-run setup: language, rhythm and break style in three steps."></video>
             <figcaption><b>Set up in three steps.</b> Language, rhythm and break style the first time you open Yonder.</figcaption>
           </figure>
+          <figure class="reel">
+            <video src="assets/media/popover.mp4" poster="assets/media/popover-poster.png" autoplay muted loop playsinline preload="metadata" aria-label="Clicking the tray icon opens a small card with a countdown ring, today's screen time, breaks and score, and quick actions."></video>
+            <figcaption><b>Tray popover.</b> Your countdown and today's score, one click away.</figcaption>
+          </figure>
+          <figure class="reel">
+            <video src="assets/media/focus.mp4" poster="assets/media/focus-poster.png" autoplay muted loop playsinline preload="metadata" aria-label="Starting a focus session from the Today page, then the Focus session settings."></video>
+            <figcaption><b>Focus sessions.</b> Pomodoro that folds nearby eye breaks into its own, so you're never interrupted twice.</figcaption>
+          </figure>
           <figure class="reel wide">
             <video src="assets/media/settings.mp4" poster="assets/media/settings-poster.png" autoplay muted loop playsinline preload="metadata" aria-label="A tour of the settings window."></video>
             <figcaption><b>Settings that feel native.</b> Every option in one calm window, light or dark.</figcaption>
@@ -307,9 +315,11 @@
         <div class="holds reveal">
           <h3>Automatically holds breaks during…</h3>
           <div class="holds-grid">
-            <div class="hold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m23 7-7 5 7 5z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg><strong>Meetings &amp; calls</strong><span>Mic or camera in use on Windows; active mic recording on Linux (PulseAudio/PipeWire); Zoom meetings on macOS.</span></div>
+            <div class="hold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m23 7-7 5 7 5z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg><strong>Meetings &amp; calls</strong><span>Microphone or camera in use on Windows and macOS; active mic recording on Linux (PulseAudio/PipeWire).</span></div>
             <div class="hold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg><strong>Fullscreen apps</strong><span>Games, presentations and fullscreen video. Windows and macOS for now.</span></div>
             <div class="hold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg><strong>Focus apps you choose</strong><span>Matched by process name. Works on every platform.</span></div>
+            <div class="hold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><strong>Do Not Disturb</strong><span>Windows Do not disturb, GNOME Do Not Disturb and KDE; macOS Focus when Yonder can read it.</span></div>
+            <div class="hold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="12" cy="10" r="2"/></svg><strong>Sharing &amp; recording</strong><span>Screen recorders like OBS, mirrored displays, and PipeWire screen sharing on Linux.</span></div>
             <div class="hold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg><strong>Typing</strong><span>If you're mid-sentence, Yonder waits for a natural pause.</span></div>
           </div>
         </div>
@@ -500,6 +510,20 @@
         </div>
         <div class="changelog">
           <article class="release reveal">
+            <div class="ver">v1.0.5<small>Focus &amp; tray</small></div>
+            <div>
+              <h3>Focus sessions, a tray popover and smarter pauses</h3>
+              <ul>
+                <li>Focus sessions: optional Pomodoro (25/5, a long break every fourth) that merges nearby eye breaks into its own</li>
+                <li>Click the tray icon for a popover with a live countdown, today's screen time, breaks and score, and quick actions</li>
+                <li>Breaks wait while Do Not Disturb / Focus is on, while you share or record your screen, and for calls on macOS (microphone or camera in use)</li>
+                <li>New "Notification only" break style, and a Firm skip difficulty where you hold Skip for two seconds</li>
+                <li>The countdown survives a restart, and settings can be exported and imported (custom sounds included)</li>
+                <li>Idle detection on GNOME and KDE Plasma Wayland; an option to hide the countdown next to the tray icon</li>
+              </ul>
+            </div>
+          </article>
+          <article class="release reveal">
             <div class="ver">v1.0.4<small>Gentle breaks</small></div>
             <div>
               <h3>Softer breaks, set up in a minute</h3>
@@ -580,7 +604,7 @@
           <details class="reveal"><summary>How is Yonder different from LookAway?</summary><div class="answer"><p><a href="https://lookaway.com">LookAway</a> is a polished, paid break reminder for the Mac, and it inspired a lot of Yonder&rsquo;s feel &mdash; if you&rsquo;re on a Mac and happy to pay, it&rsquo;s a great choice. Yonder is a free, open-source (MIT) alternative that also runs on Windows and Linux, with no account and no telemetry. LookAway has things Yonder doesn&rsquo;t, like an iPhone and iPad companion. Yonder is an independent project, not affiliated with LookAway or Mystical Bits.</p></div></details>
           <details class="reveal"><summary>Which platforms does it run on?</summary><div class="answer"><p>Windows 10 and newer, macOS 10.15 and newer, and most modern Linux desktops. Installers are attached to every <a href="https://github.com/RMoura98/yonder/releases/latest">GitHub release</a>, or you can build it yourself. A few features differ by platform — the <a href="docs.html#smart-pause">docs</a> list them.</p></div></details>
           <details class="reveal"><summary>Does Yonder collect any data?</summary><div class="answer"><p>No. There are no analytics, no crash reporters and no accounts. Settings and stats are stored locally, and nothing is sent over the network. The blurred-desktop and split-screen styles take a snapshot of your screen for the break screen; it never leaves your computer.</p></div></details>
-          <details class="reveal"><summary>How does smart pause know I'm in a meeting?</summary><div class="answer"><p>It uses simple local system signals. On Windows it checks whether your microphone or camera is in use; on Linux, whether something is actively recording from the mic via PulseAudio/PipeWire; on macOS, whether Zoom's meeting helper is running. Fullscreen detection works on Windows and macOS, and focus apps — matched by process name — work everywhere. Smart pause never records audio or video.</p></div></details>
+          <details class="reveal"><summary>How does smart pause know I'm in a meeting?</summary><div class="answer"><p>It uses simple local system signals. On Windows and macOS it checks whether any app is using your microphone or camera; on Linux, whether something is actively recording from the mic via PulseAudio/PipeWire. It can also wait while Do Not Disturb is on or while you share or record your screen. Fullscreen detection works on Windows and macOS, and focus apps — matched by process name — work everywhere. Smart pause never records audio or video.</p></div></details>
           <details class="reveal"><summary>Why is it so small?</summary><div class="answer"><p>Yonder is built with Tauri: a Rust core plus your operating system's built-in webview, rather than a bundled copy of a whole browser. That keeps the download around 10&nbsp;MB.</p></div></details>
           <details class="reveal"><summary>How can I support Yonder?</summary><div class="answer"><p>If it helps you, you can chip in through <a href="https://github.com/sponsors/RMoura98">GitHub Sponsors</a>. Starring the repo, reporting bugs, improving the docs and telling a friend help just as much.</p></div></details>
           <details class="reveal"><summary>How do I build it from source?</summary><div class="answer"><p>Install Rust (via rustup) and Node.js 20 or newer, plus the platform webview dependencies listed in the Tauri docs. Then:</p><pre><code>git clone https://github.com/RMoura98/yonder

@@ -24,7 +24,7 @@ desktop into a calm break screen, and stays out of the way while you're in a cal
 - **Break screens you'll like.** Blurred desktop, split-screen (your desktop parts to reveal a texture), animated Aurora / Nebula / Ripple, gradients or your own image, **Gentle** (the screen just dims and clicks pass through, so a call or a game keeps going), or **Notification only** (a desktop notification and a chime, no window). Rolling countdown and your own messages.
 - **Your own sounds.** Fifteen built-in synthesized sounds, or add any MP3, WAV, OGG or M4A file and use it for breaks or for each reminder.
 - **Heads-up, never a surprise.** A frosted heads-up card before each break (start now, +1m, +5m, +15m), and a countdown that follows your cursor for the last five seconds.
-- **Waits for the right moment.** Won't start while you type; pauses for meetings, fullscreen apps, Do Not Disturb / Focus and the focus apps you choose, but never holds a break for more than an hour (you pick the limit); time away from the computer counts as a break.
+- **Waits for the right moment.** Won't start while you type; pauses for calls, screen sharing and recording, fullscreen apps, Do Not Disturb / Focus and the focus apps you choose, but never holds a break for more than an hour (you pick the limit); time away from the computer counts as a break.
 - **Tray popover.** Click the tray icon for a small card with a live countdown ring, today's screen time, breaks and score, and quick actions (take a break, pause, skip, settings). Right-click keeps the classic menu; on Linux, where many panels don't report tray clicks, the menu has a *Show status* entry instead.
 - **Icon-only tray.** Hide the countdown next to the tray icon in Settings → General (where your system shows one: macOS menu bar, some Linux panels).
 - **Pauses your music.** Optionally pauses music and video when a break starts and resumes only what it paused (system media controls on Windows, Music/Spotify on macOS, playerctl on Linux).
@@ -49,6 +49,10 @@ desktop into a calm break screen, and stays out of the way while you're in a cal
   <tr>
     <td width="50%"><img src="media/gentle.gif" alt="Gentle break: the screen dims around a small countdown while the cursor keeps clicking underneath." /><br/><sub><b>Gentle breaks</b> dim the screen and let clicks through.</sub></td>
     <td width="50%"><img src="media/setup.gif" alt="First-run setup: language, rhythm, then break style." /><br/><sub><b>First-run setup</b> in three steps.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="media/popover.gif" alt="Clicking the tray icon opens a small card with a countdown ring, today's screen time, breaks and score, and quick actions." /><br/><sub><b>Tray popover</b>: your countdown and today's score, one click away.</sub></td>
+    <td width="50%"><img src="media/focus.gif" alt="Starting a focus session from the Today page, then the Focus session settings." /><br/><sub><b>Focus sessions</b>: Pomodoro that merges with your eye breaks.</sub></td>
   </tr>
   <tr>
     <td colspan="2"><img src="media/settings.gif" alt="Settings window: Today, Screen Breaks with skip-difficulty cards, the Long breaks page and break-screen backgrounds." /><br/><sub><b>Settings</b> in light or dark, laid out like your system's own.</sub></td>
