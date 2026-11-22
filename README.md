@@ -82,6 +82,24 @@ brand/          Logo files
 
 Yonder is free forever. If it helps you, you can [sponsor its development](https://github.com/sponsors/RMoura98) ♥
 
+## Contributors
+
+Thanks to everyone who has helped make Yonder better. Issues and pull requests are welcome.
+
+<a href="https://github.com/RMoura98/yonder/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=RMoura98/yonder" alt="Contributors to Yonder" />
+</a>
+
+## Star history
+
+<a href="https://star-history.com/#RMoura98/yonder&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=RMoura98/yonder&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=RMoura98/yonder&type=Date" />
+    <img alt="Star history chart for Yonder" src="https://api.star-history.com/svg?repos=RMoura98/yonder&type=Date" />
+  </picture>
+</a>
+
 ## License
 
 [MIT](LICENSE). Icons: [Material Symbols](https://fonts.google.com/icons) (Apache 2.0).
