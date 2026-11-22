@@ -88,7 +88,7 @@
         <p>Yonder is a small desktop app that reminds you to take short breaks from your screen. Once installed, it lives in your system tray (Windows, Linux) or menu bar (macOS) and counts down to your next break.</p>
         <ol>
           <li><strong>Install</strong> Yonder for your platform (see <a href="#installation">Installation</a>).</li>
-          <li><strong>Launch it.</strong> On first run a short welcome screen lets you pick a <a href="#break-modes">break mode</a>.</li>
+          <li><strong>Launch it.</strong> On first run a three-step setup asks for your language, a <a href="#break-modes">break mode</a> and skip difficulty, then a <a href="#break-styles">break style</a> and smart pause. You can skip it and change everything later.</li>
           <li><strong>Keep working.</strong> About 30 seconds before a break, a small toast appears. When the break starts, the break screen fades in with a countdown.</li>
           <li><strong>Tweak it</strong> any time from <em>Settings</em> in the tray menu.</li>
         </ol>
@@ -101,6 +101,7 @@
         <p>Download the latest installer from the <a href="https://github.com/RMoura98/yonder/releases/latest">releases page</a>. Builds are roughly 10&nbsp;MB because Yonder uses Tauri and your system's built-in webview instead of bundling a browser.</p>
         <h3>Windows</h3>
         <p>Run the <code>.exe</code> (NSIS) setup or the <code>.msi</code> installer. Windows 10 and 11 are supported; the required WebView2 runtime ships with Windows 11 and is installed automatically on Windows 10 if missing. If SmartScreen warns about an unrecognized app, choose <em>More info → Run anyway</em>.</p>
+        <p>Prefer not to install anything? Download <code>Yonder_&lt;version&gt;_x64-portable.zip</code>, unzip it anywhere and run <code>yonder.exe</code>. Settings still live in your user profile.</p>
         <h3>macOS</h3>
         <p>Open the <code>.dmg</code> and drag Yonder into <em>Applications</em>. Universal builds run natively on Apple Silicon and Intel. If macOS blocks the first launch, right-click the app and choose <em>Open</em>.</p>
         <h3>Linux</h3>
@@ -109,6 +110,8 @@
 <pre><code>curl -fsSL https://rmoura98.github.io/yonder/apt/yonder.gpg | sudo tee /usr/share/keyrings/yonder.gpg &gt; /dev/null
 echo "deb [signed-by=/usr/share/keyrings/yonder.gpg] https://rmoura98.github.io/yonder/apt stable main" | sudo tee /etc/apt/sources.list.d/yonder.list
 sudo apt update &amp;&amp; sudo apt install yonder</code></pre>
+        <h3>Verify a download</h3>
+        <p>Every release includes <code>SHA256SUMS.txt</code>. Put it next to the file you downloaded and run <code>sha256sum -c --ignore-missing SHA256SUMS.txt</code> on Linux or <code>shasum -a 256 -c --ignore-missing SHA256SUMS.txt</code> on macOS. On Windows, compare <code>(Get-FileHash .\Yonder_*_x64-setup.exe).Hash</code> with the matching line.</p>
         <h3>Start at login</h3>
         <p>Enable <em>Settings → General → Launch at login</em> so Yonder is always ready.</p>
       </section>
@@ -168,6 +171,7 @@ sudo apt update &amp;&amp; sudo apt install yonder</code></pre>
           </table>
         </div>
         <p>When a smart pause ends, Yonder gives you a short grace period before the next break rather than jumping straight in.</p>
+        <p><strong>Hold limit.</strong> If something keeps smart pause on for a long time (an app that never releases the microphone, a fullscreen window left open), the break goes ahead anyway after <em>Hold breaks for at most</em>: 30 minutes, 1 hour (the default), 2 hours or never. The heads-up then says you've been busy for a while.</p>
       </section>
 
       <section class="doc-section" id="office-hours">
@@ -203,9 +207,10 @@ sudo apt update &amp;&amp; sudo apt install yonder</code></pre>
           <li><strong>Image</strong> — any image file from your computer.</li>
           <li><strong>Blurred desktop</strong> — your own screen, frozen and softly frosted behind the countdown, then sharpening back as the break ends. <em>Windows and macOS.</em></li>
           <li><strong>Split screen</strong> — your desktop splits open across the middle, top half up and bottom half down, to reveal a texture: linen, felt, cork, cutting mat or brushed steel. <em>Windows and macOS; not available on Linux yet.</em></li>
+          <li><strong>Gentle</strong> — no takeover: every display dims around a small countdown and <strong>clicks pass through</strong>, so a call, a video or a game keeps going. The break window never takes focus, so skip it from the tray menu or with the skip shortcut (<kbd class="k">Ctrl</kbd><kbd class="k">Alt</kbd><kbd class="k">S</kbd> by default). <em>All platforms.</em></li>
         </ul>
         <p>Blurred desktop and split screen take a snapshot of your screen when the break starts. It's used only for the break screen and never leaves your computer.</p>
-        <p>You can also choose a break sound (soft synthesized chimes and tones, <strong>your own audio files</strong> added in Settings → Sounds, or silence), adjust its volume, and write your own <strong>custom messages</strong> to rotate through. Animations are disabled automatically when your OS requests reduced motion.</p>
+        <p>You can also choose a break sound (soft synthesized chimes and tones, <strong>your own audio files</strong> added in Settings → Sounds, or silence), adjust its volume, and write your own <strong>custom messages</strong> to rotate through. Turn on <em>Pause music and video during breaks</em> (Settings → Screen breaks → More) to pause what's playing when a break starts and resume it afterwards; Yonder only resumes what it paused. It uses the system media controls on Windows, Music and Spotify on macOS, and <code>playerctl</code> on Linux. Animations are disabled automatically when your OS requests reduced motion.</p>
       </section>
 
       <section class="doc-section" id="shortcuts">

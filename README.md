@@ -21,10 +21,12 @@ desktop into a calm break screen, and stays out of the way while you're in a cal
 ## Features
 
 - **Smart breaks.** Balanced (20 min / 20 s), Deep Focus, Eye Care and Wellness presets, or your own timing, with optional long breaks.
-- **Break screens you'll like.** Blurred desktop, split-screen (your desktop parts to reveal a texture), animated Aurora / Nebula / Ripple, gradients or your own image. Rolling countdown and your own messages.
+- **Break screens you'll like.** Blurred desktop, split-screen (your desktop parts to reveal a texture), animated Aurora / Nebula / Ripple, gradients or your own image, or **Gentle**: the screen just dims and clicks pass through, so a call or a game keeps going. Rolling countdown and your own messages.
 - **Your own sounds.** Fifteen built-in synthesized sounds, or add any MP3, WAV, OGG or M4A file and use it for breaks or for each reminder.
 - **Heads-up, never a surprise.** A frosted heads-up card before each break (start now, +1m, +5m, +15m), and a countdown that follows your cursor for the last five seconds.
-- **Waits for the right moment.** Won't start while you type; pauses for meetings, fullscreen apps and the focus apps you choose; time away from the computer counts as a break.
+- **Waits for the right moment.** Won't start while you type; pauses for meetings, fullscreen apps and the focus apps you choose, but never holds a break for more than an hour (you pick the limit); time away from the computer counts as a break.
+- **Pauses your music.** Optionally pauses music and video when a break starts and resumes only what it paused (system media controls on Windows, Music/Spotify on macOS, playerctl on Linux).
+- **Set up in three steps.** The first time you open Yonder: language, rhythm and break style. Skip it if you like.
 - **Posture & blink reminders.** Small liquid-glass widgets that appear, animate and disappear. Up to five custom reminders with their own icon, interval and sound.
 - **Skip difficulty.** Casual, Balanced or Hardcore.
 - **Office hours & planned breaks.** Only remind during work hours; schedule lunch or a walk.
@@ -38,6 +40,10 @@ desktop into a calm break screen, and stays out of the way while you're in a cal
   <tr>
     <td width="50%"><img src="media/reminders.gif" alt="Posture reminder: a glass bead stretches upward carrying an arrow, then a blink reminder whose face blinks twice." /><br/><sub><b>Posture &amp; blink reminders</b> appear, animate and get out of the way.</sub></td>
     <td width="50%"><img src="media/split.gif" alt="Split-screen break: the desktop parts across the middle to reveal a teal cutting-mat texture with the countdown." /><br/><sub><b>Split-screen breaks</b> part your desktop to reveal a texture.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="media/gentle.gif" alt="Gentle break: the screen dims around a small countdown while the cursor keeps clicking underneath." /><br/><sub><b>Gentle breaks</b> dim the screen and let clicks through.</sub></td>
+    <td width="50%"><img src="media/setup.gif" alt="First-run setup: language, rhythm, then break style." /><br/><sub><b>First-run setup</b> in three steps.</sub></td>
   </tr>
   <tr>
     <td colspan="2"><img src="media/settings.gif" alt="Settings window: Today, Screen Breaks with skip-difficulty cards, the Long breaks page and break-screen backgrounds." /><br/><sub><b>Settings</b> in light or dark, laid out like your system's own.</sub></td>

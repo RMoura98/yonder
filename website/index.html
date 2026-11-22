@@ -22,7 +22,7 @@
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
 
-  <a class="banner" href="https://github.com/RMoura98/yonder/releases/latest"><strong>Yonder 1.0.3 is out</strong> — your own sounds, macOS fullscreen detection and smoother breaks  — free and open source<span class="arrow" aria-hidden="true">→</span></a>
+  <a class="banner" href="https://github.com/RMoura98/yonder/releases/latest"><strong>Yonder 1.0.4 is out</strong> — gentle breaks, music that pauses itself, a three-step setup, and 中文 + 日本語 — free and open source<span class="arrow" aria-hidden="true">→</span></a>
 
   <!-- ============ NAV ============ -->
   <header class="nav">
@@ -73,7 +73,7 @@
         <p class="platform-links reveal d2" data-other-os>Available for <a href="https://github.com/RMoura98/yonder/releases/latest">Windows</a>, <a href="#install-snippet">macOS (Homebrew)</a> and <a href="https://github.com/RMoura98/yonder/releases/latest">Linux</a> — or build from source.</p>
 
         <div class="badges reveal d3" aria-label="Release info">
-          <span class="badge accent"><i class="dot"></i>v1.0.3</span>
+          <span class="badge accent"><i class="dot"></i>v1.0.4</span>
           <span class="badge">Windows 10+</span>
           <span class="badge">macOS 10.15+</span>
           <span class="badge">Linux</span>
@@ -241,6 +241,14 @@
             <video src="assets/media/split.mp4" poster="assets/media/split-poster.png" autoplay muted loop playsinline preload="metadata" aria-label="Split-screen break: the desktop parts to reveal a texture."></video>
             <figcaption><b>Split screen.</b> Your desktop parts across the middle to reveal a texture.</figcaption>
           </figure>
+          <figure class="reel">
+            <video src="assets/media/gentle.mp4" poster="assets/media/gentle-poster.png" autoplay muted loop playsinline preload="metadata" aria-label="Gentle break: the screen dims around a small countdown while the cursor keeps clicking underneath."></video>
+            <figcaption><b>Gentle breaks.</b> The screen dims and clicks pass through, so you can finish what you're doing.</figcaption>
+          </figure>
+          <figure class="reel">
+            <video src="assets/media/setup.mp4" poster="assets/media/setup-poster.png" autoplay muted loop playsinline preload="metadata" aria-label="First-run setup: language, rhythm and break style in three steps."></video>
+            <figcaption><b>Set up in three steps.</b> Language, rhythm and break style the first time you open Yonder.</figcaption>
+          </figure>
           <figure class="reel wide">
             <video src="assets/media/settings.mp4" poster="assets/media/settings-poster.png" autoplay muted loop playsinline preload="metadata" aria-label="A tour of the settings window."></video>
             <figcaption><b>Settings that feel native.</b> Every option in one calm window, light or dark.</figcaption>
@@ -370,7 +378,7 @@
           <figure class="style-tile reveal"><div class="sw blurred"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i><span>Blurred desktop</span></div><figcaption class="meta"><h4>Blurred desktop</h4><p>Your own screen, frozen and softly frosted, then sharpening back. Windows &amp; macOS.</p></figcaption></figure>
           <figure class="style-tile reveal d1"><div class="sw split-s"><div class="inner"><span>Linen</span></div><div class="half t"></div><div class="half b"></div></div><figcaption class="meta"><h4>Split screen</h4><p>Your desktop splits open across the middle onto linen, felt, cork, cutting mat or brushed steel. Windows &amp; macOS.</p></figcaption></figure>
           <figure class="style-tile reveal d2"><div class="sw aurora"><span>Aurora</span></div><figcaption class="meta"><h4>Animated</h4><p>Aurora, Nebula and Ripple drift slowly behind the countdown.</p></figcaption></figure>
-          <figure class="style-tile reveal"><div class="sw nebula"><span>Nebula</span></div><figcaption class="meta"><h4>Nebula</h4><p>A slow, starry drift. Motion turns off if you prefer reduced motion.</p></figcaption></figure>
+          <figure class="style-tile reveal"><div class="sw gentle"><span>00:20</span></div><figcaption class="meta"><h4>Gentle</h4><p>The screen just dims around a small countdown. Clicks pass through, so a call or a game keeps going. All platforms.</p></figcaption></figure>
           <figure class="style-tile reveal d1"><div class="sw gradient"><span>Gradient</span></div><figcaption class="meta"><h4>Gradients</h4><p>Presets or your own two-colour blend.</p></figcaption></figure>
           <figure class="style-tile reveal d2"><div class="sw image"><span>Your image</span></div><figcaption class="meta"><h4>Your own image</h4><p>Any picture from your computer.</p></figcaption></figure>
         </div>
@@ -381,6 +389,8 @@
           <div class="extra reveal d1"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div><h4>Your own messages</h4><p>Write the words you see on the break screen; Yonder rotates through them.</p></div></div>
           <div class="extra reveal"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div><div><h4>Skip difficulty</h4><p>Casual (skip any time), Balanced (skip after a moment) or Hardcore (no skipping).</p></div></div>
           <div class="extra reveal d1"><div class="icon sun"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><div><h4>Office hours &amp; planned breaks</h4><p>Set working hours per weekday, and plan around lunch or a daily walk.</p></div></div>
+          <div class="extra reveal"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></div><div><h4>Pauses your music</h4><p>Optionally pause music and video when a break starts and resume them after: only what Yonder paused. Linux needs playerctl.</p></div></div>
+          <div class="extra reveal d1"><div class="icon sun"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div><h4>Never stuck on hold</h4><p>If a call or a fullscreen app keeps smart pause on, the break still comes after an hour (or the limit you choose).</p></div></div>
         </div>
       </div>
     </section>
@@ -428,7 +438,7 @@
         <div class="compare-points reveal">
           <div><strong>Runs everywhere</strong><span>Windows 10/11, Linux and macOS 10.15+, including split-screen breaks on all of them except Linux.</span></div>
           <div><strong>Free, forever</strong><span>No license, no account, no telemetry. MIT licensed.</span></div>
-          <div><strong>Make it yours</strong><span>Your own sounds, images and messages, up to 5 custom reminders, shell hooks on every OS, five languages.</span></div>
+          <div><strong>Make it yours</strong><span>Your own sounds, images and messages, up to 5 custom reminders, shell hooks on every OS, seven languages.</span></div>
           <div><strong>Open to change</strong><span>The whole UI is plain HTML and CSS. Fork it, theme it, send a pull request.</span></div>
         </div>
         <div class="compare-wrap reveal">
@@ -490,8 +500,21 @@
         </div>
         <div class="changelog">
           <article class="release reveal">
-            <div class="ver">v1.0.3<small>Fixes</small></div>
+            <div class="ver">v1.0.4<small>Gentle breaks</small></div>
             <div>
+              <h3>Softer breaks, set up in a minute</h3>
+              <ul>
+                <li>New Gentle break style: the screen dims around a small countdown and clicks pass through, so calls and games keep going</li>
+                <li>Pause music and video during breaks, and resume only what Yonder paused (optional)</li>
+                <li>A three-step setup the first time you open Yonder: language, rhythm and break style</li>
+                <li>Smart pause can no longer hold a break forever: after an hour (or the limit you pick) the heads-up comes anyway</li>
+                <li>Now in Simplified Chinese and Japanese</li>
+                <li>Releases include SHA256SUMS.txt and a portable Windows zip</li>
+              </ul>
+            </div>
+          </article>
+          <article class="release reveal">
+            <div class="ver">v1.0.3<small>Fixes</small></div>            <div>
               <h3>Breaks that never get in the way</h3>
               <ul>
                 <li>Reminders and the heads-up no longer take keyboard focus while you type</li>
@@ -518,7 +541,7 @@
             <div>
               <h3>Now in five languages</h3>
               <ul>
-                <li>English, Português, Español, Français, Deutsch, 简体中文 and 日本語, with a language picker in Settings → General</li>
+                <li>English, Português, Español, Français and Deutsch, with a language picker in Settings → General</li>
                 <li>Update notifications in the tray and in Settings → About, with a toggle and a manual check</li>
                 <li>Redesigned heads-up card and cursor countdown with a watch-face badge</li>
                 <li>A one-color horizon tray icon that follows your taskbar theme</li>

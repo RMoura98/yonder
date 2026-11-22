@@ -383,6 +383,9 @@ section { position: relative; }
 .sw.ripple::before, .sw.ripple::after { content: ""; position: absolute; left: 50%; top: 50%; width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.55); animation: ripple 3.6s ease-out infinite; }
 .sw.ripple::after { animation-delay: 1.8s; }
 @keyframes ripple { from { transform: scale(0.4); opacity: 1; } to { transform: scale(7); opacity: 0; } }
+.sw.gentle { background: linear-gradient(135deg, #8a96a0 0%, #5f6b74 100%); }
+.sw.gentle::before { content: ""; position: absolute; inset: 0; background: rgba(6, 14, 18, 0.35); }
+.sw.gentle span { z-index: 2; font-size: 1.1rem; padding: 10px 18px; border-radius: 12px; background: #1d2a30; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35); text-shadow: none; }
 .sw.gradient { background: linear-gradient(160deg, #0E3B43 0%, #1F7A7A 55%, #F4C26B 120%); }
 .sw.image { background: linear-gradient(180deg, #9ad3e8 0%, #cfe9ef 45%, #6aa36f 46%, #3f7a4c 100%); }
 .sw.image::before { content: ""; position: absolute; left: 12%; bottom: 52%; width: 34%; height: 30%; background: #5f8f6a; clip-path: polygon(0 100%, 45% 0, 100% 100%); }
