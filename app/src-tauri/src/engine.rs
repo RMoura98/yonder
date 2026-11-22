@@ -31,7 +31,7 @@ pub enum Effect {
 
 #[derive(Serialize, Clone, Debug)]
 pub struct BreakInfo {
-    /// short | long | planned | custom
+    /// short | long | planned | custom | focus
     pub kind: String,
     pub title: String,
     pub icon: String,
@@ -44,6 +44,28 @@ impl BreakInfo {
     pub fn remaining(&self) -> u64 {
         self.total_secs.saturating_sub(self.elapsed_secs)
     }
+}
+
+/// Where a running focus session stands (see `Core::start_focus`).
+#[derive(Serialize, Clone, Debug, PartialEq)]
+pub struct FocusInfo {
+    /// 1-based focus period within the session.
+    pub cycle: u32,
+    pub total: u32,
+    /// work | break
+    pub phase: &'static str,
+    pub secs_left: u64,
+    /// The current (or upcoming) break is the session's long one.
+    pub long: bool,
+}
+
+/// Engine-side state of a focus session. The break itself is an ordinary
+/// `BreakInfo` of kind "focus", so only the work phase needs a clock here.
+#[derive(Debug, Clone, Default)]
+pub struct FocusSession {
+    pub cycle: u32,
+    /// Active screen seconds spent in the current focus period.
+    pub work_elapsed: u64,
 }
 
 #[derive(Serialize, Clone, Debug)]
@@ -71,6 +93,8 @@ pub struct Snapshot {
     pub held_secs: u64,
     /// The smart-pause ceiling was hit, so this break is going ahead regardless.
     pub overdue: bool,
+    /// A running focus session, if any.
+    pub focus: Option<FocusInfo>,
 }
 
 #[derive(Default)]
@@ -85,6 +109,7 @@ pub struct Engine {
     pub smart_hold_until: i64,
     pub away: bool,
     pub offhours: bool,
+    pub focus: Option<FocusSession>,
     typing_wait: u32,
     held_secs: u64,
     hold_overdue: bool,
@@ -209,6 +234,32 @@ impl Core {
         self.settings.long_enabled && self.e.short_count >= self.settings.long_every.max(1)
     }
 
+    fn focus_total(&self) -> u32 {
+        self.settings.focus.long_every.max(1)
+    }
+
+    fn focus_work_secs(&self) -> u64 {
+        self.settings.focus.work_mins.max(1) as u64 * 60
+    }
+
+    /// Seconds until the next break and whether it is a focus break.
+    ///
+    /// During a focus session an eye break that would land within the merge window of
+    /// the focus break (or is due while one is that close) is folded into it, so the
+    /// focus break is reported instead and the eye break is never started on its own.
+    /// (The merge-window idea comes from EyePomo, which has no license: idea only.)
+    fn next_break(&self) -> (i64, bool) {
+        let eye = self.interval_secs() as i64 - self.e.work_secs as i64;
+        let focus = match (&self.e.focus, &self.e.brk) {
+            (Some(f), None) => Some(self.focus_work_secs() as i64 - f.work_elapsed as i64),
+            _ => None,
+        };
+        match focus {
+            Some(f) if f <= eye.max(0) + self.settings.focus.merge_window_mins as i64 * 60 => (f, true),
+            _ => (eye, false),
+        }
+    }
+
     fn in_office_hours(&self) -> bool {
         let oh = &self.settings.office_hours;
         if !oh.enabled {
@@ -245,7 +296,25 @@ impl Core {
         } else {
             "working"
         };
-        let next_in = interval as i64 - self.e.work_secs as i64;
+        let (next_in, next_focus) = self.next_break();
+        let next_long = if next_focus {
+            self.e.focus.as_ref().map_or(false, |f| f.cycle >= self.focus_total())
+        } else {
+            self.next_is_long()
+        };
+        let focus = self.e.focus.as_ref().map(|f| {
+            let on_break = self.e.brk.as_ref().filter(|b| b.kind == "focus");
+            FocusInfo {
+                cycle: f.cycle.min(self.focus_total()),
+                total: self.focus_total(),
+                phase: if on_break.is_some() { "break" } else { "work" },
+                secs_left: match on_break {
+                    Some(b) => b.remaining(),
+                    None => self.focus_work_secs().saturating_sub(f.work_elapsed),
+                },
+                long: f.cycle >= self.focus_total(),
+            }
+        });
         let lang = i18n::resolve(&self.settings.language);
         let tr = |key: &str, vars: &[(&str, &str)]| i18n::tr(lang, key, vars);
         let label = match phase {
@@ -270,7 +339,7 @@ impl Core {
             _ => {
                 if next_in <= 0 {
                     tr("Break starting soon", &[])
-                } else if self.next_is_long() {
+                } else if next_long {
                     tr("Next long break in {t}", &[("t", &fmt_dur(next_in as u64))])
                 } else {
                     tr("Next break in {t}", &[("t", &fmt_dur(next_in as u64))])
@@ -280,10 +349,14 @@ impl Core {
         Snapshot {
             phase,
             label,
-            work_secs: self.e.work_secs,
-            interval_secs: interval,
+            // The ring on the Today page follows whichever break is next.
+            work_secs: match (&self.e.focus, next_focus) {
+                (Some(f), true) => f.work_elapsed,
+                _ => self.e.work_secs,
+            },
+            interval_secs: if next_focus { self.focus_work_secs() } else { interval },
             next_break_in: next_in,
-            next_is_long: self.next_is_long(),
+            next_is_long: next_long,
             prebreak_secs: self.settings.prebreak_secs as u64,
             paused_until: self.e.pause.map(|p| p.unwrap_or(-1)),
             reason: self.e.smart_reason.clone(),
@@ -294,6 +367,7 @@ impl Core {
             skip_difficulty: self.settings.skip_difficulty.clone(),
             held_secs: self.e.held_secs,
             overdue: self.e.hold_overdue,
+            focus,
             holding: phase == "working" && next_in <= 0 && self.e.typing_wait > 0,
         }
     }
@@ -420,13 +494,18 @@ impl Core {
             self.e.stats_dirty_secs = 0;
             fx.push(Effect::SaveStats);
         }
+        if let Some(f) = &mut self.e.focus {
+            f.work_elapsed += 1;
+        }
         self.tick_reminders(true, &mut fx);
 
-        let interval = self.interval_secs();
+        // The next break is either the eye break or (during a focus session) a focus break.
+        let (rem, focus_next) = self.next_break();
+        let span = if focus_next { self.focus_work_secs() } else { self.interval_secs() };
         if self.e.smart_reason.is_some() && !self.e.hold_overdue {
             // Only a break that is actually due counts as "held".
             let max = self.settings.smart.max_hold_mins as u64 * 60;
-            if self.e.work_secs >= interval {
+            if rem <= 0 {
                 self.e.held_secs += 1;
             }
             if max > 0 && self.e.held_secs >= max {
@@ -434,8 +513,11 @@ impl Core {
                 // heads-up runs its full lead countdown, then the break starts.
                 self.e.hold_overdue = true;
                 let lead = self.settings.prebreak_secs as u64;
-                if self.settings.prebreak_enabled && lead > 0 && interval > lead {
-                    self.e.work_secs = interval - lead;
+                if self.settings.prebreak_enabled && lead > 0 && span > lead {
+                    match &mut self.e.focus {
+                        Some(f) if focus_next => f.work_elapsed = span - lead,
+                        _ => self.e.work_secs = span - lead,
+                    }
                 }
             } else {
                 self.hide_prebreak(&mut fx);
@@ -443,18 +525,20 @@ impl Core {
             }
         }
 
+        // (the hold above may have rewound the countdown)
+        let rem = self.next_break().0;
         let lead = self.settings.prebreak_secs as u64;
         if self.settings.prebreak_enabled
             && !self.e.prebreak_shown
             && lead > 0
-            && interval > lead
-            && self.e.work_secs + lead >= interval
+            && span > lead
+            && rem <= lead as i64
         {
             self.e.prebreak_shown = true;
             fx.push(Effect::ShowPrebreak);
         }
 
-        if self.e.work_secs >= interval {
+        if rem <= 0 {
             if self.settings.wait_while_typing && idle < 2 && self.e.typing_wait < MAX_TYPING_WAIT {
                 self.e.typing_wait += 1;
             } else {
@@ -549,7 +633,34 @@ impl Core {
         msgs[self.e.msg_index].clone()
     }
 
+    fn start_focus_break(&mut self, fx: &mut Vec<Effect>) {
+        let long = self.e.focus.as_ref().map_or(false, |f| f.cycle >= self.focus_total());
+        let f = &self.settings.focus;
+        let (title, mins) = if long {
+            ("Long focus break", f.long_break_mins)
+        } else {
+            ("Focus break", f.break_mins)
+        };
+        self.start_break_with("focus", title.into(), "timer".into(), mins.max(1) as u64 * 60, fx);
+    }
+
+    /// Moves the session on after a focus break (or a skipped one); ends it after the last.
+    fn advance_focus(&mut self) {
+        let total = self.focus_total();
+        if let Some(f) = &mut self.e.focus {
+            if f.cycle >= total {
+                self.e.focus = None;
+            } else {
+                f.cycle += 1;
+                f.work_elapsed = 0;
+            }
+        }
+    }
+
     fn start_scheduled_break(&mut self, fx: &mut Vec<Effect>) {
+        if self.next_break().1 {
+            return self.start_focus_break(fx);
+        }
         let long = self.next_is_long();
         let (kind, title, secs) = if long {
             ("long", "Long break".to_string(), self.settings.long_mins.max(1) as u64 * 60)
@@ -595,6 +706,7 @@ impl Core {
         match b.kind.as_str() {
             "long" => self.e.short_count = 0,
             "short" => self.e.short_count += 1,
+            "focus" => self.advance_focus(),
             _ => {}
         }
         // A deliberate break doesn't reset the countdown when skipped.
@@ -683,10 +795,15 @@ impl Core {
         if self.settings.skip_difficulty == "hardcore" {
             return fx;
         }
+        let focus_next = self.next_break().1;
         self.e.work_secs = 0;
         self.e.snooze_secs = 0;
         self.reset_hold();
-        self.e.short_count += 1;
+        if focus_next {
+            self.advance_focus();
+        } else {
+            self.e.short_count += 1;
+        }
         self.stats.today().breaks_skipped += 1;
         self.hide_prebreak(&mut fx);
         fx.push(Effect::SaveStats);
@@ -696,6 +813,15 @@ impl Core {
     pub fn snooze(&mut self, mins: u32) -> Vec<Effect> {
         let mut fx = Vec::new();
         if self.settings.skip_difficulty == "hardcore" {
+            return fx;
+        }
+        if self.next_break().1 {
+            let total = self.focus_work_secs();
+            if let Some(f) = &mut self.e.focus {
+                f.work_elapsed = total.saturating_sub(mins as u64 * 60);
+            }
+            self.reset_hold();
+            self.hide_prebreak(&mut fx);
             return fx;
         }
         // The next break now happens `mins` minutes from now (counting active time).
@@ -740,6 +866,30 @@ impl Core {
         self.e.pause = None;
     }
 
+    /// Starts a focus session (cycle 1). The eye-break countdown keeps running and is
+    /// merged with the focus breaks, see `next_break`.
+    pub fn start_focus(&mut self) {
+        self.e.focus = Some(FocusSession { cycle: 1, work_elapsed: 0 });
+    }
+
+    /// Stops the session; the normal eye-break schedule carries on untouched.
+    pub fn stop_focus(&mut self) -> Vec<Effect> {
+        let mut fx = Vec::new();
+        self.e.focus = None;
+        // A heads-up for a focus break that no longer exists.
+        self.hide_prebreak(&mut fx);
+        fx
+    }
+
+    pub fn toggle_focus(&mut self) -> Vec<Effect> {
+        if self.e.focus.is_some() {
+            self.stop_focus()
+        } else {
+            self.start_focus();
+            Vec::new()
+        }
+    }
+
     pub fn reminder_done(&mut self) {
         self.stats.today().reminders_done += 1;
     }
@@ -762,3 +912,7 @@ pub fn fmt_dur(secs: u64) -> String {
 #[cfg(test)]
 #[path = "engine_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "engine_focus_tests.rs"]
+mod focus_tests;

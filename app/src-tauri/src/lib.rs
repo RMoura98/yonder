@@ -38,6 +38,8 @@ struct TrayItems {
     menu: Menu<Wry>,
     status: MenuItem<Wry>,
     skip: MenuItem<Wry>,
+    /// "Start/Stop focus session"; the label follows the session state.
+    focus: MenuItem<Wry>,
     pause: Submenu<Wry>,
     resume: MenuItem<Wry>,
     /// "Update available…" entry, inserted at the top only when there is one.
@@ -490,6 +492,11 @@ fn update_tray(app: &AppHandle, snap: &Snapshot) {
     let _ = t.resume.set_enabled(paused);
     let _ = t.pause.set_enabled(!paused);
     let _ = t.skip.set_enabled(snap.skip_difficulty != "hardcore");
+    let _ = t.focus.set_text(i18n::tr(
+        lang,
+        if snap.focus.is_some() { "Stop focus session" } else { "Start focus session" },
+        &[],
+    ));
     if let Some(tray) = app.tray_by_id("main") {
         // Re-tint only when the taskbar theme or the paused state changes.
         let look = (platform::taskbar_is_light(), paused);
@@ -546,6 +553,7 @@ fn register_shortcuts(app: &AppHandle) {
     bind(&sc.take_break, "take_break");
     bind(&sc.toggle_pause, "toggle_pause");
     bind(&sc.skip_break, "skip");
+    bind(&sc.toggle_focus, "toggle_focus");
 }
 
 // =================================================================== actions
@@ -557,6 +565,12 @@ fn run_action(app: &AppHandle, name: &str, arg: Option<i64>) {
         "skip_held" => with_core(app, |c| c.skip_held()),
         "end_break" => with_core(app, |c| c.skip_or_end_break()),
         "snooze" => with_core(app, |c| c.snooze(arg.unwrap_or(5) as u32)),
+        "start_focus" => with_core(app, |c| {
+            c.start_focus();
+            vec![]
+        }),
+        "stop_focus" => with_core(app, |c| c.stop_focus()),
+        "toggle_focus" => with_core(app, |c| c.toggle_focus()),
         "start_now" => with_core(app, |c| c.start_now()),
         "pause" => with_core(app, |c| c.pause(arg.filter(|a| *a > 0))),
         "pause_tomorrow" => with_core(app, |c| c.pause_until_tomorrow()),
@@ -872,6 +886,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     let status = MenuItem::with_id(app, "status", i18n::tr(lang, "Starting…", &[]), false, None::<&str>)?;
     let take = item("take_break", "Take a break now", true)?;
     let skip = item("skip", "Skip next break", true)?;
+    let focus = item("toggle_focus", "Start focus session", true)?;
     let p30 = item("pause_30", "For 30 minutes", true)?;
     let p60 = item("pause_60", "For 1 hour", true)?;
     let p120 = item("pause_120", "For 2 hours", true)?;
@@ -896,7 +911,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     if linux {
         items.push(&show_status.0);
     }
-    items.extend([&take.0 as &dyn IsMenuItem<Wry>, &skip.0, &pause, &resume.0, &sep2, settings, quit_item]);
+    items.extend([&take.0 as &dyn IsMenuItem<Wry>, &skip.0, &focus.0, &pause, &resume.0, &sep2, settings, quit_item]);
     let menu = Menu::with_items(app, &items)?;
 
     TrayIconBuilder::with_id("main")
@@ -946,6 +961,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
         menu,
         status,
         skip: skip.0,
+        focus: focus.0,
         pause,
         resume: resume.0,
         update: None,

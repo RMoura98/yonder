@@ -157,12 +157,34 @@ impl Default for PlannedBreak {
     }
 }
 
+/// Pomodoro-style focus session that runs alongside the eye breaks.
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(default)]
+pub struct Focus {
+    /// Minutes of screen time between focus breaks.
+    pub work_mins: u32,
+    pub break_mins: u32,
+    pub long_break_mins: u32,
+    /// A session is this many focus periods; the last one ends in the long break.
+    pub long_every: u32,
+    /// An eye break due within this many minutes of a focus break is folded into it.
+    pub merge_window_mins: u32,
+}
+
+impl Default for Focus {
+    fn default() -> Self {
+        Self { work_mins: 25, break_mins: 5, long_break_mins: 15, long_every: 4, merge_window_mins: 3 }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(default)]
 pub struct Shortcuts {
     pub take_break: String,
     pub toggle_pause: String,
     pub skip_break: String,
+    /// Starts or stops a focus session. Empty by default.
+    pub toggle_focus: String,
 }
 
 impl Default for Shortcuts {
@@ -171,6 +193,7 @@ impl Default for Shortcuts {
             take_break: "CmdOrCtrl+Alt+B".into(),
             toggle_pause: "CmdOrCtrl+Alt+P".into(),
             skip_break: "CmdOrCtrl+Alt+S".into(),
+            toggle_focus: String::new(),
         }
     }
 }
@@ -221,6 +244,7 @@ pub struct Settings {
     pub office_hours: OfficeHours,
     pub planned: Vec<PlannedBreak>,
     pub wellness: Wellness,
+    pub focus: Focus,
     pub shortcuts: Shortcuts,
     pub hooks: Hooks,
     pub launch_at_login: bool,
@@ -283,6 +307,7 @@ impl Default for Settings {
             office_hours: OfficeHours::default(),
             planned: vec![],
             wellness: Wellness::default(),
+            focus: Focus::default(),
             shortcuts: Shortcuts::default(),
             hooks: Hooks::default(),
             launch_at_login: true,
