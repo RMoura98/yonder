@@ -178,14 +178,15 @@ function initNav() {
   $("#back").addEventListener("click", () => go($("#page-" + current).dataset.parent));
   $$("[data-act]").forEach((b) => b.addEventListener("click", () => action(b.dataset.act)));
   $$("[data-break]").forEach((b) => b.addEventListener("click", () => action("take_break", Number(b.dataset.break))));
-  // external links open in the system browser
-  document.addEventListener("click", (e) => {
-    const a = e.target.closest("a[href^='https://']");
-    if (!a) return;
-    e.preventDefault();
-    invoke("open_url", { url: a.href });
-  });
 }
+
+// external links open in the system browser (attached once, survives re-renders)
+document.addEventListener("click", (e) => {
+  const a = e.target.closest("a[href^='https://']");
+  if (!a) return;
+  e.preventDefault();
+  invoke("open_url", { url: a.href });
+});
 
 // ------------------------------------------------------------ screen breaks
 function markCustomMode() {
@@ -682,11 +683,12 @@ function renderUpdate(u) {
   $("#updStatus").textContent = t("Version {v} is available.", { v: u.version });
 }
 
+let updateListener; // attached once; renderUpdate always works on the current markup
 async function initUpdates() {
   const version = await invoke("app_version");
   $("#aboutVersion").textContent = `${t("Version {v}", { v: version })} · ${t("Look up. Look far. Get back to it.")}`;
   renderUpdate(await invoke("get_update"));
-  listen("update-status", renderUpdate);
+  if (!updateListener) updateListener = listen("update-status", (u) => renderUpdate(u));
   $("#updCheck").onclick = async () => {
     const btn = $("#updCheck");
     btn.disabled = true;
@@ -728,18 +730,37 @@ function initLanguage() {
     S.language = sel.value;
     clearTimeout(saveTimer);
     await invoke("save_settings", { settings: S }); // also re-labels the tray
-    location.reload();
+    await relocalize();
   });
   // ordinal option labels for "Every Nth break"
   $$("select[data-bind='long_every'] option").forEach((o) => (o.textContent = t("{nth} break", { nth: ordinal(Number(o.value)) })));
 }
 
 // ------------------------------------------------------------------- init
-async function init() {
-  [S, platform] = await Promise.all([invoke("get_settings"), invoke("platform_name")]);
-  applyTheme(S.theme);
+// An untouched copy of the window's markup, taken before anything is rendered,
+// so a language change can rebuild every page in place instead of reloading.
+const PRISTINE = document.querySelector(".app").cloneNode(true);
+
+/** Re-renders the whole window in the current language, staying on the same page. */
+async function relocalize() {
+  const page = current;
+  const scrollTop = $("#scroll").scrollTop;
   await initI18n(S.language);
-  // Translate the static markup once, before anything dynamic is rendered
+  const app = document.querySelector(".app");
+  const fresh = PRISTINE.cloneNode(true);
+  fresh.style.opacity = "0.55";
+  app.replaceWith(fresh);
+  renderAll();
+  go(page);
+  $("#scroll").scrollTop = scrollTop;
+  renderState(await invoke("get_state"));
+  refreshToday();
+  fresh.animate([{ opacity: 0.55 }, { opacity: 1 }], { duration: 180, easing: "ease-out" }).finished.then(() => (fresh.style.opacity = ""));
+}
+
+/** Everything that builds or wires up the window's DOM (safe to run again on fresh markup). */
+function renderAll() {
+  // Translate the static markup before anything dynamic is rendered
   // (dynamic content is built with t() directly).
   applyI18n(document);
   initLanguage();
@@ -759,11 +780,19 @@ async function init() {
   initUpdates();
   refreshVisibility();
   refreshSummaries();
+}
+
+/** One-time startup: load settings, then render; global listeners are attached only here. */
+async function init() {
+  [S, platform] = await Promise.all([invoke("get_settings"), invoke("platform_name")]);
+  applyTheme(S.theme);
+  await initI18n(S.language);
+  renderAll();
   go("today");
   renderState(await invoke("get_state"));
   refreshToday();
   setInterval(refreshToday, 30000);
-  listen("state", renderState);
+  listen("state", (s) => renderState(s));
   if (!S.onboarded) {
     S.onboarded = true;
     save();
