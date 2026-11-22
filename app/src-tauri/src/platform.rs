@@ -342,6 +342,21 @@ const MEDIA_APPS: &[&str] = &[
 pub fn fullscreen_app_active(scanner: &mut ProcessScanner) -> bool {
     use windows_sys::Win32::UI::Shell::SHQueryUserNotificationState;
     use windows_sys::Win32::UI::WindowsAndMessaging::{GetForegroundWindow, GetWindowThreadProcessId};
+    // Borderless "fullscreen windowed" games don't report D3D full screen; catch them
+    // when the foreground app is a game Windows itself recognised (Game Bar's list)
+    // and its window covers the whole monitor.
+    {
+        let hwnd = unsafe { GetForegroundWindow() };
+        let mut pid = 0u32;
+        unsafe { GetWindowThreadProcessId(hwnd, &mut pid) };
+        if covers_monitor(hwnd) {
+            if let Some(exe) = scanner.exe_of(pid) {
+                if is_known_game(&exe, &known_games()) {
+                    return true;
+                }
+            }
+        }
+    }
     let mut state = 0i32;
     let hr = unsafe { SHQueryUserNotificationState(&mut state as *mut _ as *mut _) };
     if hr != 0 {
@@ -362,6 +377,62 @@ pub fn fullscreen_app_active(scanner: &mut ProcessScanner) -> bool {
         }
         _ => false,
     }
+}
+
+/// True when the window spans its whole monitor (borderless fullscreen).
+#[cfg(windows)]
+fn covers_monitor(hwnd: windows_sys::Win32::Foundation::HWND) -> bool {
+    use windows_sys::Win32::Foundation::RECT;
+    use windows_sys::Win32::Graphics::Gdi::{GetMonitorInfoW, MonitorFromWindow, MONITORINFO, MONITOR_DEFAULTTONEAREST};
+    use windows_sys::Win32::UI::WindowsAndMessaging::GetWindowRect;
+    if hwnd.is_null() {
+        return false;
+    }
+    let mut r: RECT = unsafe { std::mem::zeroed() };
+    if unsafe { GetWindowRect(hwnd, &mut r) } == 0 {
+        return false;
+    }
+    let mon = unsafe { MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST) };
+    let mut mi: MONITORINFO = unsafe { std::mem::zeroed() };
+    mi.cbSize = std::mem::size_of::<MONITORINFO>() as u32;
+    if unsafe { GetMonitorInfoW(mon, &mut mi) } == 0 {
+        return false;
+    }
+    let m = mi.rcMonitor;
+    r.left <= m.left && r.top <= m.top && r.right >= m.right && r.bottom >= m.bottom
+}
+
+/// Executables Windows recognised as games (Game Bar's GameConfigStore), lower-cased
+/// full paths. Read from the registry at most once a minute.
+#[cfg(windows)]
+fn known_games() -> std::collections::HashSet<String> {
+    use std::sync::Mutex;
+    use std::time::{Duration, Instant};
+    static CACHE: Mutex<Option<(Instant, std::collections::HashSet<String>)>> = Mutex::new(None);
+    let mut c = CACHE.lock().unwrap_or_else(|e| e.into_inner());
+    if let Some((t, set)) = c.as_ref() {
+        if t.elapsed() < Duration::from_secs(60) {
+            return set.clone();
+        }
+    }
+    let mut set = std::collections::HashSet::new();
+    let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
+    if let Ok(children) = hkcu.open_subkey(r"System\GameConfigStore\Children") {
+        for name in children.enum_keys().flatten() {
+            if let Ok(k) = children.open_subkey(&name) {
+                if let Ok(p) = k.get_value::<String, _>("MatchedExeFullPath") {
+                    set.insert(p.to_lowercase());
+                }
+            }
+        }
+    }
+    *c = Some((Instant::now(), set.clone()));
+    set
+}
+
+#[cfg_attr(not(windows), allow(dead_code))]
+fn is_known_game(exe: &str, games: &std::collections::HashSet<String>) -> bool {
+    !exe.is_empty() && games.contains(&exe.to_lowercase())
 }
 
 /// macOS: the frontmost normal (layer 0) window that isn't ours covers a whole display.
@@ -755,6 +826,25 @@ impl ProcessScanner {
         })
     }
 
+    /// Full path of a process's executable.
+    #[allow(dead_code)]
+    pub fn exe_of(&mut self, pid: u32) -> Option<String> {
+        use sysinfo::{Pid, ProcessRefreshKind, ProcessesToUpdate, UpdateKind};
+        if pid == 0 {
+            return None;
+        }
+        let pid = Pid::from_u32(pid);
+        self.sys.refresh_processes_specifics(
+            ProcessesToUpdate::Some(&[pid]),
+            true,
+            ProcessRefreshKind::nothing().with_exe(UpdateKind::OnlyIfNotSet),
+        );
+        self.sys
+            .process(pid)
+            .and_then(|p| p.exe())
+            .map(|e| e.to_string_lossy().into_owned())
+    }
+
     /// Lower-cased names of running processes (without .exe).
     pub fn names(&mut self) -> Vec<String> {
         use sysinfo::{ProcessRefreshKind, ProcessesToUpdate};
@@ -855,6 +945,22 @@ mod tests {
         assert!(super::pipewire_screencast(yes));
         assert!(!super::pipewire_screencast(cam));
         assert!(!super::pipewire_screencast("not json"));
+    }
+
+    #[test]
+    fn known_game_matches_case_insensitively() {
+        let games: std::collections::HashSet<String> =
+            [r"c:\games\enshrouded\enshrouded.exe".to_string()].into_iter().collect();
+        assert!(super::is_known_game(r"C:\Games\Enshrouded\enshrouded.exe", &games));
+        assert!(!super::is_known_game(r"C:\Windows\explorer.exe", &games));
+        assert!(!super::is_known_game("", &games));
+    }
+
+    #[test]
+    #[ignore]
+    fn print_fullscreen_state() {
+        let mut s = super::ProcessScanner::new();
+        println!("fullscreen_app_active = {}", super::fullscreen_app_active(&mut s));
     }
 
     #[test]
