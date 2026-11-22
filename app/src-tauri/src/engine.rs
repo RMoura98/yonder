@@ -594,7 +594,10 @@ impl Core {
                 }
             }
         }
-        if !on_break && !self.e.pending_reminders.is_empty() {
+        // Smart pause (a call, a fullscreen game, Do Not Disturb…) holds wellness
+        // reminders too; they stay pending (at most one per kind) and show once it ends.
+        let held = self.e.smart_reason.is_some() && !self.e.hold_overdue;
+        if !on_break && !held && !self.e.pending_reminders.is_empty() {
             let list = std::mem::take(&mut self.e.pending_reminders);
             self.stats.today().reminders_shown += list.len() as u32;
             if self.settings.wellness.combine {

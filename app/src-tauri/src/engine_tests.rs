@@ -739,3 +739,21 @@ fn corrupt_state_file_is_ignored() {
     assert_eq!(SavedState::load(&p).unwrap().work_secs, 5);
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+fn shown_reminders(fx: &[Effect]) -> usize {
+    fx.iter().filter(|e| matches!(e, Effect::ShowReminders(_))).count()
+}
+
+#[test]
+fn smart_pause_holds_wellness_reminders_until_it_ends() {
+    let mut s = hold_settings(0);
+    s.work_mins = 120;
+    s.wellness.blink.enabled = true;
+    s.wellness.blink.interval_mins = 1;
+    let mut c = core(s);
+    // Two blink intervals pass during a call: nothing is shown.
+    assert_eq!(shown_reminders(&tick_smart(&mut c, 150)), 0);
+    // The call ends: the held reminder shows once (not one per missed interval).
+    assert_eq!(shown_reminders(&tick_n(&mut c, 1, 0)), 1);
+    assert_eq!(shown_reminders(&tick_n(&mut c, 5, 0)), 0);
+}
