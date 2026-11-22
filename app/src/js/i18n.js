@@ -1,7 +1,7 @@
 // Tiny i18n: dictionaries are keyed by the English source text, so a missing
 // translation simply falls back to English. Keys may contain {placeholders}.
 //
-//   await initI18n(settings.language)   // "system" | "en" | "pt" | "es" | "fr" | "de"
+//   await initI18n(settings.language)   // "system" | "en" | "pt" | "es" | "fr" | "de" | "zh" | "ja"
 //   t("Next break in {t}", { t: "4:12" })
 //   applyI18n(document)                 // translates the static page
 //
@@ -16,6 +16,8 @@ export const LANGUAGES = [
   { code: "es", name: "Español" },
   { code: "fr", name: "Français" },
   { code: "de", name: "Deutsch" },
+  { code: "zh", name: "简体中文" },
+  { code: "ja", name: "日本語" },
 ];
 
 let lang = "en";
@@ -33,7 +35,7 @@ export const currentLanguage = () => lang;
 
 export async function initI18n(setting = "system") {
   lang = resolveLanguage(setting);
-  document.documentElement.lang = lang === "pt" ? "pt-PT" : lang;
+  document.documentElement.lang = locale();
   dict = {};
   patterns = [];
   if (lang !== "en") {
@@ -110,6 +112,9 @@ export function ordinal(n) {
       return n === 1 ? "1re" : `${n}e`;
     case "de":
       return `${n}.`;
+    case "zh":
+    case "ja":
+      return `${n}`; // "每 3 次休息" / "3回ごと"
     default: {
       const s = ["th", "st", "nd", "rd"];
       const v = n % 100;
@@ -119,7 +124,7 @@ export function ordinal(n) {
 }
 
 /** Locale for Intl / toLocale* calls. */
-export const locale = () => (lang === "pt" ? "pt-PT" : lang);
+export const locale = () => (lang === "pt" ? "pt-PT" : lang === "zh" ? "zh-CN" : lang);
 
 const ATTRS = [
   ["i18nPlaceholder", "placeholder"],

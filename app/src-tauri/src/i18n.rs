@@ -10,11 +10,13 @@ type Dict = HashMap<String, String>;
 fn dicts() -> &'static HashMap<&'static str, Dict> {
     static DICTS: OnceLock<HashMap<&'static str, Dict>> = OnceLock::new();
     DICTS.get_or_init(|| {
-        let raw: [(&str, &str); 4] = [
+        let raw: [(&str, &str); 6] = [
             ("pt", include_str!("../../src/i18n/pt.json")),
             ("es", include_str!("../../src/i18n/es.json")),
             ("fr", include_str!("../../src/i18n/fr.json")),
             ("de", include_str!("../../src/i18n/de.json")),
+            ("zh", include_str!("../../src/i18n/zh.json")),
+            ("ja", include_str!("../../src/i18n/ja.json")),
         ];
         raw.into_iter()
             .map(|(code, json)| (code, serde_json::from_str(json).unwrap_or_default()))
@@ -22,7 +24,7 @@ fn dicts() -> &'static HashMap<&'static str, Dict> {
     })
 }
 
-const SUPPORTED: [&str; 5] = ["en", "pt", "es", "fr", "de"];
+const SUPPORTED: [&str; 7] = ["en", "pt", "es", "fr", "de", "zh", "ja"];
 
 /// Language from the OS (e.g. "pt-PT" → "pt"), falling back to English.
 fn system_language() -> &'static str {
@@ -65,9 +67,11 @@ mod tests {
     fn translates_and_falls_back() {
         assert_eq!(tr("pt", "Quit Yonder", &[]), "Sair do Yonder");
         assert_eq!(tr("de", "Next break in {t}", &[("t", "4:12")]), "Nächste Pause in 4:12");
+        assert_eq!(tr("zh", "Next break in {t}", &[("t", "4:12")]), "距下次休息 4:12");
+        assert_eq!(tr("ja", "Quit Yonder", &[]), "Yonder を終了");
         assert_eq!(tr("en", "Quit Yonder", &[]), "Quit Yonder");
         assert_eq!(tr("fr", "not a key", &[]), "not a key");
         assert_eq!(resolve("es"), "es");
-        assert!(["en", "pt", "es", "fr", "de"].contains(&resolve("system")));
+        assert!(["en", "pt", "es", "fr", "de", "zh", "ja"].contains(&resolve("system")));
     }
 }

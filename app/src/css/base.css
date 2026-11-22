@@ -61,7 +61,7 @@
 [hidden] { display: none !important; }
 html, body { margin: 0; height: 100%; }
 body {
-  font: 13.5px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", Inter, Ubuntu, Cantarell, system-ui, sans-serif;
+  font: 13.5px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", Inter, Ubuntu, Cantarell, system-ui, "Microsoft YaHei UI", "PingFang SC", "Hiragino Sans", "Yu Gothic UI", "Noto Sans CJK SC", "Noto Sans CJK JP", sans-serif;
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
   user-select: none;
