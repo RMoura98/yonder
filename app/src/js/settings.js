@@ -15,6 +15,12 @@ const weekday = (i, style) => new Intl.DateTimeFormat(locale(), { weekday: style
 const dayLetter = (i) => weekday(i, "narrow");
 const dayName = (i) => weekday(i, "short");
 const X = () => icon("close", 16);
+
+// The built-in reminders' own glyphs (as drawn by reminders.html), shown at rest.
+const BUILTIN_GLYPH = {
+  posture: `<svg class="glyph" viewBox="0 0 50 50" aria-hidden="true"><path class="stroke" d="M16 24 L25 15 L34 24"/><path class="stroke" d="M25 16 L25 36"/></svg>`,
+  blink: `<svg class="glyph" viewBox="0 0 50 50" aria-hidden="true"><g fill="#3b1d06"><ellipse cx="18" cy="22" rx="3.6" ry="4.6"/><ellipse cx="32" cy="22" rx="3.6" ry="4.6"/></g><path class="stroke" d="M19 32 Q25 36 31 32" style="stroke-width:3"/></svg>`,
+};
 const PRESETS = {
   balanced: { work_mins: 20, break_secs: 20, long_enabled: false, long_mins: 5, long_every: 3 },
   deep_focus: { work_mins: 45, break_secs: 30, long_enabled: true, long_mins: 5, long_every: 3 },
@@ -258,8 +264,99 @@ function initBreaks() {
 
 // ----------------------------------------------------------- break screen
 function soundOptions(sel, withNone) {
-  sel.innerHTML = (withNone ? `<option value="none">${esc(t("None"))}</option>` : "") + SOUNDS.map((s) => `<option value="${s.id}">${esc(t(s.name))}</option>`).join("");
+  const mine = S.custom_sounds || [];
+  sel.classList.add("sound-pick");
+  sel.dataset.none = withNone ? "1" : "0";
+  sel.innerHTML =
+    (withNone ? `<option value="none">${esc(t("None"))}</option>` : "") +
+    SOUNDS.map((s) => `<option value="${s.id}">${esc(t(s.name))}</option>`).join("") +
+    (mine.length
+      ? `<optgroup label="${esc(t("Your sounds"))}">${mine.map((c) => `<option value="file:${esc(c.id)}">${esc(c.name)}</option>`).join("")}</optgroup>`
+      : "") +
+    `<option value="__add">${esc(t("Add a sound file…"))}</option>`;
 }
+
+/** Rebuilds every sound picker after the library changed, keeping each selection. */
+function refreshSoundPickers() {
+  $$("select.sound-pick").forEach((sel) => {
+    const v = sel.value;
+    soundOptions(sel, sel.dataset.none === "1");
+    sel.value = [...sel.options].some((o) => o.value === v) ? v : sel.dataset.none === "1" ? "none" : "chime";
+  });
+}
+
+/** Lets the user pick an audio file and adds it to their library. Resolves to the new sound or null. */
+function pickSoundFile() {
+  return new Promise((resolve) => {
+    const input = $("#soundFile");
+    input.value = "";
+    input.onchange = async () => {
+      const f = input.files[0];
+      if (!f) return resolve(null);
+      if (f.size > 8 * 1024 * 1024) {
+        toast(t("That file is too large (max 8 MB)."));
+        return resolve(null);
+      }
+      const dataUrl = await new Promise((r) => {
+        const fr = new FileReader();
+        fr.onload = () => r(fr.result);
+        fr.readAsDataURL(f);
+      });
+      try {
+        const sound = await invoke("add_custom_sound", { name: f.name.replace(/\.[^.]+$/, ""), dataUrl });
+        S.custom_sounds = [...(S.custom_sounds || []), sound];
+        refreshSoundPickers();
+        renderSoundLibrary();
+        toast(t("Sound added"));
+        resolve(sound);
+      } catch (e) {
+        toast(t(String(e)));
+        resolve(null);
+      }
+    };
+    input.click();
+  });
+}
+
+function renderSoundLibrary() {
+  const list = $("#customSoundList");
+  if (!list) return;
+  const mine = S.custom_sounds || [];
+  list.innerHTML = mine.length ? "" : `<div class="empty">${esc(t("No sounds added yet."))}</div>`;
+  for (const c of mine) {
+    const row = el(`<div class="item-row"><button class="btn ghost icon-only play" title="${esc(t("Preview"))}">${icon("play_arrow_fill", 18)}</button><div class="grow">${esc(c.name)}</div><button class="x" title="${esc(t("Remove"))}">${X()}</button></div>`);
+    $(".play", row).onclick = () => playSound("file:" + c.id, S.volume);
+    $(".x", row).onclick = async () => {
+      await invoke("remove_custom_sound", { id: c.id });
+      // mirror what the app did, so the next save doesn't bring it back
+      const key = "file:" + c.id;
+      S.custom_sounds = S.custom_sounds.filter((x) => x.id !== c.id);
+      if (S.sound === key) S.sound = "chime";
+      for (const r of [S.wellness.posture, S.wellness.blink, ...S.wellness.custom]) if (r.sound === key) r.sound = "none";
+      refreshSoundPickers();
+      renderSoundLibrary();
+    };
+    list.appendChild(row);
+  }
+}
+
+// "Add a sound file…" in any picker: open the file dialog instead of selecting it.
+// Runs in the capture phase so the picker's own change handler never sees "__add".
+document.addEventListener("focusin", (e) => {
+  if (e.target instanceof HTMLSelectElement) e.target.dataset.prev = e.target.value;
+});
+document.addEventListener("change", async (e) => {
+  const sel = e.target;
+  if (!(sel instanceof HTMLSelectElement) || sel.value !== "__add") return;
+  e.stopImmediatePropagation();
+  sel.value = sel.dataset.prev ?? (sel.dataset.none === "1" ? "none" : "chime");
+  const sound = await pickSoundFile();
+  if (sound) {
+    sel.value = "file:" + sound.id;
+    sel.dataset.prev = sel.value;
+    sel.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+}, true);
 
 function initScreen() {
   // style cards
@@ -378,13 +475,15 @@ function initSounds() {
   soundOptions($("#soundSel"), false);
   $("#soundSel").value = S.sound;
   $("#soundTest").onclick = () => playSound(S.sound, S.volume);
+  $("#addSound").onclick = () => pickSoundFile();
+  renderSoundLibrary();
 }
 
 // --------------------------------------------------------------- wellness
 function reminderCard(r, { builtin, onRemove }) {
   const card = el(`<div class="rem">
     <div class="rem-head">
-      ${builtin ? `<span class="icon-badge">${icon(r.icon, 18)}</span>` : `<span class="pick"></span>`}
+      ${builtin ? `<span class="icon-badge">${BUILTIN_GLYPH[r.id] || icon(r.icon, 18)}</span>` : `<span class="pick"></span>`}
       ${builtin ? `<div class="title">${esc(t(builtin))}</div>` : `<input type="text" class="title" maxlength="40" value="${esc(tr(r.title))}" placeholder="${esc(t("Title"))}" />`}
       <input type="checkbox" class="switch en" ${r.enabled ? "checked" : ""} />
       ${onRemove ? `<button class="x" title="${esc(t("Delete"))}">${X()}</button>` : ""}

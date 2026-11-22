@@ -307,5 +307,13 @@
   "Next long break in {t}": "Próxima pausa longa em {t}",
   "you're in a call": "estás numa chamada",
   "a fullscreen app is running": "há uma app em ecrã inteiro",
-  "{app} is open": "{app} está aberto"
+  "{app} is open": "{app} está aberto",
+  "Your sounds": "Os teus sons",
+  "Add a sound file…": "Adicionar ficheiro de som…",
+  "No sounds added yet.": "Ainda não adicionaste sons.",
+  "Sound added": "Som adicionado",
+  "That file is too large (max 8 MB).": "Esse ficheiro é demasiado grande (máx. 8 MB).",
+  "That doesn't look like an audio file.": "Isso não parece ser um ficheiro de áudio.",
+  "Unknown sound.": "Som desconhecido.",
+  "Built-in sounds are synthesized on the fly. Your own files (MP3, WAV, OGG, M4A, up to 8 MB) appear in every sound picker, for breaks and for each reminder, and stay on this computer.": "Os sons incluídos são sintetizados na hora. Os teus ficheiros (MP3, WAV, OGG, M4A, até 8 MB) aparecem em todos os seletores de som, para as pausas e para cada lembrete, e ficam neste computador."
 }

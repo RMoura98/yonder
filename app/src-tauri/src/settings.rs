@@ -222,6 +222,15 @@ pub struct Settings {
     pub skipped_update: String,
     /// "system" or a language code: en, pt, es, fr, de
     pub language: String,
+    /// Audio files the user added; referenced from sound pickers as "file:<id>".
+    pub custom_sounds: Vec<CustomSound>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[serde(default)]
+pub struct CustomSound {
+    pub id: String,
+    pub name: String,
 }
 
 impl Default for Settings {
@@ -267,6 +276,7 @@ impl Default for Settings {
             onboarded: false,
             check_updates: true,
             skipped_update: String::new(),
+            custom_sounds: Vec::new(),
             language: "system".into(),
         }
     }

@@ -90,7 +90,27 @@ const RECIPES = {
   },
 };
 
+// The user's own sounds ("file:<id>") are stored by the app as data URLs.
+const customCache = new Map();
+let current; // the sound file currently playing, so previews don't pile up
+async function playFile(id, volume) {
+  try {
+    if (!customCache.has(id)) {
+      const url = await window.__TAURI__.core.invoke("get_custom_sound", { id });
+      if (!url) return;
+      customCache.set(id, url);
+    }
+    current?.pause();
+    current = new Audio(customCache.get(id));
+    current.volume = Math.max(0, Math.min(1, volume));
+    await current.play();
+  } catch (e) {
+    console.warn("custom sound failed", e);
+  }
+}
+
 export function playSound(id, volume = 0.6) {
+  if (id?.startsWith("file:")) return void playFile(id.slice(5), volume);
   if (!id || id === "none" || !RECIPES[id]) return;
   try {
     const c = ac();

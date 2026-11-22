@@ -249,7 +249,11 @@
         <div class="row" data-show="sound_enabled"><label>Break starts</label><div class="inline"><button class="btn ghost icon-only" id="soundTest" title="Preview"><i data-icon="play_arrow_fill" data-size="18"></i></button><span class="stepper"><select data-bind="sound" id="soundSel"></select></span></div></div>
         <div class="row" data-show="sound_enabled"><label>Volume</label><input type="range" min="0" max="1" step="0.05" data-bind="volume" data-type="number" /></div>
       </div>
-      <p class="foot">All sounds are synthesized on the fly, so there's nothing to download. Reminder sounds are set per reminder.</p>
+      <h3>Your sounds</h3>
+      <div class="list" id="customSoundList"></div>
+      <button class="btn" id="addSound"><i data-icon="add" data-size="18"></i>Add a sound file…</button>
+      <input type="file" id="soundFile" accept="audio/*,.mp3,.wav,.ogg,.m4a,.aac,.flac" hidden />
+      <p class="foot">Built-in sounds are synthesized on the fly. Your own files (MP3, WAV, OGG, M4A, up to 8 MB) appear in every sound picker, for breaks and for each reminder, and stay on this computer.</p>
     </section>
 
     <!-- ========================================================== SHORTCUTS -->

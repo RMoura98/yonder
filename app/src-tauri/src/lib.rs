@@ -25,6 +25,8 @@ struct Paths {
     settings: PathBuf,
     stats: PathBuf,
     background: PathBuf,
+    /// Folder holding the user's added sounds as data URLs, one file per sound.
+    sounds: PathBuf,
 }
 
 struct TrayItems {
@@ -511,6 +513,66 @@ async fn get_background(app: AppHandle) -> Option<String> {
     std::fs::read_to_string(&state(&app).paths.background).ok()
 }
 
+// ------------------------------------------------------------ custom sounds
+
+fn valid_sound_id(id: &str) -> bool {
+    !id.is_empty() && id.len() <= 40 && id.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
+}
+
+/// Stores an audio file (as a data URL) and adds it to the user's sound library.
+#[tauri::command]
+async fn add_custom_sound(app: AppHandle, name: String, data_url: String) -> Result<settings::CustomSound, String> {
+    if !data_url.starts_with("data:audio/") && !data_url.starts_with("data:video/") {
+        return Err("That doesn't look like an audio file.".into());
+    }
+    if data_url.len() > 11_500_000 {
+        return Err("That file is too large (max 8 MB).".into());
+    }
+    let st = state(&app);
+    let id = format!("s{}", chrono::Utc::now().timestamp_millis());
+    std::fs::create_dir_all(&st.paths.sounds).map_err(|e| e.to_string())?;
+    std::fs::write(st.paths.sounds.join(format!("{id}.txt")), data_url).map_err(|e| e.to_string())?;
+    let name = name.trim().chars().take(60).collect::<String>();
+    let sound = settings::CustomSound { id, name: if name.is_empty() { "Sound".into() } else { name } };
+    let mut core = st.core.lock().unwrap();
+    core.settings.custom_sounds.push(sound.clone());
+    core.settings.save(&st.paths.settings);
+    Ok(sound)
+}
+
+#[tauri::command]
+async fn get_custom_sound(app: AppHandle, id: String) -> Option<String> {
+    if !valid_sound_id(&id) {
+        return None;
+    }
+    std::fs::read_to_string(state(&app).paths.sounds.join(format!("{id}.txt"))).ok()
+}
+
+/// Deletes a sound; anything that used it falls back to a built-in sound.
+#[tauri::command]
+async fn remove_custom_sound(app: AppHandle, id: String) -> Result<(), String> {
+    if !valid_sound_id(&id) {
+        return Err("Unknown sound.".into());
+    }
+    let st = state(&app);
+    let _ = std::fs::remove_file(st.paths.sounds.join(format!("{id}.txt")));
+    let key = format!("file:{id}");
+    let mut core = st.core.lock().unwrap();
+    let s = &mut core.settings;
+    s.custom_sounds.retain(|c| c.id != id);
+    if s.sound == key {
+        s.sound = "chime".into();
+    }
+    let w = &mut s.wellness;
+    for r in std::iter::once(&mut w.posture).chain(std::iter::once(&mut w.blink)).chain(w.custom.iter_mut()) {
+        if r.sound == key {
+            r.sound = "none".into();
+        }
+    }
+    s.save(&st.paths.settings);
+    Ok(())
+}
+
 #[tauri::command]
 async fn take_reminders(app: AppHandle) -> Vec<Reminder> {
     std::mem::take(&mut *state(&app).reminder_queue.lock().unwrap())
@@ -815,6 +877,7 @@ pub fn run() {
                 settings: config.join("settings.json"),
                 stats: data.join("stats.json"),
                 background: data.join("background.txt"),
+                sounds: data.join("sounds"),
             };
             let settings = Settings::load(&paths.settings);
             let stats = Stats::load(&paths.stats);
@@ -854,6 +917,9 @@ pub fn run() {
             get_screenshot,
             save_background,
             get_background,
+            add_custom_sound,
+            get_custom_sound,
+            remove_custom_sound,
             take_reminders,
             fit_window,
             open_url,
