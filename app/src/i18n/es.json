@@ -315,5 +315,15 @@
   "That file is too large (max 8 MB).": "Ese archivo es demasiado grande (máx. 8 MB).",
   "That doesn't look like an audio file.": "Eso no parece un archivo de audio.",
   "Unknown sound.": "Sonido desconocido.",
-  "Built-in sounds are synthesized on the fly. Your own files (MP3, WAV, OGG, M4A, up to 8 MB) appear in every sound picker, for breaks and for each reminder, and stay on this computer.": "Los sonidos incluidos se sintetizan al momento. Tus archivos (MP3, WAV, OGG, M4A, hasta 8 MB) aparecen en todos los selectores de sonido, para las pausas y cada recordatorio, y se quedan en este ordenador."
+  "Built-in sounds are synthesized on the fly. Your own files (MP3, WAV, OGG, M4A, up to 8 MB) appear in every sound picker, for breaks and for each reminder, and stay on this computer.": "Los sonidos incluidos se sintetizan al momento. Tus archivos (MP3, WAV, OGG, M4A, hasta 8 MB) aparecen en todos los selectores de sonido, para las pausas y cada recordatorio, y se quedan en este ordenador.",
+  "Soft gong": "Gong suave",
+  "Rain": "Lluvia",
+  "Kalimba": "Kalimba",
+  "Wind chimes": "Campanillas de viento",
+  "Harp": "Arpa",
+  "Wood grain": "Madera",
+  "Slate": "Pizarra",
+  "Terrazzo": "Terrazo",
+  "Paper": "Papel",
+  "Denim": "Vaquero"
 }

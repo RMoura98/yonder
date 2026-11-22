@@ -62,6 +62,49 @@ export const TEXTURES = {
       repeating-linear-gradient(90deg,rgba(255,255,255,.12) 0 1px,rgba(0,0,0,.04) 1px 2px,transparent 2px 4px),
       linear-gradient(180deg,#c4c9cf,#8f959d);`,
   },
+  wood: {
+    name: "Wood grain",
+    css: `background-color:#a9744a;background-image:
+      repeating-linear-gradient(90deg,rgba(60,30,10,.16) 0 2px,transparent 2px 38px),
+      repeating-linear-gradient(90deg,rgba(255,225,180,.1) 0 5px,transparent 5px 23px),
+      repeating-linear-gradient(0deg,rgba(70,35,10,.08) 0 1px,transparent 1px 4px),
+      linear-gradient(90deg,#9c6a42,#b58052 35%,#a06d45 70%,#b07a4e);`,
+  },
+  slate: {
+    name: "Slate",
+    css: `background-color:#3b4350;background-image:
+      radial-gradient(ellipse at 20% 15%,rgba(255,255,255,.1),transparent 55%),
+      radial-gradient(ellipse at 80% 85%,rgba(0,0,0,.25),transparent 60%),
+      radial-gradient(rgba(255,255,255,.04) 1px,transparent 1.5px),
+      linear-gradient(160deg,#454e5c,#323943);
+      background-size:auto,auto,5px 5px,auto;`,
+  },
+  terrazzo: {
+    name: "Terrazzo",
+    css: `background-color:#ece5da;background-image:
+      radial-gradient(circle at 20px 25px,#d98c7a 0 6px,transparent 7px),
+      radial-gradient(circle at 90px 70px,#6f8f86 0 8px,transparent 9px),
+      radial-gradient(circle at 140px 20px,#e0b862 0 5px,transparent 6px),
+      radial-gradient(circle at 60px 120px,#8c8fa6 0 7px,transparent 8px),
+      radial-gradient(circle at 150px 140px,#d98c7a 0 4px,transparent 5px),
+      radial-gradient(circle at 115px 105px,#4f5b66 0 3px,transparent 4px);
+      background-size:180px 180px;`,
+  },
+  paper: {
+    name: "Paper",
+    css: `background-color:#f1ead9;background-image:
+      radial-gradient(rgba(120,90,50,.07) 1px,transparent 1.5px),
+      radial-gradient(rgba(255,255,255,.35) 1px,transparent 1.5px),
+      linear-gradient(180deg,#f5efe0,#e8dfca);
+      background-size:4px 4px,7px 7px,auto;background-position:0 0,2px 3px,0 0;`,
+  },
+  denim: {
+    name: "Denim",
+    css: `background-color:#2f4a73;background-image:
+      repeating-linear-gradient(45deg,rgba(255,255,255,.07) 0 1px,transparent 1px 3px),
+      repeating-linear-gradient(-45deg,rgba(0,0,20,.14) 0 1px,transparent 1px 3px),
+      linear-gradient(160deg,#37557f,#27406a);`,
+  },
 };
 
 /** Starts an animated background on `canvas`; returns a stop() function. */
