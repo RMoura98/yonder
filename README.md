@@ -21,7 +21,8 @@ desktop into a calm break screen, and stays out of the way while you're in a cal
 ## Features
 
 - **Smart breaks.** Balanced (20 min / 20 s), Deep Focus, Eye Care and Wellness presets, or your own timing, with optional long breaks.
-- **Break screens you'll like.** Blurred desktop, split-screen (your desktop parts to reveal a texture), animated Aurora / Nebula / Ripple, gradients or your own image. Rolling countdown, custom messages, synthesized sounds.
+- **Break screens you'll like.** Blurred desktop, split-screen (your desktop parts to reveal a texture), animated Aurora / Nebula / Ripple, gradients or your own image. Rolling countdown and your own messages.
+- **Your own sounds.** Ten built-in synthesized sounds, or add any MP3, WAV, OGG or M4A file and use it for breaks or for each reminder.
 - **Heads-up, never a surprise.** A frosted heads-up card before each break (start now, +1m, +5m, +15m), and a countdown that follows your cursor for the last five seconds.
 - **Waits for the right moment.** Won't start while you type; pauses for meetings, fullscreen apps and the focus apps you choose; time away from the computer counts as a break.
 - **Posture & blink reminders.** Small liquid-glass widgets that appear, animate and disappear. Up to five custom reminders with their own icon, interval and sound.
@@ -68,17 +69,26 @@ needed), or click **Watch → Custom → Releases** on this repo. News and quest
 ## Yonder vs. LookAway
 
 [LookAway](https://lookaway.com) is a polished, paid break reminder for the Mac, and it inspired a lot of
-Yonder's feel. If you're on a Mac and happy to pay, it's a great choice. Yonder exists for everyone else:
+Yonder's feel. If you're on a recent Mac, want iPhone sync and deep macOS integration, and are happy to pay,
+it's a great choice. Yonder is for everyone else: **every desktop, older Macs, free, and open to change.**
 
 | | Yonder | LookAway |
 |---|---|---|
-| Price | Free | Paid (one-time license) |
-| Source | Open source (MIT) | Closed source |
-| Platforms | Windows, macOS, Linux | macOS (Windows announced as coming soon) |
-| Account / telemetry | None | — |
+| Price | **Free** | Paid, one-time license (from $19) |
+| Source | **Open source (MIT)**: change anything, down to the UI | Closed source |
+| Windows | **Yes** (10, 11) | Announced as coming soon |
+| Linux | **Yes** (.AppImage, .deb, .rpm) | No |
+| macOS | **10.15 Catalina and newer** | 13 Ventura and newer |
+| Split-screen break | Windows and macOS 10.15+ | macOS 26 Tahoe and newer |
+| Your own sounds, images, gradients, messages | Yes | Yes |
+| Custom reminders | Up to 5 | Up to 5 |
+| Automation | Shell commands on break start/end, on every OS; global hotkeys | Shortcuts, AppleScript, Siri, Focus Filters |
+| Smart pause on macOS | Zoom meetings and apps you choose | Camera/mic meetings, video, fullscreen, screen recording |
+| Stats | Screen time, breaks, daily history, JSON export | Includes app and website usage |
 | iPhone / iPad companion | No | Yes |
+| Signed & notarized | Not yet ([#6](https://github.com/RMoura98/yonder/issues/6)) | Yes |
 
-Comparison based on lookaway.com as of November 2026. Yonder is an independent project, not affiliated
+Comparison based on lookaway.com as of November 2026; corrections welcome. Yonder is an independent project, not affiliated
 with or endorsed by LookAway or Mystical Bits; product names belong to their owners.
 
 ## Platform notes
