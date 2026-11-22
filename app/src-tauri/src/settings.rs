@@ -191,6 +191,7 @@ pub struct Settings {
     pub wait_while_typing: bool,
     pub allow_end_early: bool,
     pub lock_on_break: bool,
+    pub pause_media: bool,
 
     pub prebreak_enabled: bool,
     pub prebreak_secs: u32,
@@ -249,6 +250,7 @@ impl Default for Settings {
             wait_while_typing: true,
             allow_end_early: true,
             lock_on_break: false,
+            pause_media: false,
             prebreak_enabled: true,
             prebreak_secs: 60,
             prebreak_visible_secs: 10,

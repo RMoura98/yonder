@@ -11,6 +11,7 @@ pkgbase = yonder-bin
 	optdepends = xprintidle: idle detection on X11
 	optdepends = libpulse: pactl, used for meeting (microphone) detection
 	optdepends = pipewire-pulse: pactl, used for meeting (microphone) detection on PipeWire systems
+	optdepends = playerctl: pause and resume music and video during breaks
 	provides = yonder
 	conflicts = yonder
 	options = !strip

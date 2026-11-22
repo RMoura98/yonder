@@ -353,5 +353,8 @@
   "Skip setup": "Omitir configuración",
   "Back": "Atrás",
   "Next": "Siguiente",
-  "Get started": "Empezar"
+  "Get started": "Empezar",
+  "Pause music and video during breaks": "Pausar música y vídeo durante los descansos",
+  "Resumes afterwards, only what Yonder paused.": "Se reanuda después, solo lo que Yonder pausó.",
+  "Needs playerctl. Resumes afterwards, only what Yonder paused.": "Necesita playerctl. Se reanuda después, solo lo que Yonder pausó."
 }

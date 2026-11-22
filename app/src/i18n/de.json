@@ -353,5 +353,8 @@
   "Skip setup": "Einrichtung überspringen",
   "Back": "Zurück",
   "Next": "Weiter",
-  "Get started": "Los geht's"
+  "Get started": "Los geht's",
+  "Pause music and video during breaks": "Musik und Video während der Pausen anhalten",
+  "Resumes afterwards, only what Yonder paused.": "Wird danach fortgesetzt, nur was Yonder angehalten hat.",
+  "Needs playerctl. Resumes afterwards, only what Yonder paused.": "Benötigt playerctl. Wird danach fortgesetzt, nur was Yonder angehalten hat."
 }

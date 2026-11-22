@@ -9,7 +9,8 @@ license=('MIT')
 depends=('webkit2gtk-4.1' 'gtk3' 'libayatana-appindicator')
 optdepends=('xprintidle: idle detection on X11'
             'libpulse: pactl, used for meeting (microphone) detection'
-            'pipewire-pulse: pactl, used for meeting (microphone) detection on PipeWire systems')
+            'pipewire-pulse: pactl, used for meeting (microphone) detection on PipeWire systems'
+            'playerctl: pause and resume music and video during breaks')
 provides=('yonder')
 conflicts=('yonder')
 options=('!strip' '!debug')

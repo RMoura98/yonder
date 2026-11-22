@@ -1,5 +1,6 @@
 mod engine;
 mod i18n;
+mod media;
 mod platform;
 mod settings;
 mod stats;
@@ -315,9 +316,16 @@ fn apply(app: &AppHandle, fx: Vec<Effect>) {
             }
             Effect::StartBreak => {
                 close_window(app, "cursor");
+                if state(app).core.lock().unwrap().settings.pause_media {
+                    media::pause_playing();
+                }
                 start_break_windows(app)
             }
-            Effect::EndBreak { delay_ms } => end_break_windows(app, delay_ms),
+            Effect::EndBreak { delay_ms } => {
+                // Resume only what we paused, even if the setting was turned off mid-break.
+                media::resume_paused();
+                end_break_windows(app, delay_ms)
+            }
             Effect::ShowReminders(list) => show_reminders(app, list),
             Effect::Lock => platform::lock_screen(),
             Effect::Hook { cmd, event, kind, secs } => platform::run_hook(&cmd, event, &kind, secs),

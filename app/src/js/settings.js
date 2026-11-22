@@ -971,6 +971,10 @@ async function init() {
   applyTheme(S.theme);
   await initI18n(S.language);
   renderAll();
+  if (platform === "linux") {
+    const note = document.getElementById("pauseMediaNote");
+    if (note) note.textContent = t("Needs playerctl. Resumes afterwards, only what Yonder paused.");
+  }
   go("today");
   renderState(await invoke("get_state"));
   refreshToday();
