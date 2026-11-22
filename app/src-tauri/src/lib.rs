@@ -161,8 +161,9 @@ fn show_cursor_pill(app: &AppHandle) {
         if let Ok(p) = app.cursor_position() {
             let scale = w.scale_factor().unwrap_or(1.0);
             let _ = w.set_position(PhysicalPosition::new(
-                (p.x + 18.0 * scale) as i32,
-                (p.y + 22.0 * scale) as i32,
+                // the pill sits 20px inside its window (room for its shadow)
+                (p.x + 5.0 * scale) as i32,
+                (p.y + 9.0 * scale) as i32,
             ));
         }
     };

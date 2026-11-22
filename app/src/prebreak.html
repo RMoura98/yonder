@@ -6,19 +6,22 @@
   <link rel="stylesheet" href="css/base.css" />
   <style>
     html, body { background: transparent; overflow: hidden; }
+    /* the card is centered in its window, and the window is centered on screen,
+       so resizing the window never moves the card */
+    body { display: flex; justify-content: center; align-items: flex-start; }
     :root { --e: cubic-bezier(.22,.8,.2,1); --fg: #F1F6F5; --fg-2: rgba(241,246,245,.62); --edge: rgba(255,255,255,.11); }
     /* Always a dark glass card: it sits over any wallpaper and reads like part of the OS. */
     .card {
-      margin: 14px; padding: 16px 18px 16px 16px; width: max-content; min-width: 360px; max-width: 500px; box-sizing: border-box;
+      margin: 26px; padding: 16px 18px 16px 16px; width: max-content; min-width: 360px; max-width: 500px; box-sizing: border-box;
       color: var(--fg);
       background:
         radial-gradient(120% 140% at 0% 0%, rgba(255,255,255,.07), transparent 55%),
         linear-gradient(180deg, rgba(22, 46, 56, .74), rgba(8, 22, 28, .82));
       backdrop-filter: blur(30px) saturate(1.8);
       border: 1px solid var(--edge); border-radius: 24px;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 18px 48px rgba(0,0,0,.32), 0 2px 8px rgba(0,0,0,.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 8px 18px rgba(0,0,0,.28), 0 1px 4px rgba(0,0,0,.18);
       animation: drop .6s var(--e) both;
-      transition: padding .45s var(--e), border-radius .45s var(--e), opacity .3s, transform .3s var(--e);
+      overflow: hidden;
     }
     @keyframes drop { from { opacity: 0; transform: translateY(-16px) scale(.97); filter: blur(5px); } }
     .top { display: flex; align-items: center; gap: 13px; }
@@ -88,11 +91,25 @@
     ];
     $("msg").textContent = t(MESSAGES[Math.floor(Math.random() * MESSAGES.length)]);
 
-    const fit = () => setTimeout(() => {
-      const r = card.getBoundingClientRect();
-      invoke("fit_window", { width: Math.ceil(r.width + 28), height: Math.ceil(r.height + 28), align: "center" });
-    }, 470);
-    const mini = (on) => { card.classList.toggle("mini", on); fit(); };
+    const fitTo = (r) => invoke("fit_window", { width: Math.ceil(r.width + 52), height: Math.ceil(r.height + 52), align: "center" });
+    const fit = () => fitTo(card.getBoundingClientRect());
+
+    // Expand/collapse by animating the card's real size (FLIP). The window grows
+    // before an expansion and shrinks after a collapse, so nothing clips or jumps.
+    let anim;
+    const mini = (on) => {
+      if (card.classList.contains("mini") === on) return;
+      anim?.cancel();
+      const cs0 = getComputedStyle(card);
+      const from = { width: card.offsetWidth + "px", height: card.offsetHeight + "px", borderRadius: cs0.borderTopLeftRadius };
+      card.classList.toggle("mini", on);
+      const r1 = card.getBoundingClientRect();
+      const to = { width: r1.width + "px", height: r1.height + "px", borderRadius: getComputedStyle(card).borderTopLeftRadius };
+      const growing = !on;
+      if (growing) fitTo(r1);
+      anim = card.animate([from, to], { duration: 420, easing: "cubic-bezier(.22,.8,.2,1)" });
+      anim.finished.then(() => { if (!growing) fitTo(r1); }).catch(() => {});
+    };
 
     // Collapse after the "keep expanded" period; click the pill to expand again.
     setTimeout(() => mini(true), Math.max(3, settings.prebreak_visible_secs) * 1000);

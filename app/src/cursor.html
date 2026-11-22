@@ -7,7 +7,7 @@
   <style>
     html, body { background: transparent; overflow: hidden; }
     .pill {
-      position: absolute; left: 7px; top: 7px;
+      position: absolute; left: 20px; top: 20px;
       display: inline-flex; align-items: center; gap: 9px; padding: 5px 15px 5px 5px; border-radius: 999px;
       color: #F1F6F5; font-weight: 600; font-size: 13px; white-space: nowrap;
       background:
@@ -15,7 +15,7 @@
         linear-gradient(180deg, rgba(22, 46, 56, .78), rgba(8, 22, 28, .86));
       backdrop-filter: blur(24px) saturate(1.8);
       border: 1px solid rgba(255,255,255,.12);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 10px 28px rgba(0,0,0,.32);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 6px 14px rgba(0,0,0,.28);
       animation: pop .45s cubic-bezier(.2,.9,.3,1.3) both;
     }
     .pill .clock { display: block; }
@@ -50,7 +50,7 @@
     // size the window to the pill, which also shows it (it starts hidden to avoid an empty frame)
     requestAnimationFrame(() => {
       const r = pill.getBoundingClientRect();
-      invoke("fit_window", { width: Math.ceil(r.width + 14), height: Math.ceil(r.height + 14) });
+      invoke("fit_window", { width: Math.ceil(r.width + 40), height: Math.ceil(r.height + 40) });
     });
   </script>
 </body>
