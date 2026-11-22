@@ -1,0 +1,45 @@
+name: Bug report
+description: Something isn't working the way it should
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to report this! The more detail, the faster it gets fixed.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open Settings → Screen Breaks
+        2. …
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options: [Windows 11, Windows 10, macOS (Apple silicon), macOS (Intel), Linux (X11), Linux (Wayland)]
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Yonder version
+      placeholder: "1.0.0 (Settings → About)"
+    validations:
+      required: true
+  - type: input
+    id: install
+    attributes:
+      label: How did you install it?
+      placeholder: Homebrew, .exe installer, .msi, .AppImage, .deb, built from source…
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Screenshots, number of monitors, break style, which smart-pause options are on…
