@@ -105,6 +105,10 @@
         <p>Open the <code>.dmg</code> and drag Yonder into <em>Applications</em>. Universal builds run natively on Apple Silicon and Intel. If macOS blocks the first launch, right-click the app and choose <em>Open</em>.</p>
         <h3>Linux</h3>
         <p>Use the <code>.AppImage</code> (make it executable with <code>chmod +x</code>), or install the <code>.deb</code> / <code>.rpm</code> package for your distribution. A tray requires a desktop with StatusNotifier / AppIndicator support (most do; on GNOME install the AppIndicator extension).</p>
+        <p><strong>Debian / Ubuntu (apt).</strong> Install from the signed APT repository and get updates through <code>apt upgrade</code>:</p>
+<pre><code>curl -fsSL https://rmoura98.github.io/yonder/apt/yonder.gpg | sudo tee /usr/share/keyrings/yonder.gpg &gt; /dev/null
+echo "deb [signed-by=/usr/share/keyrings/yonder.gpg] https://rmoura98.github.io/yonder/apt stable main" | sudo tee /etc/apt/sources.list.d/yonder.list
+sudo apt update &amp;&amp; sudo apt install yonder</code></pre>
         <h3>Start at login</h3>
         <p>Enable <em>Settings → General → Launch at login</em> so Yonder is always ready.</p>
       </section>
