@@ -61,6 +61,20 @@ jobs:
           releaseDraft: true
           prerelease: false
 
+      - name: Portable Windows zip
+        if: matrix.platform == 'windows-latest'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $version = (Get-Content src-tauri/tauri.conf.json -Raw | ConvertFrom-Json).version
+          $zip = "Yonder_${version}_x64-portable.zip"
+          New-Item -ItemType Directory -Force src-tauri/target/release/bundle/portable | Out-Null
+          Compress-Archive -Path src-tauri/target/release/yonder.exe -DestinationPath "src-tauri/target/release/bundle/portable/$zip" -Force
+          if ($env:GITHUB_REF -like 'refs/tags/*') {
+            gh release upload $env:GITHUB_REF_NAME "src-tauri/target/release/bundle/portable/$zip" --clobber
+          }
+
       - name: Upload build artifacts (non-release runs)
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         uses: actions/upload-artifact@v4
@@ -73,4 +87,22 @@ jobs:
             app/src-tauri/target/**/release/bundle/**/*.AppImage
             app/src-tauri/target/**/release/bundle/**/*.deb
             app/src-tauri/target/**/release/bundle/**/*.rpm
+            app/src-tauri/target/**/release/bundle/**/*.zip
           if-no-files-found: ignore
+
+  checksums:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Attach SHA256SUMS.txt
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          mkdir assets && cd assets
+          gh release download "$TAG" -R "$GITHUB_REPOSITORY" --skip-existing
+          rm -f SHA256SUMS.txt
+          sha256sum * > ../SHA256SUMS.txt
+          cat ../SHA256SUMS.txt
+          gh release upload "$TAG" ../SHA256SUMS.txt -R "$GITHUB_REPOSITORY" --clobber

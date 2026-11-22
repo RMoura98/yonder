@@ -66,7 +66,8 @@ scoop install yonder/yonder
 ```
 
 or download the `.exe` (or `.msi`) installer from the [latest release](https://github.com/RMoura98/yonder/releases/latest).
-SmartScreen may warn about an unrecognized app: choose **More info → Run anyway**.
+Prefer not to install anything? The `x64-portable.zip` holds a single `yonder.exe` you can run from any folder
+(settings still live in your user profile). SmartScreen may warn about an unrecognized app: choose **More info → Run anyway**.
 
 **Linux (Debian, Ubuntu and derivatives):** add the signed apt repository once, then updates come with `apt upgrade`:
 
@@ -77,6 +78,10 @@ sudo apt update && sudo apt install yonder
 ```
 
 **Other Linux:** grab the `.AppImage`, `.deb` or `.rpm` from the [latest release](https://github.com/RMoura98/yonder/releases/latest).
+
+**Verify a download:** every release has a `SHA256SUMS.txt`. Put it next to the file you downloaded and run
+`sha256sum -c --ignore-missing SHA256SUMS.txt` (Linux), `shasum -a 256 -c --ignore-missing SHA256SUMS.txt` (macOS), or on Windows
+compare `(Get-FileHash .\Yonder_*_x64-setup.exe).Hash` with the matching line.
 
 **Stay up to date:** follow the [releases feed](https://github.com/RMoura98/yonder/releases.atom) in any RSS reader (no account
 needed), or click **Watch → Custom → Releases** on this repo. News and questions live in [Discussions](https://github.com/RMoura98/yonder/discussions).
