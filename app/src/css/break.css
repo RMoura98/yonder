@@ -44,6 +44,8 @@ body.closing #blur::after { background: rgba(8, 10, 24, 0); }
 body.open #split .top { transform: translateY(-68%); }
 body.open #split .bottom { transform: translateY(68%); }
 body.closing #split .top, body.closing #split .bottom { transform: none; box-shadow: 0 0 0 rgba(0, 0, 0, 0); }
+/* keep white text readable on light textures (linen, cork, steel) */
+#texture::after { content: ""; position: absolute; inset: 0; background: radial-gradient(60% 40% at 50% 50%, rgba(6, 18, 21, .55), rgba(6, 18, 21, .15) 70%, transparent); }
 
 /* ---------------------------------------------------------------- content */
 .stagger { opacity: 0; transform: translateY(14px); filter: blur(6px);
