@@ -121,9 +121,25 @@ fn floating_window(app: &AppHandle, label: &str, url: &str, w: f64, h: f64) -> O
         .skip_taskbar(true)
         .resizable(false)
         .focused(false)
+        // Heads-up, cursor countdown and reminders must never take keyboard focus
+        // from whatever you're typing in; clicking their buttons still works.
+        .focusable(false)
         .visible(false)
         .build()
         .ok()
+}
+
+/// Shows a floating window without activating it (no focus steal).
+fn show_quietly(window: &WebviewWindow) {
+    #[cfg(windows)]
+    {
+        use windows_sys::Win32::UI::WindowsAndMessaging::{ShowWindow, SW_SHOWNOACTIVATE};
+        if let Ok(hwnd) = window.hwnd() {
+            unsafe { ShowWindow(hwnd.0 as _, SW_SHOWNOACTIVATE) };
+            return;
+        }
+    }
+    let _ = window.show();
 }
 
 /// Places a floating window horizontally centered (or right-aligned) near the top.
@@ -590,7 +606,8 @@ async fn fit_window(window: WebviewWindow, width: f64, height: f64, align: Optio
         place_top(&app, &window, align.as_deref() == Some("right"));
     }
     if !window.is_visible().unwrap_or(true) {
-        let _ = window.show();
+        // only the small floating windows go through here; never let them take focus
+        show_quietly(&window);
     }
 }
 
