@@ -9,7 +9,7 @@
     :root { --e: cubic-bezier(.22,.8,.2,1); }
     /* Always a dark frosted card: it sits over any wallpaper and reads like part of the OS. */
     .card {
-      margin: 12px; padding: 14px 16px 14px 14px; width: 376px;
+      margin: 12px; padding: 14px 16px 14px 14px; width: max-content; min-width: 376px; max-width: 480px; box-sizing: border-box;
       color: #EEF4F2;
       background: linear-gradient(180deg, rgba(16, 48, 54, .80), rgba(7, 26, 30, .86));
       backdrop-filter: blur(26px) saturate(1.5);
@@ -80,10 +80,13 @@
     import { invoke, listen, action, applyTheme } from "./js/api.js";
     import { playSound } from "./js/sounds.js";
     import { icon } from "./js/icons.js";
+    import { initI18n, applyI18n, t } from "./js/i18n.js";
     const $ = (id) => document.getElementById(id);
     const card = $("card");
     const settings = await invoke("get_settings");
     applyTheme(settings.theme);
+    await initI18n(settings.language);
+    applyI18n(document);
     $("hand").innerHTML = icon("hourglass_top", 18);
     $("close").innerHTML = icon("close", 15);
     if (settings.skip_difficulty === "hardcore") document.querySelectorAll("[data-snooze],#skip").forEach((b) => b.remove());
@@ -94,7 +97,7 @@
       "A short break is coming up.",
       "Save your work, a breather is near.",
     ];
-    $("msg").textContent = MESSAGES[Math.floor(Math.random() * MESSAGES.length)];
+    $("msg").textContent = t(MESSAGES[Math.floor(Math.random() * MESSAGES.length)]);
 
     const fit = () => setTimeout(() => {
       const r = card.getBoundingClientRect();
@@ -116,7 +119,7 @@
       $("arc").style.strokeDashoffset = String(113.1 * (1 - Math.min(1, left / lead)));
       if (left <= 10 && !finalShown) {
         finalShown = true;
-        $("msg").textContent = s.next_is_long ? "Long break in a few seconds." : "Starting in a few seconds.";
+        $("msg").textContent = t(s.next_is_long ? "Long break in a few seconds." : "Starting in a few seconds.");
       }
     };
     const first = await invoke("get_state");

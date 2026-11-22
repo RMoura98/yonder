@@ -220,6 +220,8 @@ pub struct Settings {
     pub check_updates: bool,
     /// A release the user chose to skip (e.g. "1.1.0").
     pub skipped_update: String,
+    /// "system" or a language code: en, pt, es, fr, de
+    pub language: String,
 }
 
 impl Default for Settings {
@@ -265,6 +267,7 @@ impl Default for Settings {
             onboarded: false,
             check_updates: true,
             skipped_update: String::new(),
+            language: "system".into(),
         }
     }
 }

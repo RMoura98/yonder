@@ -11,7 +11,7 @@
 <div class="app">
   <!-- ================================================================ SIDEBAR -->
   <aside class="sidebar">
-    <div class="brand" data-tauri-drag-region><img src="assets/logo.svg" alt="" /><span>yonder<i></i></span></div>
+    <div class="brand" data-tauri-drag-region><img src="assets/logo.svg" alt="" /><span data-no-i18n>yonder<i></i></span></div>
     <nav id="nav">
       <a data-page="today" data-tile="sun" data-ic="today">Today</a>
       <a data-page="general" data-tile="slate" data-ic="settings">General</a>
@@ -26,7 +26,7 @@
       <a data-page="shortcuts" data-tile="graphite" data-ic="keyboard_command_key">Keyboard Shortcuts</a>
       <h4>Integrations</h4>
       <a data-page="automation" data-tile="green" data-ic="sync_alt">Automation</a>
-      <h4>Yonder</h4>
+      <h4 data-no-i18n>Yonder</h4>
       <a data-page="stats" data-tile="teal" data-ic="bar_chart">Stats</a>
       <a data-page="about" data-tile="gold" data-ic="info">About</a>
     </nav>
@@ -92,6 +92,7 @@
       <div class="list">
         <div class="row"><label>Theme</label><div class="seg" data-bind="theme">
           <button data-v="system">System</button><button data-v="light">Light</button><button data-v="dark">Dark</button></div></div>
+        <div class="row"><label>Language</label><span class="stepper"><select id="langSel"></select></span></div>
       </div>
     </section>
 
@@ -185,7 +186,7 @@
         <h3>Focus apps</h3>
         <div class="list" id="appList"></div>
         <div class="add-row"><input type="text" id="appNew" placeholder="Process name, e.g. obs64, Keynote, code, POWERPNT" /><button class="btn" id="appAdd">Add</button></div>
-        <p class="foot">Breaks wait while any of these apps is open. Use the name from Task Manager (Details), Activity Monitor or <code>ps</code>.</p>
+        <p class="foot" data-i18n-html>Breaks wait while any of these apps is open. Use the name from Task Manager (Details), Activity Monitor or <code>ps</code>.</p>
       </div>
     </section>
 
@@ -268,7 +269,7 @@
         <div class="row col"><label>When a break starts</label><input type="text" class="mono" data-bind="hooks.on_break_start" placeholder="e.g. nircmd mutesysvolume 1" /></div>
         <div class="row col"><label>When a break ends or is skipped</label><input type="text" class="mono" data-bind="hooks.on_break_end" placeholder="e.g. curl -X POST http://localhost:8123/api/webhook/break-over" /></div>
       </div>
-      <p class="foot">Commands run in your shell with <code>YONDER_EVENT</code> (break-start, break-end, break-skip), <code>YONDER_BREAK_KIND</code> and <code>YONDER_BREAK_SECS</code> set.</p>
+      <p class="foot" data-i18n-html>Commands run in your shell with <code>YONDER_EVENT</code> (break-start, break-end, break-skip), <code>YONDER_BREAK_KIND</code> and <code>YONDER_BREAK_SECS</code> set.</p>
     </section>
 
     <!-- ============================================================== STATS -->
@@ -292,7 +293,7 @@
         <img src="assets/logo.svg" alt="" />
         <div>
           <div class="wordmark">yonder<i></i></div>
-          <p class="muted">Version <span id="appVersion">—</span> · Look up. Look far. Get back to it.</p>
+          <p class="muted" id="aboutVersion" data-no-i18n></p>
           <p>Free and open source under the MIT license. No account, no tracking: your settings and stats never leave this computer.</p>
           <div class="btn-row">
             <a class="btn primary" href="https://github.com/sponsors/RMoura98"><i data-icon="favorite_fill" data-size="16"></i>Donate</a>
@@ -305,7 +306,7 @@
       <div class="update-banner" id="updateBanner" hidden>
         <span class="tile" data-tile="lagoon" data-ic="download"></span>
         <div class="grow">
-          <b>Yonder <span id="updVersion"></span> is available</b>
+          <b id="updTitle"></b>
           <p class="muted small" id="updHint">Download the new installer from the release page.</p>
         </div>
         <button class="btn ghost" id="updSkip">Skip this version</button>

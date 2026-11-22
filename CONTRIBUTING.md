@@ -54,6 +54,19 @@ website/                   The project website (static, deployed to GitHub Pages
 A good mental model: `engine.rs` decides **what** should happen, `lib.rs` makes it happen on screen,
 and `platform.rs` talks to the operating system.
 
+## Adding a translation
+
+All text lives in `app/src/i18n/<code>.json`. The files are keyed by the English text, so anything missing
+simply shows in English.
+
+1. Copy `app/src/i18n/en.json` to `app/src/i18n/<code>.json` (e.g. `it.json`) and translate the **values**.
+   Keep `{placeholders}` and `<code>`/`<kbd>` tags as they are.
+2. Add the language to `LANGUAGES` in `app/src/js/i18n.js` (with its native name) and, if it needs special
+   ordinals or plurals, to `ordinal()` / `plural()` there.
+3. Add the file to `dicts()` and the code to `SUPPORTED` in `app/src-tauri/src/i18n.rs`. The tray menu and
+   status line read the same file.
+4. Run the app, pick the language in Settings → General, and check that long strings still fit.
+
 ## Pull requests
 
 - Keep each PR focused on one change, and describe what you tested and on which OS.

@@ -1,6 +1,7 @@
 //! The break scheduler: a small state machine ticked once per second.
 //! It never touches windows directly; it returns `Effect`s for lib.rs to apply.
 
+use crate::i18n;
 use crate::settings::{Reminder, Settings};
 use crate::stats::{today_key, Stats};
 use chrono::{Datelike, Local, Timelike};
@@ -148,33 +149,34 @@ impl Core {
             "working"
         };
         let next_in = interval as i64 - self.e.work_secs as i64;
+        let lang = i18n::resolve(&self.settings.language);
+        let tr = |key: &str, vars: &[(&str, &str)]| i18n::tr(lang, key, vars);
         let label = match phase {
             "break" => {
                 let r = self.e.brk.as_ref().map(|b| b.remaining()).unwrap_or(0);
-                format!("On a break — {}", fmt_dur(r))
+                tr("On a break — {t}", &[("t", &fmt_dur(r))])
             }
             "paused" => match self.e.pause {
                 Some(Some(t)) => {
                     let left = (t - now_epoch()).max(0) as u64;
-                    format!("Paused — resumes in {}", fmt_dur(left))
+                    tr("Paused — resumes in {t}", &[("t", &fmt_dur(left))])
                 }
-                _ => "Paused".into(),
+                _ => tr("Paused", &[]),
             },
-            "offhours" => "Outside office hours".into(),
-            "smart" => format!(
-                "Holding breaks — {}",
-                self.e.smart_reason.clone().unwrap_or_default()
+            "offhours" => tr("Outside office hours", &[]),
+            // the reason is already translated where it's detected (lib.rs)
+            "smart" => tr(
+                "Holding breaks — {reason}",
+                &[("reason", &self.e.smart_reason.clone().unwrap_or_default())],
             ),
-            "away" => "You're away — timer on hold".into(),
+            "away" => tr("You're away — timer on hold", &[]),
             _ => {
                 if next_in <= 0 {
-                    "Break starting soon".into()
+                    tr("Break starting soon", &[])
+                } else if self.next_is_long() {
+                    tr("Next long break in {t}", &[("t", &fmt_dur(next_in as u64))])
                 } else {
-                    format!(
-                        "Next {}break in {}",
-                        if self.next_is_long() { "long " } else { "" },
-                        fmt_dur(next_in as u64)
-                    )
+                    tr("Next break in {t}", &[("t", &fmt_dur(next_in as u64))])
                 }
             }
         };

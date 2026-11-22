@@ -1,4 +1,5 @@
 mod engine;
+mod i18n;
 mod platform;
 mod settings;
 mod stats;
@@ -34,6 +35,8 @@ struct TrayItems {
     resume: MenuItem<Wry>,
     /// "Update available…" entry, inserted at the top only when there is one.
     update: Option<(MenuItem<Wry>, PredefinedMenuItem<Wry>)>,
+    /// Static items and their English source text, for re-labelling.
+    labeled: Vec<(MenuItem<Wry>, &'static str)>,
 }
 
 struct AppState {
@@ -317,6 +320,7 @@ fn broadcast(app: &AppHandle) {
 }
 
 fn update_tray(app: &AppHandle, snap: &Snapshot) {
+    let lang = ui_lang(app);
     let st = state(app);
     let guard = st.tray.lock().unwrap();
     let Some(t) = guard.as_ref() else { return };
@@ -338,8 +342,8 @@ fn update_tray(app: &AppHandle, snap: &Snapshot) {
         let _ = tray.set_tooltip(Some(format!("Yonder — {}", snap.label)));
         // Text next to the tray icon (macOS menu bar, some Linux panels; ignored on Windows).
         let title = match snap.phase {
-            "break" => "Break".to_string(),
-            "paused" => "Paused".to_string(),
+            "break" => i18n::tr(lang, "Break", &[]),
+            "paused" => i18n::tr(lang, "Paused", &[]),
             "working" | "smart" | "away" => {
                 let s = snap.next_break_in.max(0) as u64;
                 if s >= 60 { format!("{}m", (s + 59) / 60) } else { format!("0:{:02}", s) }
@@ -452,6 +456,7 @@ async fn save_settings(app: AppHandle, settings: Settings) -> Result<(), String>
         core.settings = s;
     }
     register_shortcuts(&app);
+    relabel_tray(&app);
     let al = app.autolaunch();
     if launch != al.is_enabled().unwrap_or(false) {
         let _ = if launch { al.enable() } else { al.disable() };
@@ -547,38 +552,47 @@ fn tray_icon(light_taskbar: bool, paused: bool) -> tauri::image::Image<'static> 
     tauri::image::Image::new_owned(platform::tray_glyph(SIZE, rgb, alpha), SIZE, SIZE)
 }
 
+/// The UI language for text the core draws itself (tray menu, status line).
+fn ui_lang(app: &AppHandle) -> &'static str {
+    i18n::resolve(&state(app).core.lock().unwrap().settings.language)
+}
+
 fn build_tray(app: &AppHandle) -> tauri::Result<()> {
-    let status = MenuItem::with_id(app, "status", "Starting…", false, None::<&str>)?;
-    let take = MenuItem::with_id(app, "take_break", "Take a break now", true, None::<&str>)?;
-    let skip = MenuItem::with_id(app, "skip", "Skip next break", true, None::<&str>)?;
+    let lang = ui_lang(app);
+    let item = |id: &str, key: &'static str, enabled: bool| -> tauri::Result<(MenuItem<Wry>, &'static str)> {
+        Ok((MenuItem::with_id(app, id, i18n::tr(lang, key, &[]), enabled, None::<&str>)?, key))
+    };
+    let status = MenuItem::with_id(app, "status", i18n::tr(lang, "Starting…", &[]), false, None::<&str>)?;
+    let take = item("take_break", "Take a break now", true)?;
+    let skip = item("skip", "Skip next break", true)?;
+    let p30 = item("pause_30", "For 30 minutes", true)?;
+    let p60 = item("pause_60", "For 1 hour", true)?;
+    let p120 = item("pause_120", "For 2 hours", true)?;
+    let ptomorrow = item("pause_tomorrow", "Until tomorrow", true)?;
+    let pforever = item("pause_forever", "Until I resume", true)?;
     let pause = Submenu::with_id_and_items(
         app,
         "pause_menu",
-        "Pause",
+        i18n::tr(lang, "Pause", &[]),
         true,
-        &[
-            &MenuItem::with_id(app, "pause_30", "For 30 minutes", true, None::<&str>)?,
-            &MenuItem::with_id(app, "pause_60", "For 1 hour", true, None::<&str>)?,
-            &MenuItem::with_id(app, "pause_120", "For 2 hours", true, None::<&str>)?,
-            &MenuItem::with_id(app, "pause_tomorrow", "Until tomorrow", true, None::<&str>)?,
-            &MenuItem::with_id(app, "pause_forever", "Until I resume", true, None::<&str>)?,
-        ],
+        &[&p30.0, &p60.0, &p120.0, &ptomorrow.0, &pforever.0],
     )?;
-    let resume = MenuItem::with_id(app, "resume", "Resume", false, None::<&str>)?;
-    let settings = MenuItem::with_id(app, "open_settings", "Settings…", true, None::<&str>)?;
-    let quit = MenuItem::with_id(app, "quit", "Quit Yonder", true, None::<&str>)?;
+    let resume = item("resume", "Resume", false)?;
+    let settings_item = item("open_settings", "Settings…", true)?;
+    let quit = item("quit", "Quit Yonder", true)?;
+    let (settings, quit_item) = (&settings_item.0, &quit.0);
     let menu = Menu::with_items(
         app,
         &[
             &status,
             &PredefinedMenuItem::separator(app)?,
-            &take,
-            &skip,
+            &take.0,
+            &skip.0,
             &pause,
-            &resume,
+            &resume.0,
             &PredefinedMenuItem::separator(app)?,
-            &settings,
-            &quit,
+            settings,
+            quit_item,
         ],
     )?;
 
@@ -607,14 +621,40 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
         })
         .build(app)?;
 
-    *state(app).tray.lock().unwrap() = Some(TrayItems { menu, status, skip, pause, resume, update: None });
+    let labeled = vec![take.clone(), skip.clone(), p30, p60, p120, ptomorrow, pforever, resume.clone(), settings_item.clone(), quit.clone()];
+    *state(app).tray.lock().unwrap() = Some(TrayItems {
+        menu,
+        status,
+        skip: skip.0,
+        pause,
+        resume: resume.0,
+        update: None,
+        labeled,
+    });
     Ok(())
+}
+
+/// Re-labels the tray menu after the language setting changes.
+fn relabel_tray(app: &AppHandle) {
+    let lang = ui_lang(app);
+    {
+        let st = state(app);
+        let guard = st.tray.lock().unwrap();
+        let Some(t) = guard.as_ref() else { return };
+        for (item, key) in &t.labeled {
+            let _ = item.set_text(i18n::tr(lang, key, &[]));
+        }
+        let _ = t.pause.set_text(i18n::tr(lang, "Pause", &[]));
+    }
+    let update = state(app).update.lock().unwrap().clone();
+    set_tray_update(app, update.as_ref());
 }
 
 // ==================================================================== updates
 
 /// Shows (or clears) the "Update available" entry at the top of the tray menu.
 fn set_tray_update(app: &AppHandle, info: Option<&UpdateInfo>) {
+    let lang = ui_lang(app); // read before taking the tray lock
     let st = state(app);
     let mut guard = st.tray.lock().unwrap();
     let Some(t) = guard.as_mut() else { return };
@@ -623,7 +663,7 @@ fn set_tray_update(app: &AppHandle, info: Option<&UpdateInfo>) {
         let _ = t.menu.remove(&sep);
     }
     if let Some(u) = info {
-        let label = format!("Update available: v{}…", u.version);
+        let label = i18n::tr(lang, "Update available: v{v}…", &[("v", &u.version)]);
         if let (Ok(item), Ok(sep)) = (
             MenuItem::with_id(app, "update", label, true, None::<&str>),
             PredefinedMenuItem::separator(app),
@@ -700,6 +740,7 @@ fn app_version(app: AppHandle) -> String {
 // ================================================================= tick loop
 
 fn smart_reason(s: &Settings, scanner: &mut platform::ProcessScanner, frame: u64, cache: &mut Option<String>) -> Option<String> {
+    let lang = i18n::resolve(&s.language);
     if !s.smart.enabled {
         return None;
     }
@@ -708,10 +749,10 @@ fn smart_reason(s: &Settings, scanner: &mut platform::ProcessScanner, frame: u64
     }
     let mut reason = None;
     if s.smart.meetings && platform::mic_or_camera_in_use() {
-        reason = Some("you're in a call".to_string());
+        reason = Some(i18n::tr(lang, "you're in a call", &[]));
     }
     if reason.is_none() && s.smart.fullscreen && platform::fullscreen_app_active(scanner) {
-        reason = Some("a fullscreen app is running".to_string());
+        reason = Some(i18n::tr(lang, "a fullscreen app is running", &[]));
     }
     let need_scan = !s.smart.apps.is_empty() || (s.smart.meetings && cfg!(target_os = "macos"));
     if reason.is_none() && need_scan {
@@ -721,13 +762,13 @@ fn smart_reason(s: &Settings, scanner: &mut platform::ProcessScanner, frame: u64
                 .iter()
                 .any(|n| platform::MEETING_PROCESS_HINTS.iter().any(|h| n == h))
         {
-            reason = Some("you're in a call".to_string());
+            reason = Some(i18n::tr(lang, "you're in a call", &[]));
         } else if let Some(app) = s.smart.apps.iter().find(|a| {
             let a = a.trim().to_lowercase();
             let a = a.trim_end_matches(".exe").trim_end_matches(".app");
             !a.is_empty() && names.iter().any(|n| n == a || n.starts_with(a))
         }) {
-            reason = Some(format!("{} is open", app.trim()));
+            reason = Some(i18n::tr(lang, "{app} is open", &[("app", app.trim())]));
         }
     }
     *cache = reason.clone();

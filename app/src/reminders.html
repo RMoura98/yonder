@@ -71,8 +71,10 @@
     import { invoke, listen, action, applyTheme } from "./js/api.js";
     import { playSound } from "./js/sounds.js";
     import { icon } from "./js/icons.js";
+    import { initI18n, t, tr } from "./js/i18n.js";
     const wrap = document.getElementById("wrap");
     const settings = await invoke("get_settings");
+    await initI18n(settings.language);
     applyTheme(settings.theme);
     const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
@@ -152,9 +154,9 @@
       const kind = r.id === "posture" ? "posture" : "blink";
       const el = document.createElement("div");
       el.className = `stage ${kind}`;
-      el.title = r.title;
+      el.title = tr(r.title);
       el.innerHTML = `<div class="tube"><div class="orb">${kind === "posture" ? ARROW : FACE}</div></div>
-        ${r.sticky ? `<button class="done-pill">${icon("check", 13)} Done</button>` : ""}`;
+        ${r.sticky ? `<button class="done-pill">${icon("check", 13)} ${esc(t("Done"))}</button>` : ""}`;
       return el;
     }
 
@@ -172,8 +174,8 @@
       const el = document.createElement("div");
       el.className = `card ${r.size || "medium"}`;
       el.innerHTML = `<div class="icon">${icon(r.icon, r.size === "large" ? 28 : 20)}</div>
-        <div class="txt"><div class="t">${esc(r.title)}</div>${r.body ? `<div class="b">${esc(r.body)}</div>` : ""}</div>
-        <button class="btn done">${r.sticky ? icon("check", 14) + " Done" : "OK"}</button>`;
+        <div class="txt"><div class="t">${esc(tr(r.title))}</div>${r.body ? `<div class="b">${esc(tr(r.body))}</div>` : ""}</div>
+        <button class="btn done">${r.sticky ? icon("check", 14) + " " + esc(t("Done")) : esc(t("OK"))}</button>`;
       return el;
     }
 

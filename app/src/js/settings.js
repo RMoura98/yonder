@@ -2,6 +2,7 @@ import { invoke, listen, action, applyTheme, fmtClock, fmtHuman } from "./api.js
 import { SOUNDS, playSound } from "./sounds.js";
 import { ANIMATED, GRADIENTS, TEXTURES } from "./backgrounds.js";
 import { icon as baseIcon, hydrateIcons, PICKABLE, ICON_PATHS } from "./icons.js";
+import { initI18n, applyI18n, t, tr, plural, ordinal, locale, LANGUAGES } from "./i18n.js";
 
 // Prefer a filled glyph when asked for "<name>_fill", falling back to the outline.
 const icon = (name, size, cls) =>
@@ -9,8 +10,10 @@ const icon = (name, size, cls) =>
 
 const $ = (s, root = document) => root.querySelector(s);
 const $$ = (s, root = document) => [...root.querySelectorAll(s)];
-const DAYS = ["M", "T", "W", "T", "F", "S", "S"];
-const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+// Monday-first weekday names in the UI language (2024-01-01 was a Monday).
+const weekday = (i, style) => new Intl.DateTimeFormat(locale(), { weekday: style }).format(new Date(2024, 0, 1 + i));
+const dayLetter = (i) => weekday(i, "narrow");
+const dayName = (i) => weekday(i, "short");
 const X = () => icon("close", 16);
 const PRESETS = {
   balanced: { work_mins: 20, break_secs: 20, long_enabled: false, long_mins: 5, long_every: 3 },
@@ -37,7 +40,7 @@ function save() {
     try {
       await invoke("save_settings", { settings: S });
     } catch (e) {
-      toast("Couldn't save: " + e);
+      toast(t("Couldn't save: {e}", { e }));
     }
   }, 250);
   refreshVisibility();
@@ -58,8 +61,8 @@ const el = (html) => {
 };
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const uid = () => Math.random().toString(36).slice(2, 9);
-const ordinal = (n) => n + (n % 10 === 1 && n !== 11 ? "st" : n % 10 === 2 && n !== 12 ? "nd" : n % 10 === 3 && n !== 13 ? "rd" : "th");
-const secsLabel = (s) => (s < 60 ? `${s} seconds` : s % 60 ? `${Math.floor(s / 60)} min ${s % 60} s` : `${s / 60} minute${s === 60 ? "" : "s"}`);
+const secsLabel = (s) =>
+  s < 60 ? t("{n} seconds", { n: s }) : s % 60 ? t("{m} min {s} s", { m: Math.floor(s / 60), s: s % 60 }) : plural(s / 60, "1 minute", "{n} minutes");
 
 /** Fills `[data-tile][data-ic]` elements with their glyph (nav items get a tile + label). */
 function paintTiles() {
@@ -72,7 +75,7 @@ function paintTiles() {
 
 /** A button showing the current icon; opens a small grid of Material icons. */
 function iconPicker(current, onPick) {
-  const wrap = el(`<div class="icon-pick"><button type="button" class="icon-btn" title="Choose icon">${icon(current, 18)}</button></div>`);
+  const wrap = el(`<div class="icon-pick"><button type="button" class="icon-btn" title="${esc(t("Choose icon"))}">${icon(current, 18)}</button></div>`);
   const btn = wrap.firstChild;
   btn.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -157,10 +160,10 @@ function go(page) {
   $$("#nav a").forEach((a) => a.classList.toggle("active", a.dataset.page === navKey));
   $$(".page").forEach((p) => p.classList.toggle("active", p === sec));
   const navItem = $(`#nav a[data-page="${navKey}"]`);
-  $("#barTitle").textContent = sec.dataset.title;
+  $("#barTitle").textContent = t(sec.dataset.title);
   $("#back").hidden = !parent;
   $("#barTile").hidden = !!parent;
-  if (parent) $("#backLabel").textContent = $("#page-" + parent).dataset.title;
+  if (parent) $("#backLabel").textContent = t($("#page-" + parent).dataset.title);
   else {
     $("#barTile").dataset.tile = navItem.dataset.tile;
     $("#barTile").innerHTML = icon(navItem.dataset.ic + "_fill", 20);
@@ -205,13 +208,17 @@ function paintBreaks() {
 function refreshSummaries() {
   if (!S) return;
   const bgName = S.break_style === "split" ? "Split screen" : ({ blur: "Blurred desktop", image: "Your image", gradient: "Gradient" }[S.background] || (ANIMATED.find((a) => a.id === S.background)?.name ?? ""));
-  $("#vScreen").textContent = bgName;
-  $("#vLong").textContent = S.long_enabled ? `Every ${ordinal(S.long_every)} break is a ${S.long_mins} min long break` : "Off";
+  $("#vScreen").textContent = t(bgName);
+  $("#vLong").textContent = S.long_enabled ? t("Every {nth} break is a {mins} min long break", { nth: ordinal(S.long_every), mins: S.long_mins }) : t("Off");
   const oh = S.office_hours;
-  const days = oh.days.every(Boolean) ? "every day" : oh.days.slice(0, 5).every(Boolean) && !oh.days[5] && !oh.days[6] ? "weekdays" : oh.days.map((d, i) => (d ? DAY_NAMES[i] : null)).filter(Boolean).join(", ");
-  $("#vHours").textContent = oh.enabled ? `${oh.start} to ${oh.end} ${days}` : "Always on";
+  const days = oh.days.every(Boolean)
+    ? t("every day")
+    : oh.days.slice(0, 5).every(Boolean) && !oh.days[5] && !oh.days[6]
+      ? t("weekdays")
+      : oh.days.map((d, i) => (d ? dayName(i) : null)).filter(Boolean).join(", ");
+  $("#vHours").textContent = oh.enabled ? t("{from} to {to} {days}", { from: oh.start, to: oh.end, days }) : t("Always on");
   const n = S.planned.filter((p) => p.enabled).length;
-  $("#vPlanned").textContent = n ? `${n} planned` : "None";
+  $("#vPlanned").textContent = n ? plural(n, "1 planned", "{n} planned") : t("None");
 }
 
 function initBreaks() {
@@ -250,7 +257,7 @@ function initBreaks() {
 
 // ----------------------------------------------------------- break screen
 function soundOptions(sel, withNone) {
-  sel.innerHTML = (withNone ? `<option value="none">None</option>` : "") + SOUNDS.map((s) => `<option value="${s.id}">${s.name}</option>`).join("");
+  sel.innerHTML = (withNone ? `<option value="none">${esc(t("None"))}</option>` : "") + SOUNDS.map((s) => `<option value="${s.id}">${esc(t(s.name))}</option>`).join("");
 }
 
 function initScreen() {
@@ -267,7 +274,7 @@ function initScreen() {
   paintStyle();
   if (platform === "linux") {
     $("#splitBtn").disabled = true;
-    $("#splitBtn span:last-child").textContent = "Not available on Linux yet";
+    $("#splitBtn span:last-child").textContent = t("Not available on Linux yet");
   }
 
   // backgrounds
@@ -283,13 +290,13 @@ function initScreen() {
     ripple: "repeating-radial-gradient(circle at 50% 50%,rgba(159,216,203,.28) 0 2px,transparent 2px 16px),linear-gradient(135deg,#0e3b43,#12253d)",
   };
   if (platform !== "linux") {
-    box.appendChild(el(`<button class="swatch blurprev" data-bg="blur" title="Your desktop, frosted behind the countdown"><span>Blurred desktop</span></button>`));
+    box.appendChild(el(`<button class="swatch blurprev" data-bg="blur" title="${esc(t("Your desktop, frosted behind the countdown"))}"><span>${esc(t("Blurred desktop"))}</span></button>`));
   }
-  for (const a of ANIMATED) box.appendChild(el(`<button class="swatch" data-bg="${a.id}" style="background:${preview[a.id]}"><span>${a.name}</span></button>`));
+  for (const a of ANIMATED) box.appendChild(el(`<button class="swatch" data-bg="${a.id}" style="background:${preview[a.id]}"><span>${esc(t(a.name))}</span></button>`));
   for (const [id, g] of Object.entries(GRADIENTS)) {
-    box.appendChild(el(`<button class="swatch" data-bg="gradient" data-g="${id}" style="background:${g}"><span>${id[0].toUpperCase() + id.slice(1)}</span></button>`));
+    box.appendChild(el(`<button class="swatch" data-bg="gradient" data-g="${id}" style="background:${g}"><span>${esc(t(id[0].toUpperCase() + id.slice(1)))}</span></button>`));
   }
-  const img = el(`<button class="swatch upload" data-bg="image" title="Click to choose, double-click to replace"><span>Your image</span><b class="plus">${icon("add", 26)}</b></button>`);
+  const img = el(`<button class="swatch upload" data-bg="image" title="${esc(t("Click to choose, double-click to replace"))}"><span>${esc(t("Your image"))}</span><b class="plus">${icon("add", 26)}</b></button>`);
   box.appendChild(img);
   if (S.has_image) invoke("get_background").then((u) => { if (u) { img.style.backgroundImage = `url(${u})`; $(".plus", img)?.remove(); } });
   box.addEventListener("click", (e) => {
@@ -315,7 +322,7 @@ function initScreen() {
         $(".plus", img)?.remove();
         paint();
         save();
-        toast("Background image saved");
+        toast(t("Background image saved"));
       } catch (err) {
         toast(String(err));
       }
@@ -326,9 +333,9 @@ function initScreen() {
 
   // textures
   const tb = $("#texSwatches");
-  for (const [id, t] of Object.entries(TEXTURES)) {
-    const s = el(`<button class="swatch" data-t="${id}"><span>${t.name}</span></button>`);
-    s.style.cssText += t.css;
+  for (const [id, tex] of Object.entries(TEXTURES)) {
+    const s = el(`<button class="swatch" data-t="${id}"><span>${esc(tr(tex.name))}</span></button>`);
+    s.style.cssText += tex.css;
     tb.appendChild(s);
   }
   const paintT = () => $$(".swatch", tb).forEach((s) => s.classList.toggle("on", s.dataset.t === S.texture));
@@ -344,9 +351,10 @@ function initScreen() {
   // messages
   const renderMsgs = () => {
     const list = $("#msgList");
-    list.innerHTML = S.messages.length ? "" : `<div class="empty">No messages yet. A default one will be used.</div>`;
+    list.innerHTML = S.messages.length ? "" : `<div class="empty">${esc(t("No messages yet. A default one will be used."))}</div>`;
     S.messages.forEach((m, i) => {
-      const row = el(`<div class="item-row"><div class="grow"><input type="text" maxlength="140" value="${esc(m)}" /></div><button class="x" title="Remove">${X()}</button></div>`);
+      // untouched English defaults show translated; edits are stored as typed
+      const row = el(`<div class="item-row"><div class="grow"><input type="text" maxlength="140" value="${esc(tr(m))}" /></div><button class="x" title="${esc(t("Remove"))}">${X()}</button></div>`);
       $("input", row).addEventListener("input", (e) => { S.messages[i] = e.target.value; save(); });
       $(".x", row).onclick = () => { S.messages.splice(i, 1); renderMsgs(); save(); };
       list.appendChild(row);
@@ -376,17 +384,17 @@ function reminderCard(r, { builtin, onRemove }) {
   const card = el(`<div class="rem">
     <div class="rem-head">
       ${builtin ? `<span class="icon-badge">${icon(r.icon, 18)}</span>` : `<span class="pick"></span>`}
-      ${builtin ? `<div class="title">${esc(builtin)}</div>` : `<input type="text" class="title" maxlength="40" value="${esc(r.title)}" placeholder="Title" />`}
+      ${builtin ? `<div class="title">${esc(t(builtin))}</div>` : `<input type="text" class="title" maxlength="40" value="${esc(tr(r.title))}" placeholder="${esc(t("Title"))}" />`}
       <input type="checkbox" class="switch en" ${r.enabled ? "checked" : ""} />
-      ${onRemove ? `<button class="x" title="Delete">${X()}</button>` : ""}
+      ${onRemove ? `<button class="x" title="${esc(t("Delete"))}">${X()}</button>` : ""}
     </div>
     <div class="rem-grid">
-      <label>Every <input type="number" class="iv" min="1" max="480" value="${r.interval_mins}" /> min</label>
-      <label>Size <span class="stepper"><select class="sz"><option value="small">Small</option><option value="medium">Medium</option><option value="large">Large</option></select></span></label>
-      <label>Sound <span class="stepper"><select class="snd"></select></span></label>
-      <label><input type="checkbox" class="switch sticky" ${r.sticky ? "checked" : ""} /> Stay until done</label>
+      <label>${esc(t("Every"))} <input type="number" class="iv" min="1" max="480" value="${r.interval_mins}" /> ${esc(t("min"))}</label>
+      <label>${esc(t("Size"))} <span class="stepper"><select class="sz"><option value="small">${esc(t("Small"))}</option><option value="medium">${esc(t("Medium"))}</option><option value="large">${esc(t("Large"))}</option></select></span></label>
+      <label>${esc(t("Sound"))} <span class="stepper"><select class="snd"></select></span></label>
+      <label><input type="checkbox" class="switch sticky" ${r.sticky ? "checked" : ""} /> ${esc(t("Stay until done"))}</label>
     </div>
-    ${builtin ? "" : `<div style="margin-top:8px"><input type="text" class="body" maxlength="80" style="width:100%" value="${esc(r.body)}" placeholder="Optional description" /></div>`}
+    ${builtin ? "" : `<div style="margin-top:8px"><input type="text" class="body" maxlength="80" style="width:100%" value="${esc(tr(r.body))}" placeholder="${esc(t("Optional description"))}" /></div>`}
   </div>`);
   $(".pick", card)?.replaceWith(iconPicker(r.icon, (n) => { r.icon = n; save(); }));
   soundOptions($(".snd", card), true);
@@ -415,7 +423,7 @@ function initWellness() {
     S.wellness.custom.forEach((r, i) =>
       box.appendChild(reminderCard(r, { onRemove: () => { S.wellness.custom.splice(i, 1); renderCustom(); save(); } }))
     );
-    $("#customCount").textContent = `${S.wellness.custom.length} of 5`;
+    $("#customCount").textContent = t("{n} of 5", { n: S.wellness.custom.length });
     $("#addReminder").disabled = S.wellness.custom.length >= 5;
   };
   $("#addReminder").onclick = () => {
@@ -433,17 +441,17 @@ function initWellness() {
 // ------------------------------------------------------------------ smart
 function initSmart() {
   if (platform === "macos") {
-    $("#meetNote").textContent = "Detected while a Zoom meeting is running. Add other call apps under Focus apps.";
-    $("#fsNote").textContent = "Not available on macOS yet. Add specific apps below instead.";
+    $("#meetNote").textContent = t("Detected while a Zoom meeting is running. Add other call apps under Focus apps.");
+    $("#fsNote").textContent = t("Not available on macOS yet. Add specific apps below instead.");
   } else if (platform === "linux") {
-    $("#meetNote").textContent = "When any app is recording from your microphone.";
-    $("#fsNote").textContent = "Not available on Linux yet. Add specific apps below instead.";
+    $("#meetNote").textContent = t("When any app is recording from your microphone.");
+    $("#fsNote").textContent = t("Not available on Linux yet. Add specific apps below instead.");
   }
   const render = () => {
     const list = $("#appList");
-    list.innerHTML = S.smart.apps.length ? "" : `<div class="empty">No focus apps yet.</div>`;
+    list.innerHTML = S.smart.apps.length ? "" : `<div class="empty">${esc(t("No focus apps yet."))}</div>`;
     S.smart.apps.forEach((a, i) => {
-      const row = el(`<div class="item-row"><div class="grow">${esc(a)}</div><button class="x" title="Remove">${X()}</button></div>`);
+      const row = el(`<div class="item-row"><div class="grow">${esc(a)}</div><button class="x" title="${esc(t("Remove"))}">${X()}</button></div>`);
       $(".x", row).onclick = () => { S.smart.apps.splice(i, 1); render(); save(); };
       list.appendChild(row);
     });
@@ -464,8 +472,8 @@ function initSmart() {
 // --------------------------------------------------------------- schedule
 function daysPicker(arr) {
   const box = el(`<div class="days"></div>`);
-  DAYS.forEach((d, i) => {
-    const b = el(`<button class="${arr[i] ? "on" : ""}" title="${DAY_NAMES[i]}">${d}</button>`);
+  [0, 1, 2, 3, 4, 5, 6].forEach((i) => {
+    const b = el(`<button class="${arr[i] ? "on" : ""}" title="${esc(dayName(i))}">${esc(dayLetter(i))}</button>`);
     b.onclick = () => { arr[i] = !arr[i]; b.classList.toggle("on", arr[i]); save(); };
     box.appendChild(b);
   });
@@ -481,13 +489,13 @@ function initSchedule() {
       const card = el(`<div class="rem">
         <div class="rem-head">
           <span class="pick"></span>
-          <input type="text" class="title" maxlength="40" value="${esc(p.title)}" />
+          <input type="text" class="title" maxlength="40" value="${esc(tr(p.title))}" />
           <input type="checkbox" class="switch en" ${p.enabled ? "checked" : ""} />
-          <button class="x" title="Delete">${X()}</button>
+          <button class="x" title="${esc(t("Delete"))}">${X()}</button>
         </div>
         <div class="rem-grid">
-          <label>At <input type="time" class="tm" value="${esc(p.time)}" /></label>
-          <label>For <input type="number" class="du" min="1" max="240" value="${p.duration_mins}" /> min</label>
+          <label>${esc(t("At"))} <input type="time" class="tm" value="${esc(p.time)}" /></label>
+          <label>${esc(t("For"))} <input type="number" class="du" min="1" max="240" value="${p.duration_mins}" /> ${esc(t("min"))}</label>
           <span class="dp"></span>
         </div></div>`);
       $(".dp", card).replaceWith(daysPicker(p.days));
@@ -531,7 +539,7 @@ function accelFrom(e) {
   return [...mods, k].join("+");
 }
 const pretty = (a) => {
-  if (!a) return "Not set";
+  if (!a) return t("Not set");
   const mac = platform === "macos";
   return a.replace("CmdOrCtrl", mac ? "⌘" : "Ctrl").replace("Alt", mac ? "⌥" : "Alt").replace("Shift", mac ? "⇧" : "Shift").replaceAll("+", mac ? " " : " + ");
 };
@@ -540,7 +548,7 @@ function initShortcuts() {
   for (const input of $$("[data-keys]")) {
     const path = input.dataset.keys;
     input.value = pretty(get(path));
-    input.addEventListener("focus", () => (input.value = "Press keys…"));
+    input.addEventListener("focus", () => (input.value = t("Press keys…")));
     input.addEventListener("blur", () => (input.value = pretty(get(path))));
     input.addEventListener("keydown", (e) => {
       e.preventDefault();
@@ -551,7 +559,7 @@ function initShortcuts() {
       set(path, a);
       input.blur();
       save();
-      toast("Shortcut saved");
+      toast(t("Shortcut saved"));
     });
   }
 }
@@ -587,10 +595,15 @@ async function renderStats() {
   const chart = $("#chart");
   chart.innerHTML = "";
   for (const d of days) {
-    chart.appendChild(el(`<div class="bar" title="${d.date.toDateString()}\nScreen time: ${fmtHuman(d.screen_secs || 0)}\nBreaks taken: ${d.breaks_taken || 0} · skipped: ${d.breaks_skipped || 0}">
+    const tip = [
+      d.date.toLocaleDateString(locale(), { weekday: "long", day: "numeric", month: "long" }),
+      t("Screen time: {t}", { t: fmtHuman(d.screen_secs || 0) }),
+      t("Breaks taken: {n} · skipped: {m}", { n: d.breaks_taken || 0, m: d.breaks_skipped || 0 }),
+    ].join("\n");
+    chart.appendChild(el(`<div class="bar" title="${esc(tip)}">
       <div class="a" style="height:${((d.screen_secs || 0) / max) * 82}%"></div>
       <div class="b" style="opacity:${0.25 + 0.75 * ((d.breaks_taken || 0) / maxB)}"></div>
-      <div class="d">${d.date.toLocaleDateString(undefined, { weekday: "short" }).slice(0, 2)}</div></div>`));
+      <div class="d">${esc(d.date.toLocaleDateString(locale(), { weekday: "short" }).slice(0, 3))}</div></div>`));
   }
 }
 
@@ -605,12 +618,12 @@ function initStats() {
     // two clicks within 3 s, instead of a modal dialog
     if (Date.now() - confirmReset > 3000) {
       confirmReset = Date.now();
-      $("#resetStats").textContent = "Click again to delete all stats";
-      setTimeout(() => ($("#resetStats").textContent = "Reset stats"), 3000);
+      $("#resetStats").textContent = t("Click again to delete all stats");
+      setTimeout(() => ($("#resetStats").textContent = t("Reset stats")), 3000);
       return;
     }
     await invoke("reset_stats");
-    $("#resetStats").textContent = "Reset stats";
+    $("#resetStats").textContent = t("Reset stats");
     renderStats();
     refreshToday();
   };
@@ -632,18 +645,18 @@ function renderState(s) {
   const ring = $("#homeRing");
   if (s.phase === "break" && s.break) {
     $("#homeCount").textContent = fmtClock(s.break.total_secs - s.break.elapsed_secs);
-    $("#homeSub").textContent = "of break left";
+    $("#homeSub").textContent = t("of break left");
     ring.style.strokeDashoffset = String(326.7 * (s.break.elapsed_secs / s.break.total_secs));
   } else {
     $("#homeCount").textContent = fmtClock(left);
-    $("#homeSub").textContent = s.next_is_long ? "until long break" : "until next break";
+    $("#homeSub").textContent = t(s.next_is_long ? "until long break" : "until next break");
     ring.style.strokeDashoffset = String(326.7 * Math.min(1, s.work_secs / s.interval_secs));
   }
-  $("#homePhase").textContent = PHASES[s.phase] || "Working";
+  $("#homePhase").textContent = t(PHASES[s.phase] || "Working");
   $("#homeLabel").textContent = s.label;
   $("#homeSkip").disabled = s.skip_difficulty === "hardcore";
   const pause = $("#homePause");
-  pause.textContent = s.phase === "paused" ? "Resume" : "Pause 30 min";
+  pause.textContent = t(s.phase === "paused" ? "Resume" : "Pause 30 min");
   pause.onclick = () => (s.phase === "paused" ? action("resume") : action("pause", 30));
   const side = $("#sideStatus");
   side.textContent = s.label;
@@ -655,33 +668,36 @@ function renderUpdate(u) {
   $("#updateBanner").hidden = !u;
   $("#sideUpdate").hidden = !u;
   if (!u) return;
-  $("#updVersion").textContent = "v" + u.version;
+  $("#updTitle").textContent = t("Yonder {v} is available", { v: "v" + u.version });
+  // our own trusted markup (contains a <code> tag)
   $("#updHint").innerHTML =
     platform === "macos"
-      ? `Installed with Homebrew? Run <code>brew upgrade --cask yonder</code>. Otherwise download the new .dmg.`
-      : "Download the new installer from the release page.";
+      ? t("Installed with Homebrew? Run <code>brew upgrade --cask yonder</code>. Otherwise download the new .dmg.")
+      : esc(t("Download the new installer from the release page."));
   $("#updGet").onclick = () => invoke("open_url", { url: u.url });
   $("#updSkip").onclick = async () => {
     await invoke("skip_update", { version: u.version });
-    $("#updStatus").textContent = `Skipped v${u.version}. You'll hear about the next one.`;
+    $("#updStatus").textContent = t("Skipped v{v}. You'll hear about the next one.", { v: u.version });
   };
-  $("#updStatus").textContent = `Version ${u.version} is available.`;
+  $("#updStatus").textContent = t("Version {v} is available.", { v: u.version });
 }
 
 async function initUpdates() {
-  $("#appVersion").textContent = await invoke("app_version");
+  const version = await invoke("app_version");
+  $("#aboutVersion").textContent = `${t("Version {v}", { v: version })} · ${t("Look up. Look far. Get back to it.")}`;
   renderUpdate(await invoke("get_update"));
   listen("update-status", renderUpdate);
   $("#updCheck").onclick = async () => {
     const btn = $("#updCheck");
     btn.disabled = true;
-    $("#updStatus").textContent = "Checking…";
+    $("#updStatus").textContent = t("Checking…");
     try {
       const u = await invoke("check_updates_now");
       renderUpdate(u);
-      if (!u) $("#updStatus").textContent = `You're on the latest version (checked ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}).`;
+      const time = new Date().toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit" });
+      if (!u) $("#updStatus").textContent = t("You're on the latest version (checked {time}).", { time });
     } catch (e) {
-      $("#updStatus").textContent = String(e);
+      $("#updStatus").textContent = tr(String(e));
     } finally {
       btn.disabled = false;
     }
@@ -701,10 +717,32 @@ function initWindowControls() {
   $("#wClose").onclick = () => win.close();
 }
 
+// --------------------------------------------------------------- language
+function initLanguage() {
+  const sel = $("#langSel");
+  sel.innerHTML =
+    `<option value="system">${esc(t("System default"))}</option>` +
+    LANGUAGES.map((l) => `<option value="${l.code}">${esc(l.name)}</option>`).join("");
+  sel.value = S.language || "system";
+  sel.addEventListener("change", async () => {
+    S.language = sel.value;
+    clearTimeout(saveTimer);
+    await invoke("save_settings", { settings: S }); // also re-labels the tray
+    location.reload();
+  });
+  // ordinal option labels for "Every Nth break"
+  $$("select[data-bind='long_every'] option").forEach((o) => (o.textContent = t("{nth} break", { nth: ordinal(Number(o.value)) })));
+}
+
 // ------------------------------------------------------------------- init
 async function init() {
   [S, platform] = await Promise.all([invoke("get_settings"), invoke("platform_name")]);
   applyTheme(S.theme);
+  await initI18n(S.language);
+  // Translate the static markup once, before anything dynamic is rendered
+  // (dynamic content is built with t() directly).
+  applyI18n(document);
+  initLanguage();
   initWindowControls();
   paintTiles();
   hydrateIcons();

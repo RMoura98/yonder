@@ -24,11 +24,16 @@
   </style>
 </head>
 <body>
-  <div class="pill"><span class="dot" id="dot"></span><span>Starting break in <span id="n">5</span></span></div>
+  <div class="pill"><span class="dot" id="dot"></span><span id="label">Starting break in <span id="n">5</span></span></div>
   <script type="module">
     import { listen, invoke } from "./js/api.js";
     import { icon } from "./js/icons.js";
+    import { initI18n, t } from "./js/i18n.js";
     document.getElementById("dot").innerHTML = icon("spa_fill", 15);
+    const settings = await invoke("get_settings");
+    await initI18n(settings.language);
+    // the number keeps its own element so it can animate
+    document.getElementById("label").innerHTML = t("Starting break in {n}", { n: '<span id="n">5</span>' });
     const n = document.getElementById("n");
     const render = (s) => {
       if (s.phase !== "working") return;

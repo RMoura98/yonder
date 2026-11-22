@@ -2,12 +2,14 @@ import { invoke, listen, action, applyTheme } from "./api.js";
 import { playSound } from "./sounds.js";
 import { animate, GRADIENTS, TEXTURES } from "./backgrounds.js";
 import { icon, hydrateIcons } from "./icons.js";
+import { initI18n, applyI18n, t, tr, locale } from "./i18n.js";
 
 const $ = (id) => document.getElementById(id);
 const primary = new URLSearchParams(location.search).get("primary") === "1";
 let settings;
 let stopAnim = () => {};
 let ended = false;
+let ready = false; // render only once the language is loaded
 
 const SUBTITLES = {
   short: "Rest your eyes on something far away until the countdown ends.",
@@ -35,13 +37,16 @@ function setTime(secs) {
 }
 
 function tickClock() {
-  $("clock").innerHTML = icon("schedule", 14) + new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  $("clock").innerHTML = icon("schedule", 14) + new Date().toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit" });
 }
 
 // ------------------------------------------------------------------ setup
 async function init() {
   settings = await invoke("get_settings");
   applyTheme(settings.theme);
+  await initI18n(settings.language);
+  applyI18n(document);
+  ready = true;
   hydrateIcons();
   if (!primary) document.body.classList.add("secondary");
   tickClock();
@@ -95,7 +100,7 @@ async function setupBackdrop() {
 let lastKind;
 function render(s) {
   const b = s.break;
-  if (!b || ended) return;
+  if (!b || ended || !ready) return;
   setTime(b.total_secs - b.elapsed_secs);
   $("bar").style.transform = `scaleX(${Math.min(1, (b.elapsed_secs + 1) / b.total_secs)})`;
 
@@ -103,9 +108,9 @@ function render(s) {
     lastKind = b.kind + b.message;
     const kindLabel = { long: "Long break", planned: b.title, custom: "Break time", short: "Short break" }[b.kind] || "Break";
     $("kind").innerHTML = (b.icon ? icon(b.icon, 15) : "") + `<span></span>`;
-    $("kind").lastChild.textContent = kindLabel;
-    $("title").textContent = b.message;
-    $("sub").textContent = SUBTITLES[b.kind] || SUBTITLES.short;
+    $("kind").lastChild.textContent = b.kind === "planned" ? tr(kindLabel) : t(kindLabel);
+    $("title").textContent = tr(b.message);
+    $("sub").textContent = t(SUBTITLES[b.kind] || SUBTITLES.short);
   }
 
   const skip = $("skip"), end = $("end"), hint = $("hint");
@@ -113,11 +118,11 @@ function render(s) {
   skip.hidden = s.can_end || s.skip_difficulty === "hardcore";
   if (!skip.hidden) {
     skip.disabled = !s.can_skip;
-    skip.querySelector(".lbl").textContent = s.can_skip ? "Skip break" : `Skip in ${s.skip_in}s`;
+    skip.querySelector(".lbl").textContent = s.can_skip ? t("Skip break") : t("Skip in {n}s", { n: s.skip_in });
   }
-  if (s.can_end) hint.innerHTML = `Press <kbd>Esc</kbd> to end the break`;
-  else if (s.can_skip) hint.innerHTML = `Press <kbd>Esc</kbd> twice to skip`;
-  else if (s.skip_difficulty === "hardcore") hint.textContent = "Hardcore mode. No skipping — you've got this.";
+  if (s.can_end) hint.innerHTML = t("Press <kbd>Esc</kbd> to end the break");
+  else if (s.can_skip) hint.innerHTML = t("Press <kbd>Esc</kbd> twice to skip");
+  else if (s.skip_difficulty === "hardcore") hint.textContent = t("Hardcore mode. No skipping — you've got this.");
   else hint.textContent = "";
 }
 
