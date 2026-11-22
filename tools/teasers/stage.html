@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Yonder teaser stage</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 1600px; height: 1000px; overflow: hidden; background: #071a1e; }
+  body { font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+
+  /* ------------------------------------------------------------ wallpaper */
+  #desktop { position: absolute; inset: 0; overflow: hidden;
+    background:
+      radial-gradient(60% 55% at 78% 92%, rgba(244,194,107,.85) 0%, rgba(232,135,90,.45) 30%, transparent 62%),
+      radial-gradient(70% 60% at 15% 10%, rgba(31,122,122,.55) 0%, transparent 60%),
+      radial-gradient(90% 70% at 50% 120%, rgba(159,216,203,.25) 0%, transparent 70%),
+      linear-gradient(170deg, #062227 0%, #0b3a41 45%, #155a5c 75%, #2f6f68 100%);
+  }
+  #desktop::before { /* soft horizon band */
+    content: ""; position: absolute; left: -10%; right: -10%; top: 62%; height: 260px;
+    background: radial-gradient(50% 50% at 60% 50%, rgba(255,233,194,.22), transparent 70%);
+    filter: blur(10px);
+  }
+  .hills { position: absolute; left: 0; right: 0; bottom: 48px; height: 340px; }
+
+  /* --------------------------------------------------------------- windows */
+  .win { position: absolute; border-radius: 9px; overflow: hidden; box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 24px 60px rgba(0,0,0,.45), 0 4px 14px rgba(0,0,0,.3); }
+  .titlebar { height: 34px; display: flex; align-items: center; padding: 0 0 0 12px; font-size: 12px; gap: 8px; }
+  .titlebar .t { flex: 1; }
+  .titlebar .ctl { display: flex; } .titlebar .ctl i { width: 44px; height: 34px; display: grid; place-items: center; font-style: normal; opacity: .7; font-size: 12px; }
+
+  #editor { left: 150px; top: 110px; width: 900px; height: 600px; background: #1b1d22; color: #c9d1d9; }
+  #editor .titlebar { background: #15171b; color: #9aa4ae; }
+  #editor .body { display: grid; grid-template-columns: 210px 1fr; height: calc(100% - 34px); }
+  #editor .tree { background: #17191d; border-right: 1px solid #23262c; padding: 12px 0; font-size: 12.5px; color: #8b949e; }
+  #editor .tree div { padding: 3px 16px; white-space: nowrap; }
+  #editor .tree .dir { color: #c9d1d9; font-weight: 600; }
+  #editor .tree .on { background: #23303a; color: #e6edf3; }
+  #editor .main { display: flex; flex-direction: column; min-width: 0; }
+  #editor .tabs { display: flex; background: #15171b; font-size: 12px; }
+  #editor .tabs span { padding: 8px 16px; color: #8b949e; border-right: 1px solid #23262c; }
+  #editor .tabs span.on { background: #1b1d22; color: #e6edf3; box-shadow: inset 0 2px 0 #7bcfc3; }
+  #editor pre { margin: 0; padding: 14px 0; font: 13px/1.62 "Cascadia Code", Consolas, monospace; counter-reset: ln; }
+  #editor pre div { padding-left: 64px; position: relative; white-space: pre; }
+  #editor pre div::before { counter-increment: ln; content: counter(ln); position: absolute; left: 0; width: 44px; text-align: right; color: #4b535d; }
+  #editor pre div.cur { background: rgba(123,207,195,.06); }
+  .k { color: #ff7b72; } .f { color: #d2a8ff; } .s { color: #a5d6ff; } .c { color: #6e7781; font-style: italic; } .n { color: #79c0ff; } .ty { color: #ffa657; }
+
+  #browser { left: 920px; top: 330px; width: 560px; height: 420px; background: #fbfcfc; color: #0b1f24; }
+  #browser .titlebar { background: #e8eeec; color: #4e6569; }
+  #browser .url { margin: 0 8px 0 0; flex: 1; background: #fff; border-radius: 6px; padding: 4px 10px; color: #4e6569; font-size: 11.5px; }
+  #browser .page { padding: 26px 30px; }
+  #browser h2 { margin: 0 0 6px; font-size: 22px; letter-spacing: -.01em; }
+  #browser p { margin: 0 0 10px; font-size: 13px; color: #4e6569; line-height: 1.55; }
+  #browser .skel { height: 9px; border-radius: 5px; background: #e3eae8; margin: 9px 0; }
+  #browser .card { margin-top: 16px; display: flex; gap: 12px; }
+  #browser .card div { flex: 1; height: 90px; border-radius: 10px; background: linear-gradient(160deg, #0e3b43, #1f7a7a 70%, #f4c26b); }
+  #browser .card div:nth-child(2) { background: linear-gradient(160deg, #f4c26b, #e8875a); }
+
+  /* --------------------------------------------------------------- taskbar */
+  #taskbar { position: absolute; left: 0; right: 0; bottom: 0; height: 48px; background: rgba(12, 26, 29, .82); backdrop-filter: blur(24px); border-top: 1px solid rgba(255,255,255,.07); display: flex; align-items: center; color: #e4efed; }
+  #taskbar .apps { position: absolute; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; }
+  #taskbar .apps i { width: 38px; height: 38px; border-radius: 6px; display: grid; place-items: center; }
+  #taskbar .apps i.on { background: rgba(255,255,255,.08); }
+  #taskbar .apps b { width: 22px; height: 22px; border-radius: 5px; display: block; }
+  #taskbar .tray { margin-left: auto; display: flex; align-items: center; gap: 14px; padding-right: 16px; font-size: 12px; }
+  #taskbar .tray .yd { width: 30px; height: 30px; border-radius: 5px; display: grid; place-items: center; background: rgba(255,255,255,.07); }
+  #taskbar .clock { text-align: right; line-height: 1.25; }
+
+  /* ---------------------------------------------------------- app overlays */
+  #overlays { position: absolute; inset: 0; pointer-events: none; }
+  #overlays iframe { position: absolute; border: 0; background: transparent; color-scheme: light; }
+  iframe.full { left: 0; top: 0; width: 1600px; height: 1000px; }
+  iframe.settings { border-radius: 10px; box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 30px 80px rgba(0,0,0,.5), 0 6px 18px rgba(0,0,0,.35); }
+
+  #cursor { position: absolute; left: 0; top: 0; width: 22px; height: 30px; z-index: 50; transform: translate(700px, 520px); filter: drop-shadow(0 2px 3px rgba(0,0,0,.4)); }
+  #cursor.hidden { opacity: 0; }
+  #ripple { position: absolute; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; border: 2px solid rgba(255,255,255,.85); opacity: 0; z-index: 49; }
+  body.dim #editor, body.dim #browser { filter: brightness(.7) saturate(.9); }
+</style>
+</head>
+<body>
+<div id="desktop">
+  <svg class="hills" viewBox="0 0 1600 340" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 210 C 240 160 420 230 640 190 S 1040 120 1260 170 S 1520 210 1600 190 L1600 340 L0 340 Z" fill="rgba(7,26,30,.45)"/>
+    <path d="M0 260 C 300 220 520 290 820 250 S 1300 210 1600 250 L1600 340 L0 340 Z" fill="rgba(7,26,30,.65)"/>
+  </svg>
+
+  <div class="win" id="browser">
+    <div class="titlebar"><span class="url">yonder.app/docs/20-20-20</span><span class="ctl"><i>—</i><i>▢</i><i>✕</i></span></div>
+    <div class="page">
+      <h2>The 20-20-20 rule</h2>
+      <p>Every 20 minutes, look at something 20 feet away for 20 seconds. It relaxes the muscles that focus your eyes.</p>
+      <div class="skel" style="width:92%"></div><div class="skel" style="width:84%"></div><div class="skel" style="width:61%"></div>
+      <div class="card"><div></div><div></div></div>
+    </div>
+  </div>
+
+  <div class="win" id="editor">
+    <div class="titlebar"><span class="t">engine.rs — yonder</span><span class="ctl"><i>—</i><i>▢</i><i>✕</i></span></div>
+    <div class="body">
+      <div class="tree">
+        <div class="dir">▾ yonder</div><div>&nbsp;&nbsp;▸ website</div><div class="dir">&nbsp;&nbsp;▾ app</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;▸ src</div><div class="dir">&nbsp;&nbsp;&nbsp;&nbsp;▾ src-tauri</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Cargo.toml</div><div class="on">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;engine.rs</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lib.rs</div><div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;platform.rs</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;settings.rs</div><div>&nbsp;&nbsp;README.md</div>
+      </div>
+      <div class="main">
+        <div class="tabs"><span class="on">engine.rs</span><span>lib.rs</span><span>platform.rs</span></div>
+<pre><div><span class="c">// Active screen time.</span></div><div><span class="n">self</span>.e.work_secs <span class="k">+=</span> <span class="n">1</span>;</div><div><span class="n">self</span>.<span class="f">tick_reminders</span>(<span class="n">true</span>, <span class="k">&amp;mut</span> fx);</div><div> </div><div><span class="k">let</span> interval <span class="k">=</span> <span class="n">self</span>.<span class="f">interval_secs</span>();</div><div><span class="k">if</span> <span class="n">self</span>.e.smart_reason.<span class="f">is_some</span>() {</div><div>    <span class="n">self</span>.<span class="f">hide_prebreak</span>(<span class="k">&amp;mut</span> fx);</div><div>    <span class="k">return</span> fx;</div><div>}</div><div> </div><div><span class="k">let</span> lead <span class="k">=</span> <span class="n">self</span>.settings.prebreak_secs <span class="k">as</span> <span class="ty">u64</span>;</div><div class="cur"><span class="k">if</span> <span class="n">self</span>.settings.prebreak_enabled</div><div>    <span class="k">&amp;&amp;</span> <span class="k">!</span><span class="n">self</span>.e.prebreak_shown</div><div>    <span class="k">&amp;&amp;</span> <span class="n">self</span>.e.work_secs <span class="k">+</span> lead <span class="k">&gt;=</span> interval</div><div>{</div><div>    <span class="n">self</span>.e.prebreak_shown <span class="k">=</span> <span class="n">true</span>;</div><div>    fx.<span class="f">push</span>(<span class="ty">Effect</span>::<span class="ty">ShowPrebreak</span>);</div><div>}</div><div> </div><div><span class="k">if</span> <span class="n">self</span>.e.work_secs <span class="k">&gt;=</span> interval {</div><div>    <span class="c">// wait politely while you're still typing</span></div><div>    <span class="n">self</span>.<span class="f">start_scheduled_break</span>(<span class="k">&amp;mut</span> fx);</div><div>}</div><div>fx</div></pre>
+      </div>
+    </div>
+  </div>
+
+  <div id="taskbar">
+    <div class="apps">
+      <i><b style="background:linear-gradient(135deg,#7bcfc3,#1f7a7a)"></b></i>
+      <i class="on"><b style="background:linear-gradient(135deg,#5c9be0,#2e62a6)"></b></i>
+      <i class="on"><b style="background:linear-gradient(135deg,#f4c26b,#e8875a)"></b></i>
+      <i><b style="background:linear-gradient(135deg,#a496e6,#6a58c2)"></b></i>
+      <i><b style="background:linear-gradient(135deg,#93a4ab,#5e6f77)"></b></i>
+    </div>
+    <div class="tray">
+      <span style="opacity:.7">⌃</span>
+      <span class="yd"><svg width="16" height="16" viewBox="0 0 16 16" fill="#fff"><path d="M3 9A5 5 0 0 1 13 9Z"/><rect x="1" y="10" width="14" height="2" rx="1"/><rect x="5" y="13.5" width="6" height="1.5" rx=".75"/></svg></span>
+      <span>ENG</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e4efed" stroke-width="2" stroke-linecap="round"><path d="M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0"/><circle cx="12" cy="19.5" r="1" fill="#e4efed"/></svg>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e4efed" stroke-width="2" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>
+      <div class="clock">14:32<br/>22/11/2026</div>
+    </div>
+  </div>
+</div>
+
+<div id="overlays"></div>
+<div id="ripple"></div>
+<svg id="cursor" viewBox="0 0 22 30"><path d="M2 2 L2 24 L8 18.5 L12 27.5 L15.5 26 L11.6 17.2 L19.5 17.2 Z" fill="#fff" stroke="#111" stroke-width="1.5" stroke-linejoin="round"/></svg>
+
+<script src="/stage.js"></script>
+</body>
+</html>

@@ -74,7 +74,8 @@ simply shows in English.
   (`feat(ui): …`, `fix(core): …`, `docs: …`).
 - Match the existing style: `cargo fmt` for Rust; for the UI, plain modern JavaScript and the CSS tokens in
   `app/src/css/base.css` (both light and dark themes).
-- UI changes: please attach a screenshot or short clip.
+- UI changes: please attach a screenshot or short clip, and if the change shows up in a teaser, re-record it with
+  `node tools/teasers/teasers.mjs <scene>` (see [tools/teasers](tools/teasers/README.md)) and commit the new media too.
 - Respect privacy: Yonder never sends data anywhere. New features must keep it that way.
 
 ## Code of conduct
