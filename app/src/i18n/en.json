@@ -379,5 +379,7 @@
   "Screen sharing & recording": "Screen sharing & recording",
   "Screen recorders like OBS, and mirrored displays.": "Screen recorders like OBS, and mirrored displays.",
   "Screen recorders like OBS, and PipeWire screen sharing.": "Screen recorders like OBS, and PipeWire screen sharing.",
-  "you're sharing or recording your screen": "you're sharing or recording your screen"
+  "you're sharing or recording your screen": "you're sharing or recording your screen",
+  "Show countdown next to the icon": "Show countdown next to the icon",
+  "Shows the time until your next break beside the tray icon, where your system supports it (macOS menu bar, some Linux panels).": "Shows the time until your next break beside the tray icon, where your system supports it (macOS menu bar, some Linux panels)."
 }

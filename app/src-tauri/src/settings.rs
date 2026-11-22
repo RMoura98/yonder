@@ -229,6 +229,8 @@ pub struct Settings {
     pub onboarded: bool,
     /// Ask GitHub for a newer release every few hours.
     pub check_updates: bool,
+    /// Show the time until the next break beside the tray icon (macOS menu bar, some Linux panels).
+    pub tray_countdown: bool,
     /// A release the user chose to skip (e.g. "1.1.0").
     pub skipped_update: String,
     /// "system" or a language code: en, pt, es, fr, de
@@ -287,6 +289,7 @@ impl Default for Settings {
             theme: "system".into(),
             onboarded: false,
             check_updates: true,
+            tray_countdown: true,
             skipped_update: String::new(),
             custom_sounds: Vec::new(),
             language: "system".into(),

@@ -115,6 +115,8 @@ sudo apt update &amp;&amp; sudo apt install yonder</code></pre>
         <p>Every release includes <code>SHA256SUMS.txt</code>. Put it next to the file you downloaded and run <code>sha256sum -c --ignore-missing SHA256SUMS.txt</code> on Linux or <code>shasum -a 256 -c --ignore-missing SHA256SUMS.txt</code> on macOS. On Windows, compare <code>(Get-FileHash .\Yonder_*_x64-setup.exe).Hash</code> with the matching line.</p>
         <h3>Start at login</h3>
         <p>Enable <em>Settings → General → Launch at login</em> so Yonder is always ready.</p>
+        <h3>Countdown next to the tray icon</h3>
+        <p>On macOS (and in some Linux panels) the time until your next break is shown beside the tray icon. If you prefer an icon-only menu bar, turn off <em>Settings → General → Show countdown next to the icon</em>; it takes effect immediately. Windows can't show text beside a tray icon, so the setting is hidden there (the countdown stays in the icon's tooltip).</p>
       </section>
 
       <section class="doc-section" id="break-modes">

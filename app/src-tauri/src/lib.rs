@@ -379,7 +379,10 @@ fn update_tray(app: &AppHandle, snap: &Snapshot) {
         drop(last);
         let _ = tray.set_tooltip(Some(format!("Yonder — {}", snap.label)));
         // Text next to the tray icon (macOS menu bar, some Linux panels; ignored on Windows).
+        // Icon-only when the user turned the countdown off (the tooltip still has it).
+        let show = st.core.lock().unwrap().settings.tray_countdown;
         let title = match snap.phase {
+            _ if !show => String::new(),
             "break" => i18n::tr(lang, "Break", &[]),
             "paused" => i18n::tr(lang, "Paused", &[]),
             "working" | "smart" | "away" => {

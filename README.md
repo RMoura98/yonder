@@ -25,6 +25,7 @@ desktop into a calm break screen, and stays out of the way while you're in a cal
 - **Your own sounds.** Fifteen built-in synthesized sounds, or add any MP3, WAV, OGG or M4A file and use it for breaks or for each reminder.
 - **Heads-up, never a surprise.** A frosted heads-up card before each break (start now, +1m, +5m, +15m), and a countdown that follows your cursor for the last five seconds.
 - **Waits for the right moment.** Won't start while you type; pauses for meetings, fullscreen apps, Do Not Disturb / Focus and the focus apps you choose, but never holds a break for more than an hour (you pick the limit); time away from the computer counts as a break.
+- **Icon-only tray.** Hide the countdown next to the tray icon in Settings → General (where your system shows one: macOS menu bar, some Linux panels).
 - **Pauses your music.** Optionally pauses music and video when a break starts and resumes only what it paused (system media controls on Windows, Music/Spotify on macOS, playerctl on Linux).
 - **Set up in three steps.** The first time you open Yonder: language, rhythm and break style. Skip it if you like.
 - **Posture & blink reminders.** Small liquid-glass widgets that appear, animate and disappear. Up to five custom reminders with their own icon, interval and sound.

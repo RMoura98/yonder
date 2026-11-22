@@ -379,5 +379,7 @@
   "Screen sharing & recording": "Partilha e gravação de ecrã",
   "Screen recorders like OBS, and mirrored displays.": "Gravadores de ecrã como o OBS e ecrãs espelhados.",
   "Screen recorders like OBS, and PipeWire screen sharing.": "Gravadores de ecrã como o OBS e partilha de ecrã via PipeWire.",
-  "you're sharing or recording your screen": "estás a partilhar ou a gravar o ecrã"
+  "you're sharing or recording your screen": "estás a partilhar ou a gravar o ecrã",
+  "Show countdown next to the icon": "Mostrar a contagem junto ao ícone",
+  "Shows the time until your next break beside the tray icon, where your system supports it (macOS menu bar, some Linux panels).": "Mostra o tempo até à próxima pausa junto ao ícone da bandeja, onde o sistema o permita (barra de menus do macOS, alguns painéis Linux)."
 }
