@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Yonder break</title>
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/break.css" />
+</head>
+<body class="loading">
+  <div id="backdrop" hidden><canvas id="canvas"></canvas><div id="image"></div></div>
+  <div id="blur" hidden></div>
+
+  <!-- split-screen style: two halves of the desktop slide apart -->
+  <div id="split" hidden>
+    <div id="texture"></div>
+    <div class="half top"></div>
+    <div class="half bottom"></div>
+  </div>
+
+  <div id="clock" class="stagger s1"></div>
+
+  <main id="content">
+    <div class="kind stagger s1" id="kind"></div>
+    <h1 class="title stagger s2" id="title"></h1>
+    <p class="sub stagger s3" id="sub"></p>
+    <div class="progress stagger s3"><i id="bar"></i></div>
+    <div class="time stagger s4" id="time" aria-live="off"></div>
+  </main>
+
+  <footer id="foot">
+    <div class="actions stagger s5">
+      <button class="pill" id="skip"><span class="ic" data-icon="skip_next"></span><span class="lbl">Skip break</span></button>
+      <button class="pill" id="end" hidden><span class="ic" data-icon="check"></span><span class="lbl">End break</span></button>
+      <button class="pill" id="lock"><span class="ic" data-icon="lock"></span><span class="lbl">Lock screen</span></button>
+    </div>
+    <div class="hint stagger s5" id="hint"></div>
+  </footer>
+
+  <script type="module" src="js/break.js"></script>
+</body>
+</html>
