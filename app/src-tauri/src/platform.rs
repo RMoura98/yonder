@@ -51,42 +51,124 @@ pub fn idle_secs() -> u64 {
     }
 }
 
+/// Parse `gdbus call` output such as `(uint64 1234,)` or `(uint32 1234,)`
+/// into milliseconds.
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+fn parse_gdbus_millis(out: &str) -> Option<u64> {
+    let digits: String = out
+        .split_whitespace()
+        .nth(1)?
+        .chars()
+        .filter(|c| c.is_ascii_digit())
+        .collect();
+    digits.parse().ok()
+}
+
+/// True on a Wayland session. There XWayland only sees input sent to X
+/// clients, so `xprintidle` would report a bogus "idle" time and must not be used.
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+fn is_wayland_session(session_type: Option<&str>, wayland_display: Option<&str>) -> bool {
+    session_type.map_or(false, |t| t.eq_ignore_ascii_case("wayland"))
+        || wayland_display.map_or(false, |d| !d.is_empty())
+}
+
+#[cfg(target_os = "linux")]
+fn gdbus_idle_ms(dest: &str, path: &str, method: &str) -> Option<u64> {
+    let out = Command::new("gdbus")
+        .args(["call", "--session", "--dest", dest, "--object-path", path, "--method", method])
+        .output()
+        .ok()?;
+    if !out.status.success() {
+        return None;
+    }
+    parse_gdbus_millis(&String::from_utf8_lossy(&out.stdout))
+}
+
+/// Idle backends, tried in order; the last one that worked is tried first.
+#[cfg(target_os = "linux")]
+#[derive(Clone, Copy, PartialEq)]
+enum IdleSource {
+    XPrintIdle,
+    /// GNOME / Mutter.
+    Mutter,
+    /// KDE Plasma (KWin) implements the freedesktop ScreenSaver interface.
+    ScreenSaver,
+}
+
+#[cfg(target_os = "linux")]
+fn idle_from(src: IdleSource) -> Option<u64> {
+    match src {
+        IdleSource::XPrintIdle => {
+            let out = quiet(&mut Command::new("xprintidle")).output().ok()?;
+            if !out.status.success() {
+                return None;
+            }
+            String::from_utf8_lossy(&out.stdout).trim().parse::<u64>().ok()
+        }
+        IdleSource::Mutter => gdbus_idle_ms(
+            "org.gnome.Mutter.IdleMonitor",
+            "/org/gnome/Mutter/IdleMonitor/Core",
+            "org.gnome.Mutter.IdleMonitor.GetIdletime",
+        ),
+        IdleSource::ScreenSaver => gdbus_idle_ms(
+            "org.freedesktop.ScreenSaver",
+            "/org/freedesktop/ScreenSaver",
+            "org.freedesktop.ScreenSaver.GetSessionIdleTime",
+        ),
+    }
+}
+
 #[cfg(target_os = "linux")]
 pub fn idle_secs() -> u64 {
-    // X11: xprintidle (ms). GNOME / Wayland: Mutter idle monitor over D-Bus.
-    if let Ok(out) = quiet(&mut Command::new("xprintidle")).output() {
-        if out.status.success() {
-            if let Ok(ms) = String::from_utf8_lossy(&out.stdout).trim().parse::<u64>() {
-                return ms / 1000;
-            }
-        }
+    use std::sync::atomic::{AtomicU8, Ordering};
+    // 0 = nothing worked yet, otherwise 1 + index into `ALL`.
+    static LAST_GOOD: AtomicU8 = AtomicU8::new(0);
+    const ALL: [IdleSource; 3] = [IdleSource::XPrintIdle, IdleSource::Mutter, IdleSource::ScreenSaver];
+
+    let wayland = is_wayland_session(
+        std::env::var("XDG_SESSION_TYPE").ok().as_deref(),
+        std::env::var("WAYLAND_DISPLAY").ok().as_deref(),
+    );
+    let candidates: Vec<usize> = (0..ALL.len())
+        .filter(|&i| !(wayland && ALL[i] == IdleSource::XPrintIdle))
+        .collect();
+    let last = LAST_GOOD.load(Ordering::Relaxed) as usize;
+    let mut order = Vec::with_capacity(candidates.len());
+    if last > 0 && candidates.contains(&(last - 1)) {
+        order.push(last - 1);
     }
-    if let Ok(out) = Command::new("gdbus")
-        .args([
-            "call",
-            "--session",
-            "--dest",
-            "org.gnome.Mutter.IdleMonitor",
-            "--object-path",
-            "/org/gnome/Mutter/IdleMonitor/Core",
-            "--method",
-            "org.gnome.Mutter.IdleMonitor.GetIdletime",
-        ])
-        .output()
-    {
-        let s = String::from_utf8_lossy(&out.stdout);
-        let digits: String = s
-            .split_whitespace()
-            .nth(1)
-            .unwrap_or("")
-            .chars()
-            .filter(|c| c.is_ascii_digit())
-            .collect();
-        if let Ok(ms) = digits.parse::<u64>() {
+    order.extend(candidates.into_iter().filter(|&i| i + 1 != last));
+
+    for i in order {
+        if let Some(ms) = idle_from(ALL[i]) {
+            LAST_GOOD.store((i + 1) as u8, Ordering::Relaxed);
             return ms / 1000;
         }
     }
+    // Nothing available: never claim the user is away.
     0
+}
+
+#[cfg(test)]
+mod idle_tests {
+    use super::*;
+
+    #[test]
+    fn parses_gdbus_output() {
+        assert_eq!(parse_gdbus_millis("(uint64 5230,)
+"), Some(5230));
+        assert_eq!(parse_gdbus_millis("(uint32 17,)"), Some(17));
+        assert_eq!(parse_gdbus_millis("Error: no such method"), None);
+        assert_eq!(parse_gdbus_millis(""), None);
+    }
+
+    #[test]
+    fn detects_wayland() {
+        assert!(is_wayland_session(Some("wayland"), None));
+        assert!(is_wayland_session(None, Some("wayland-0")));
+        assert!(!is_wayland_session(Some("x11"), None));
+        assert!(!is_wayland_session(None, Some("")));
+    }
 }
 
 // ------------------------------------------------------- fullscreen detection

@@ -133,6 +133,7 @@ see an optometrist or ophthalmologist.
 | Meeting detection | mic/camera in use | Zoom meeting helper | mic recording (PulseAudio/PipeWire) |
 | Fullscreen detection | ✓ | ✓ | — |
 | Focus apps (by process name) | ✓ | ✓ | ✓ |
+| Idle detection (away counts as a break) | ✓ | ✓ | X11 (`xprintidle`), GNOME and KDE Plasma on Wayland; not yet Sway/Hyprland |
 | Countdown next to tray icon | — (tooltip) | ✓ | panel-dependent |
 
 ## Build from source
