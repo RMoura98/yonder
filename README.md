@@ -7,6 +7,10 @@
 <p align="center"><b>Look up. Look far. Get back to it.</b><br/>
 A tiny, open-source break reminder for Windows, macOS and Linux.</p>
 
+<p align="center">
+  <img src="media/hero.gif" width="900" alt="A heads-up card counts down, a small countdown follows the cursor, then the desktop blurs into Yonder's break screen and sharpens back." />
+</p>
+
 ---
 
 Every 20 minutes, look at something 20 feet away for 20 seconds. Yonder turns that habit into something
@@ -25,6 +29,18 @@ desktop into a calm break screen, and stays out of the way while you're in a cal
 - **Shortcuts & automation.** Global hotkeys and shell hooks on break start/end (`YONDER_EVENT`, `YONDER_BREAK_KIND`, `YONDER_BREAK_SECS`).
 - **Private by design.** No account, no telemetry. Settings and stats stay on your machine.
 - **Lightweight.** Rust core + the system webview (Tauri 2). A few MB to download, near-zero CPU between breaks; windows only exist while they're on screen.
+
+<table>
+  <tr>
+    <td width="50%"><img src="media/reminders.gif" alt="Posture reminder: a glass bead stretches upward carrying an arrow, then a blink reminder whose face blinks twice." /><br/><sub><b>Posture &amp; blink reminders</b> appear, animate and get out of the way.</sub></td>
+    <td width="50%"><img src="media/split.gif" alt="Split-screen break: the desktop parts across the middle to reveal a teal cutting-mat texture with the countdown." /><br/><sub><b>Split-screen breaks</b> part your desktop to reveal a texture.</sub></td>
+  </tr>
+  <tr>
+    <td colspan="2"><img src="media/settings.gif" alt="Settings window: Today, Screen Breaks with skip-difficulty cards, the Long breaks page and break-screen backgrounds." /><br/><sub><b>Settings</b> in light or dark, laid out like your system's own.</sub></td>
+  </tr>
+</table>
+
+<sub>Teasers are recorded from the app's real UI pages (MP4 versions in <a href="media/">media/</a>).</sub>
 
 ## Platform notes
 
