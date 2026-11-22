@@ -4,7 +4,9 @@ body { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 10px; border: 3px solid transparent; background-clip: padding-box; }
 ::-webkit-scrollbar-thumb:hover { background-color: var(--ink-3); }
 ::-webkit-scrollbar-track { background: transparent; }
-.app { display: grid; grid-template-columns: 240px 1fr; height: 100vh; }
+.app { display: grid; grid-template-columns: 240px 1fr; grid-template-rows: minmax(0, 1fr); height: 100vh; }
+/* grid items default to min-height:auto; without this a tall page stretches the row past the window and pushes the sidebar footer out of view */
+.app > * { min-height: 0; }
 
 /* ------------------------------------------------------------ icon tiles */
 .tile {
