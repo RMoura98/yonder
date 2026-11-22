@@ -197,7 +197,7 @@ pub struct Settings {
     pub prebreak_visible_secs: u32,
 
     pub messages: Vec<String>,
-    /// fullscreen | split
+    /// fullscreen | split | gentle
     pub break_style: String,
     /// aurora | nebula | ripple | gradient | image
     pub background: String,

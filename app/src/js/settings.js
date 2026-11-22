@@ -214,7 +214,7 @@ function paintBreaks() {
 
 function refreshSummaries() {
   if (!S) return;
-  const bgName = S.break_style === "split" ? "Split screen" : ({ blur: "Blurred desktop", image: "Your image", gradient: "Gradient" }[S.background] || (ANIMATED.find((a) => a.id === S.background)?.name ?? ""));
+  const bgName = S.break_style === "split" ? "Split screen" : S.break_style === "gentle" ? "Gentle" : ({ blur: "Blurred desktop", image: "Your image", gradient: "Gradient" }[S.background] || (ANIMATED.find((a) => a.id === S.background)?.name ?? ""));
   $("#vScreen").textContent = t(bgName);
   $("#vLong").textContent = S.long_enabled ? t("Every {nth} break is a {mins} min long break", { nth: ordinal(S.long_every), mins: S.long_mins }) : t("Off");
   const oh = S.office_hours;

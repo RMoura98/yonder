@@ -32,6 +32,7 @@ const settings = {
 };
 if (scene === "hero") Object.assign(settings, { prebreak_secs: 10, prebreak_visible_secs: 3 });
 if (scene === "split") Object.assign(settings, { break_style: "split", texture: "mat_teal" });
+if (scene === "gentle") Object.assign(settings, { break_style: "gentle" });
 if (scene === "settings") settings.theme = "dark";
 if (scene === "settingsLight") settings.theme = "light";
 
@@ -225,6 +226,12 @@ const SCENES = {
     await sleep(4300);
     overlays.querySelectorAll('iframe[data-role="reminders"]').forEach((f) => f.remove());
     await sleep(300);
+  },
+
+  async gentle() {
+    await sleep(500);
+    await runBreak(230);
+    await sleep(500);
   },
 
   async split() {

@@ -333,5 +333,9 @@
   "1 hour": "1 hora",
   "2 hours": "2 horas",
   "Never": "Nunca",
-  "You've been busy for a while. A short break?": "Tens estado ocupado há muito tempo. Uma pausa curta?"
+  "You've been busy for a while. A short break?": "Tens estado ocupado há muito tempo. Uma pausa curta?",
+  "Gentle": "Suave",
+  "The screen dims; you can keep working": "O ecrã escurece; podes continuar a trabalhar",
+  "Skip from the tray or press {keys}": "Salta pela bandeja ou prime {keys}",
+  "Skip from the tray menu": "Salta pelo menu da bandeja"
 }

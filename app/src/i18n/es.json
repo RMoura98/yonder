@@ -333,5 +333,9 @@
   "1 hour": "1 hora",
   "2 hours": "2 horas",
   "Never": "Nunca",
-  "You've been busy for a while. A short break?": "Llevas un buen rato ocupado. ¿Un descanso corto?"
+  "You've been busy for a while. A short break?": "Llevas un buen rato ocupado. ¿Un descanso corto?",
+  "Gentle": "Suave",
+  "The screen dims; you can keep working": "La pantalla se atenúa; puedes seguir trabajando",
+  "Skip from the tray or press {keys}": "Omite desde la bandeja o pulsa {keys}",
+  "Skip from the tray menu": "Omite desde el menú de la bandeja"
 }

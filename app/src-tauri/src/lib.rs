@@ -208,8 +208,9 @@ fn start_break_windows(app: &AppHandle) {
     let needs_shot = {
         let st = state(app);
         let s = &st.core.lock().unwrap().settings;
-        s.break_style == "split" || s.background == "blur"
+        s.break_style == "split" || (s.break_style != "gentle" && s.background == "blur")
     };
+    let gentle = state(app).core.lock().unwrap().settings.break_style == "gentle";
     let primary = app.primary_monitor().ok().flatten();
 
     if needs_shot {
@@ -239,6 +240,7 @@ fn start_break_windows(app: &AppHandle) {
             .unwrap_or(i == 0);
         let url = format!("break.html?primary={}", if is_primary { 1 } else { 0 });
         let Ok(w) = WebviewWindowBuilder::new(app, &label, WebviewUrl::App(url.into()))
+            .focusable(!gentle)
             .title("Yonder break")
             .decorations(false)
             .transparent(true)
@@ -257,6 +259,13 @@ fn start_break_windows(app: &AppHandle) {
         // Native fullscreen covers the monitor pixel-exactly (no stray borders), which
         // keeps the split-screen illusion seamless. macOS fullscreen would open a new
         // Space with an animation, so there we keep the borderless, monitor-sized window.
+        // Gentle mode is a click-through veil: no fullscreen (keeps the taskbar and the
+        // user's apps undisturbed), never focused, and the mouse passes straight through.
+        if gentle {
+            let _ = w.set_ignore_cursor_events(true);
+            show_quietly(&w);
+            continue;
+        }
         #[cfg(not(target_os = "macos"))]
         let _ = w.set_fullscreen(true);
         let _ = w.show();

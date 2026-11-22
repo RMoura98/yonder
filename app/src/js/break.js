@@ -18,6 +18,11 @@ const SUBTITLES = {
   planned: "A break you planned for yourself. Enjoy it.",
 };
 
+const prettyAccel = (a) => {
+  const mac = /mac/i.test(navigator.platform);
+  return a.replace("CmdOrCtrl", mac ? "⌘" : "Ctrl").replace("Alt", mac ? "⌥" : "Alt").replace("Shift", mac ? "⇧" : "Shift").replaceAll("+", mac ? " " : "+");
+};
+
 // ------------------------------------------------------------ odometer clock
 const timeEl = $("time");
 function setTime(secs) {
@@ -52,11 +57,15 @@ async function init() {
   tickClock();
   setInterval(tickClock, 10000);
 
+  const gentle = settings.break_style === "gentle";
   const split = settings.break_style === "split";
-  const wantsShot = split || settings.background === "blur";
+  const wantsShot = !gentle && (split || settings.background === "blur");
   const shot = wantsShot ? await invoke("get_screenshot") : null;
 
-  if (shot && split) {
+  if (gentle) {
+    document.body.classList.add("gentle");
+    $("veil").hidden = false;
+  } else if (shot && split) {
     document.body.classList.add("split");
     $("split").hidden = false;
     $("texture").style.cssText = (TEXTURES[settings.texture] || TEXTURES.linen).css;
@@ -120,7 +129,11 @@ function render(s) {
     skip.disabled = !s.can_skip;
     skip.querySelector(".lbl").textContent = s.can_skip ? t("Skip break") : t("Skip in {n}s", { n: s.skip_in });
   }
-  if (s.can_end) hint.innerHTML = t("Press <kbd>Esc</kbd> to end the break");
+  if (settings.break_style === "gentle") {
+    const acc = settings.shortcuts?.skip_break;
+    if (acc) hint.innerHTML = t("Skip from the tray or press {keys}", { keys: `<kbd>${prettyAccel(acc)}</kbd>` });
+    else hint.textContent = t("Skip from the tray menu");
+  } else if (s.can_end) hint.innerHTML = t("Press <kbd>Esc</kbd> to end the break");
   else if (s.can_skip) hint.innerHTML = t("Press <kbd>Esc</kbd> twice to skip");
   else if (s.skip_difficulty === "hardcore") hint.textContent = t("Hardcore mode. No skipping — you've got this.");
   else hint.textContent = "";

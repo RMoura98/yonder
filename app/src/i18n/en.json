@@ -333,5 +333,9 @@
   "1 hour": "1 hour",
   "2 hours": "2 hours",
   "Never": "Never",
-  "You've been busy for a while. A short break?": "You've been busy for a while. A short break?"
+  "You've been busy for a while. A short break?": "You've been busy for a while. A short break?",
+  "Gentle": "Gentle",
+  "The screen dims; you can keep working": "The screen dims; you can keep working",
+  "Skip from the tray or press {keys}": "Skip from the tray or press {keys}",
+  "Skip from the tray menu": "Skip from the tray menu"
 }
