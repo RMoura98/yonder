@@ -243,6 +243,84 @@ impl ProcessScanner {
     }
 }
 
+// ---------------------------------------------------------------- tray glyph
+
+/// Rasterizes the Yonder tray glyph (low sun on a horizon, one reflection),
+/// drawn on a 16-unit grid, as RGBA at `size` px with 4x4 supersampling.
+pub fn tray_glyph(size: u32, rgb: [u8; 3], alpha: f32) -> Vec<u8> {
+    fn rrect(u: f32, v: f32, x0: f32, y0: f32, x1: f32, y1: f32, r: f32) -> bool {
+        if u < x0 || u > x1 || v < y0 || v > y1 {
+            return false;
+        }
+        let cx = u.clamp(x0 + r, x1 - r);
+        let cy = v.clamp(y0 + r, y1 - r);
+        (u - cx).powi(2) + (v - cy).powi(2) <= r * r
+    }
+    let inside = |u: f32, v: f32| -> bool {
+        let sun = v <= 9.0 && (u - 8.0).powi(2) + (v - 9.0).powi(2) <= 25.0;
+        sun || rrect(u, v, 1.0, 10.0, 15.0, 12.0, 1.0) || rrect(u, v, 5.0, 13.5, 11.0, 15.0, 0.75)
+    };
+    const SS: u32 = 4;
+    let mut out = Vec::with_capacity((size * size * 4) as usize);
+    let scale = 16.0 / size as f32;
+    for py in 0..size {
+        for px in 0..size {
+            let mut hits = 0;
+            for sy in 0..SS {
+                for sx in 0..SS {
+                    let u = (px as f32 + (sx as f32 + 0.5) / SS as f32) * scale;
+                    let v = (py as f32 + (sy as f32 + 0.5) / SS as f32) * scale;
+                    if inside(u, v) {
+                        hits += 1;
+                    }
+                }
+            }
+            let a = (hits as f32 / (SS * SS) as f32 * alpha * 255.0).round() as u8;
+            out.extend_from_slice(&[rgb[0], rgb[1], rgb[2], a]);
+        }
+    }
+    out
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn tray_glyph_renders_horizon() {
+        let size = 16;
+        let px = super::tray_glyph(size, [255, 255, 255], 1.0);
+        let mut art = String::new();
+        for y in 0..size {
+            for x in 0..size {
+                let a = px[((y * size + x) * 4 + 3) as usize];
+                art.push(match a { 0..=40 => '.', 41..=170 => '+', _ => '#' });
+            }
+            art.push('\n');
+        }
+        println!("{art}");
+        // sun above the horizon, horizon wider than the reflection
+        let alpha = |x: u32, y: u32| px[((y * size + x) * 4 + 3) as usize];
+        assert!(alpha(8, 6) > 200, "sun");
+        assert!(alpha(1, 11) > 100 && alpha(14, 11) > 100, "horizon");
+        assert!(alpha(2, 14) < 40 && alpha(8, 14) > 100, "reflection");
+    }
+}
+
+/// Whether the Windows taskbar uses the light theme (so the glyph should be dark).
+#[cfg(windows)]
+pub fn taskbar_is_light() -> bool {
+    use winreg::enums::HKEY_CURRENT_USER;
+    winreg::RegKey::predef(HKEY_CURRENT_USER)
+        .open_subkey(r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize")
+        .and_then(|k| k.get_value::<u32, _>("SystemUsesLightTheme"))
+        .map(|v| v == 1)
+        .unwrap_or(false)
+}
+
+#[cfg(not(windows))]
+pub fn taskbar_is_light() -> bool {
+    false
+}
+
 // --------------------------------------------------------------- open a URL
 
 /// Opens an https URL in the default browser.

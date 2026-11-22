@@ -37,6 +37,8 @@ struct AppState {
     snapshots: Mutex<HashMap<String, String>>,
     reminder_queue: Mutex<Vec<Reminder>>,
     tray: Mutex<Option<TrayItems>>,
+    /// (light taskbar, paused) the tray glyph was last drawn for
+    tray_look: Mutex<Option<(bool, bool)>>,
 }
 
 fn state(app: &AppHandle) -> tauri::State<'_, AppState> {
@@ -317,6 +319,15 @@ fn update_tray(app: &AppHandle, snap: &Snapshot) {
     let _ = t.pause.set_enabled(!paused);
     let _ = t.skip.set_enabled(snap.skip_difficulty != "hardcore");
     if let Some(tray) = app.tray_by_id("main") {
+        // Re-tint only when the taskbar theme or the paused state changes.
+        let look = (platform::taskbar_is_light(), paused);
+        let mut last = st.tray_look.lock().unwrap();
+        if *last != Some(look) {
+            *last = Some(look);
+            let _ = tray.set_icon(Some(tray_icon(look.0, look.1)));
+            let _ = tray.set_icon_as_template(cfg!(target_os = "macos"));
+        }
+        drop(last);
         let _ = tray.set_tooltip(Some(format!("Yonder — {}", snap.label)));
         // Text next to the tray icon (macOS menu bar, some Linux panels; ignored on Windows).
         let title = match snap.phase {
@@ -520,6 +531,15 @@ fn platform_name() -> &'static str {
 
 // ======================================================================= tray
 
+/// The one-color horizon glyph, tinted for the current taskbar / menu bar.
+fn tray_icon(light_taskbar: bool, paused: bool) -> tauri::image::Image<'static> {
+    const SIZE: u32 = 32;
+    // macOS uses a template image (system tints it); elsewhere pick contrast.
+    let rgb = if cfg!(target_os = "macos") || light_taskbar { [0, 0, 0] } else { [255, 255, 255] };
+    let alpha = if paused { 0.45 } else { 1.0 };
+    tauri::image::Image::new_owned(platform::tray_glyph(SIZE, rgb, alpha), SIZE, SIZE)
+}
+
 fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     let status = MenuItem::with_id(app, "status", "Starting…", false, None::<&str>)?;
     let take = MenuItem::with_id(app, "take_break", "Take a break now", true, None::<&str>)?;
@@ -556,7 +576,8 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     )?;
 
     TrayIconBuilder::with_id("main")
-        .icon(app.default_window_icon().cloned().expect("app icon"))
+        .icon(tray_icon(platform::taskbar_is_light(), false))
+        .icon_as_template(cfg!(target_os = "macos"))
         .tooltip("Yonder")
         .menu(&menu)
         .show_menu_on_left_click(true)
@@ -663,6 +684,7 @@ pub fn run() {
                 snapshots: Mutex::new(HashMap::new()),
                 reminder_queue: Mutex::new(Vec::new()),
                 tray: Mutex::new(None),
+                tray_look: Mutex::new(None),
             });
 
             let handle = app.handle().clone();
