@@ -1,6 +1,6 @@
 [package]
 name = "yonder"
-version = "1.0.2"
+version = "1.0.3"
 description = "A tiny, open-source break reminder"
 authors = ["Yonder contributors"]
 license = "MIT"
