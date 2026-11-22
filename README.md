@@ -22,7 +22,7 @@ desktop into a calm break screen, and stays out of the way while you're in a cal
 
 - **Smart breaks.** Balanced (20 min / 20 s), Deep Focus, Eye Care and Wellness presets, or your own timing, with optional long breaks.
 - **Break screens you'll like.** Blurred desktop, split-screen (your desktop parts to reveal a texture), animated Aurora / Nebula / Ripple, gradients or your own image. Rolling countdown and your own messages.
-- **Your own sounds.** Ten built-in synthesized sounds, or add any MP3, WAV, OGG or M4A file and use it for breaks or for each reminder.
+- **Your own sounds.** Fifteen built-in synthesized sounds, or add any MP3, WAV, OGG or M4A file and use it for breaks or for each reminder.
 - **Heads-up, never a surprise.** A frosted heads-up card before each break (start now, +1m, +5m, +15m), and a countdown that follows your cursor for the last five seconds.
 - **Waits for the right moment.** Won't start while you type; pauses for meetings, fullscreen apps and the focus apps you choose; time away from the computer counts as a break.
 - **Posture & blink reminders.** Small liquid-glass widgets that appear, animate and disappear. Up to five custom reminders with their own icon, interval and sound.
@@ -51,12 +51,12 @@ desktop into a calm break screen, and stays out of the way while you're in a cal
 **macOS** (Homebrew, no App Store needed):
 
 ```sh
-brew tap rmoura98/yonder https://github.com/RMoura98/yonder
-brew install --cask yonder
+brew install --cask rmoura98/tap/yonder
 ```
 
 Update with `brew upgrade --cask yonder`. Yonder isn't notarized yet, so the cask clears the macOS quarantine flag after
 installing; if you download the `.dmg` yourself instead, right-click Yonder.app → **Open** the first time.
+(Installed with the older `brew tap rmoura98/yonder …` command? That keeps working too.)
 
 **Windows:** download the `.exe` (or `.msi`) installer from the [latest release](https://github.com/RMoura98/yonder/releases/latest).
 SmartScreen may warn about an unrecognized app: choose **More info → Run anyway**.
