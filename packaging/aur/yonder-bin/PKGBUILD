@@ -1,6 +1,6 @@
 # Maintainer: RMoura98 <https://github.com/RMoura98>
 pkgname=yonder-bin
-pkgver=1.0.2
+pkgver=1.0.3
 pkgrel=1
 pkgdesc="Free, open-source break reminder: 20-20-20 breaks, posture and blink reminders"
 arch=('x86_64')
@@ -16,7 +16,7 @@ options=('!strip' '!debug')
 source=("LICENSE::https://raw.githubusercontent.com/RMoura98/yonder/v${pkgver}/LICENSE")
 source_x86_64=("https://github.com/RMoura98/yonder/releases/download/v${pkgver}/Yonder_${pkgver}_amd64.deb")
 sha256sums=('b6e666b0bdeae772a73732a5d411aeff155aeea945654a8e80f17303e57f825b')
-sha256sums_x86_64=('f40e463b803faa31fda0765d97314f4870dcfbbf860a78d86f4ccc04d70371b3')
+sha256sums_x86_64=('4a49f3098ce713a5153f29ca026bc20717f260f87b3e5c25b31cb4e39603809b')
 
 package() {
   # The .deb is an ar archive; makepkg (bsdtar) extracts it into $srcdir,
