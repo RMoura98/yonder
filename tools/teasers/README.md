@@ -16,6 +16,7 @@ Whenever a change alters something visible in a teaser, re-record the affected s
 | `settingsLight` | settings window still (light), saved as `media/settings-light.png` |
 | `split` | split-screen break |
 | `popover` | tray popover: click the icon, live countdown and score, pause menu |
+| `focus` | starting a focus session from Today, then the Focus page |
 
 ## Usage
 

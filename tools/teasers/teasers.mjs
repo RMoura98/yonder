@@ -29,6 +29,7 @@ const SCENES = {
   gentle: { poster: 4.5, gifw: 960, fps: 18 },
   setup: { poster: 5.0, gifw: 960, fps: 18 },
   popover: { poster: 3.6, gifw: 960, fps: 18 },
+  focus: { poster: 4.5, gifw: 960, fps: 18 },
 };
 
 const wanted = process.argv.slice(2).length ? process.argv.slice(2) : [...Object.keys(SCENES), "settingsLight"];

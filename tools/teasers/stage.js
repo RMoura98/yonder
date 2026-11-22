@@ -26,7 +26,8 @@ const settings = {
     custom: [{ id: "c_water", enabled: true, title: "Drink water", body: "", icon: "water_drop", interval_mins: 45, size: "medium", sound: "drop", sticky: false }],
     combine: true, reset_after_break: false, ripple: true,
   },
-  shortcuts: { take_break: "CmdOrCtrl+Alt+B", toggle_pause: "CmdOrCtrl+Alt+P", skip_break: "CmdOrCtrl+Alt+S" },
+  focus: { work_mins: 25, break_mins: 5, long_break_mins: 15, long_every: 4, merge_window_mins: 3 },
+  shortcuts: { take_break: "CmdOrCtrl+Alt+B", toggle_pause: "CmdOrCtrl+Alt+P", skip_break: "CmdOrCtrl+Alt+S", toggle_focus: "" },
   hooks: { on_break_start: "", on_break_end: "" },
   launch_at_login: true, theme: "system", onboarded: true, language: "en", check_updates: true, tray_countdown: true, skipped_update: "",
 };
@@ -36,6 +37,7 @@ if (scene === "gentle") Object.assign(settings, { break_style: "gentle" });
 if (scene === "setup") Object.assign(settings, { onboarded: false, theme: "light" });
 if (scene === "settings" || scene === "popover") settings.theme = "dark";
 if (scene === "settingsLight") settings.theme = "light";
+if (scene === "focus") settings.theme = "light";
 
 // 14 days of plausible demo stats
 const stats = { days: {} };
@@ -93,6 +95,7 @@ const TEASER = (window.TEASER = {
       case "platform_name": return "windows";
       case "app_version": return "1.0.0";
       case "get_update": return null;
+      case "action": return stageAction(args.name);
       case "fit_window": return fit(win, args);
       default: return null;
     }
@@ -177,6 +180,21 @@ async function clickIn(frame, selector, ms = 650) {
   await sleep(200);
 }
 placeCursor();
+
+// Focus session as the Rust core would report it (25 min periods, 4 per session).
+let focusTicker = null;
+function stageAction(name) {
+  if (name === "start_focus") {
+    let left = 25 * 60 - 12 * 60 - 30; // demo: already 12:30 into the second period
+    const push = () => setState({ ...state, focus: { cycle: 2, total: 4, phase: "work", secs_left: left--, long: false } });
+    push();
+    focusTicker = setInterval(push, 1000);
+  } else if (name === "stop_focus") {
+    clearInterval(focusTicker);
+    setState({ ...state, focus: null });
+  }
+  return null;
+}
 
 // --------------------------------------------------------------- scenes
 async function runBreak(stepMs) {
@@ -336,6 +354,19 @@ const SCENES = {
     clearInterval(ticker);
   },
 
+  // Today page: start a focus session, then show the Focus page with the lengths.
+  async focus() {
+    const f = settingsFrame;
+    await sleep(900);
+    await clickIn(f, "#homeFocus", 800);
+    await sleep(1200);
+    await clickIn(f, '#nav a[data-page="focus"]', 700);
+    await sleep(1800);
+    await clickIn(f, '#nav a[data-page="today"]', 700);
+    await moveCursor(900, 560, 600);
+    await sleep(1200);
+  },
+
   async settingsLight() {
     const f = settingsFrame;
     cursorEl.classList.add("hidden");
@@ -347,7 +378,7 @@ const SCENES = {
 
 // Settings scenes: open the window before recording so frame 0 is fully rendered.
 let settingsFrame = null;
-if (scene === "settings" || scene === "settingsLight" || scene === "setup") {
+if (scene === "settings" || scene === "settingsLight" || scene === "setup" || scene === "focus") {
   if (scene !== "settingsLight") document.body.classList.add("dim");
   settingsFrame = openFrame("settings", "/app/index.html", { left: "310px", top: "130px", width: "980px", height: "690px" });
   settingsFrame.classList.add("settings");
