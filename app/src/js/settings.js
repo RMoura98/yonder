@@ -938,6 +938,7 @@ function initSetup() {
   // skip difficulty and break style reuse the real pages' cards (previews included)
   const enforce = $("#setupEnforce");
   enforce.innerHTML = $("#enforce").innerHTML;
+  enforce.style.gridTemplateColumns = `repeat(${enforce.children.length}, 1fr)`;
   const paintEnf = () => $$("button", enforce).forEach((b) => b.classList.toggle("on", b.dataset.v === S.skip_difficulty));
   $$("button", enforce).forEach((b) => b.addEventListener("click", () => { S.skip_difficulty = b.dataset.v; paintEnf(); save(); }));
   paintEnf();

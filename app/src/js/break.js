@@ -11,6 +11,9 @@ let stopAnim = () => {};
 let ended = false;
 let ready = false; // render only once the language is loaded
 
+const HOLD_MS = 2000; // Firm mode: how long Skip must be held
+let firm = false;
+
 const SUBTITLES = {
   short: "Rest your eyes on something far away until the countdown ends.",
   long: "Stand up, stretch, refill your water. Your work will wait.",
@@ -125,15 +128,20 @@ function render(s) {
   const skip = $("skip"), end = $("end"), hint = $("hint");
   end.hidden = !s.can_end;
   skip.hidden = s.can_end || s.skip_difficulty === "hardcore";
+  if (skip.hidden) firm = false;
   if (!skip.hidden) {
     skip.disabled = !s.can_skip;
-    skip.querySelector(".lbl").textContent = s.can_skip ? t("Skip break") : t("Skip in {n}s", { n: s.skip_in });
+    firm = s.skip_difficulty === "firm" && s.can_skip;
+    skip.classList.toggle("hold-fill", firm);
+    if (!firm) stopHold();
+    skip.querySelector(".lbl").textContent = firm ? t("Hold to skip") : s.can_skip ? t("Skip break") : t("Skip in {n}s", { n: s.skip_in });
   }
   if (settings.break_style === "gentle") {
     const acc = settings.shortcuts?.skip_break;
     if (acc) hint.innerHTML = t("Skip from the tray or press {keys}", { keys: `<kbd>${prettyAccel(acc)}</kbd>` });
     else hint.textContent = t("Skip from the tray menu");
   } else if (s.can_end) hint.innerHTML = t("Press <kbd>Esc</kbd> to end the break");
+  else if (firm) hint.innerHTML = t("Hold <kbd>Esc</kbd> to skip");
   else if (s.can_skip) hint.innerHTML = t("Press <kbd>Esc</kbd> twice to skip");
   else if (s.skip_difficulty === "hardcore") hint.textContent = t("Hardcore mode. No skipping — you've got this.");
   else hint.textContent = "";
@@ -152,12 +160,36 @@ function finish(delay) {
 }
 
 // ---------------------------------------------------------------- actions
-$("skip").onclick = () => action("end_break");
+// Firm mode: the button (or Esc) must be held for HOLD_MS; a fill shows the progress.
+let holdTimer = null;
+function startHold() {
+  if (holdTimer || !firm || ended) return;
+  const skip = $("skip");
+  skip.style.setProperty("--hold-ms", HOLD_MS + "ms");
+  skip.classList.add("holding");
+  holdTimer = setTimeout(() => {
+    holdTimer = null;
+    $("skip").classList.remove("holding");
+    action("skip_held");
+  }, HOLD_MS);
+}
+function stopHold() {
+  clearTimeout(holdTimer);
+  holdTimer = null;
+  $("skip").classList.remove("holding");
+}
+$("skip").onclick = () => { if (!firm) action("end_break"); };
+$("skip").addEventListener("pointerdown", (e) => { if (e.button === 0) startHold(); });
+for (const ev of ["pointerup", "pointercancel", "pointerleave", "blur"]) $("skip").addEventListener(ev, stopHold);
+$("skip").addEventListener("keydown", (e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); startHold(); } });
+$("skip").addEventListener("keyup", stopHold);
 $("end").onclick = () => action("end_break");
 $("lock").onclick = () => action("lock");
 let lastEsc = 0;
+addEventListener("keyup", (e) => { if (e.key === "Escape") stopHold(); });
 addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
+  if (firm && $("end").hidden) return startHold(); // hold Esc to skip
   const now = Date.now();
   // End early: one press. Skip: two presses within 1.5 s, so it's never an accident.
   if (!$("end").hidden || now - lastEsc < 1500) action("end_break");

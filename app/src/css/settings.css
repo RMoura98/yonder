@@ -156,6 +156,9 @@ button.on > .pv { outline-color: var(--accent); }
   box-shadow: inset 0 1px 0 rgba(255,255,255,.3);
 }
 .pv .glass.dim { opacity: .55; }
+.pv .glass.fill { position: relative; overflow: hidden; }
+.pv .glass.fill::before { content: ""; position: absolute; inset: 0; width: 58%; background: rgba(255,255,255,.4); }
+.pv .glass.fill > * { position: relative; }
 .pv .spin .ms { animation: spin 1.4s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .pv span:not(.glass) { color: #fff; font-weight: 700; font-size: 20px; font-variant-numeric: tabular-nums; position: relative; z-index: 1; text-shadow: 0 1px 6px rgba(0,0,0,.3); }

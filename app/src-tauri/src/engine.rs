@@ -315,6 +315,8 @@ impl Core {
         match self.settings.skip_difficulty.as_str() {
             "casual" => (true, 0, false),
             "hardcore" => (false, 0, false),
+            // Firm: skippable at once, but the break screen makes you hold the button (see skip_inner).
+            "firm" => (true, 0, false),
             _ => {
                 let wait = BALANCED_SKIP_DELAY.saturating_sub(b.elapsed_secs);
                 (wait == 0, wait, false)
@@ -639,8 +641,23 @@ impl Core {
 
     /// Skip or end the current break, honoring the difficulty rules.
     pub fn skip_or_end_break(&mut self) -> Vec<Effect> {
+        self.skip_inner(false)
+    }
+
+    /// The Skip button of the break screen was held long enough (Firm mode).
+    pub fn skip_held(&mut self) -> Vec<Effect> {
+        self.skip_inner(true)
+    }
+
+    fn skip_inner(&mut self, held: bool) -> Vec<Effect> {
         let mut fx = Vec::new();
-        let (can_skip, _, can_end) = self.skip_rules();
+        let (mut can_skip, _, can_end) = self.skip_rules();
+        // Firm: a plain skip (Esc, tray, shortcut) is refused while the break screen is up,
+        // since that one has the hold-to-skip button. Styles without clickable buttons
+        // (gentle, notification) have nothing to hold, so the tray / shortcut still skip.
+        if self.settings.skip_difficulty == "firm" && !held && !matches!(self.settings.break_style.as_str(), "gentle" | "notify") {
+            can_skip = false;
+        }
         if can_end {
             let deliberate = matches!(self.e.brk.as_ref().map(|b| b.kind.as_str()), Some("planned" | "custom"));
             // A deliberate break counts as taken (and resets the countdown) once it lasted

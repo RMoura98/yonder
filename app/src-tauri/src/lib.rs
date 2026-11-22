@@ -554,6 +554,7 @@ fn run_action(app: &AppHandle, name: &str, arg: Option<i64>) {
     match name {
         "take_break" => with_core(app, |c| c.take_break_now(arg.map(|a| a as u32))),
         "skip" => with_core(app, |c| c.skip_next()),
+        "skip_held" => with_core(app, |c| c.skip_held()),
         "end_break" => with_core(app, |c| c.skip_or_end_break()),
         "snooze" => with_core(app, |c| c.snooze(arg.unwrap_or(5) as u32)),
         "start_now" => with_core(app, |c| c.start_now()),

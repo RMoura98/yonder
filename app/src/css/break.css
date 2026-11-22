@@ -108,6 +108,14 @@ body.secondary #foot { display: none; }
   transition: background .2s, opacity .2s, transform .12s var(--ease);
 }
 .pill .ic { display: inline-flex; }
+/* Firm skip: a fill sweeps across the button while it is held */
+.pill.hold-fill { position: relative; overflow: hidden; -webkit-user-select: none; user-select: none; }
+.pill.hold-fill > * { position: relative; }
+.pill.hold-fill::before {
+  content: ""; position: absolute; inset: 0; background: rgba(255, 255, 255, .42);
+  transform: scaleX(0); transform-origin: left; transition: transform .25s ease-out;
+}
+.pill.hold-fill.holding::before { transform: scaleX(1); transition: transform var(--hold-ms, 2s) linear; }
 .pill:hover { background: rgba(255, 255, 255, 0.24); }
 .pill:active { transform: scale(.96); }
 .pill:disabled { opacity: .5; cursor: not-allowed; }

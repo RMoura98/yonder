@@ -30,7 +30,7 @@ desktop into a calm break screen, and stays out of the way while you're in a cal
 - **Pauses your music.** Optionally pauses music and video when a break starts and resumes only what it paused (system media controls on Windows, Music/Spotify on macOS, playerctl on Linux).
 - **Set up in three steps.** The first time you open Yonder: language, rhythm and break style. Skip it if you like.
 - **Posture & blink reminders.** Small liquid-glass widgets that appear, animate and disappear. Up to five custom reminders with their own icon, interval and sound.
-- **Skip difficulty.** Casual, Balanced or Hardcore.
+- **Skip difficulty.** Casual, Balanced, Firm (hold Skip for 2 seconds) or Hardcore.
 - **Office hours & planned breaks.** Only remind during work hours; schedule lunch or a walk.
 - **Shortcuts & automation.** Global hotkeys and shell hooks on break start/end (`YONDER_EVENT`, `YONDER_BREAK_KIND`, `YONDER_BREAK_SECS`).
 - **Languages.** English, Português, Español, Français, Deutsch, 简体中文 and 日本語, following your system language or picked in Settings → General. [Add yours](CONTRIBUTING.md#adding-a-translation).

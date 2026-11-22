@@ -227,6 +227,53 @@ fn balanced_can_skip_only_after_delay() {
 }
 
 #[test]
+fn firm_needs_the_hold_on_the_break_screen() {
+    let mut c = start_break_with_difficulty("firm");
+    let sn = c.snapshot();
+    assert!(sn.can_skip);
+    assert_eq!(sn.skip_in, 0);
+    // Esc / tray / shortcut (a plain skip) do nothing while the break screen is up...
+    assert!(c.skip_or_end_break().is_empty());
+    assert!(c.skip_next().is_empty());
+    assert!(c.e.brk.is_some());
+    // ...only the held Skip button ends it, and it counts as skipped.
+    assert_eq!(ends(&c.skip_held()), 1);
+    assert!(c.e.brk.is_none());
+    assert_eq!(c.stats.today().breaks_skipped, 1);
+    assert_eq!(taken(&mut c), 0);
+}
+
+#[test]
+fn firm_tray_skip_works_without_a_clickable_break_screen() {
+    for style in ["gentle", "notify"] {
+        let mut s = test_settings();
+        s.skip_difficulty = "firm".into();
+        s.break_style = style.into();
+        let mut c = core(s);
+        tick_n(&mut c, 60, 0);
+        assert!(c.e.brk.is_some());
+        assert_eq!(ends(&c.skip_or_end_break()), 1, "{style}");
+    }
+}
+
+#[test]
+fn firm_still_allows_skip_next_and_snooze_before_a_break() {
+    let mut s = test_settings();
+    s.skip_difficulty = "firm".into();
+    let mut c = core(s);
+    tick_n(&mut c, 10, 0);
+    assert!(!c.skip_next().is_empty());
+    assert_eq!(c.e.work_secs, 0);
+}
+
+#[test]
+fn hold_cannot_bypass_hardcore() {
+    let mut c = start_break_with_difficulty("hardcore");
+    assert!(c.skip_held().is_empty());
+    assert!(c.e.brk.is_some());
+}
+
+#[test]
 fn hardcore_cannot_skip() {
     let mut c = start_break_with_difficulty("hardcore");
     assert!(!c.snapshot().can_skip);
