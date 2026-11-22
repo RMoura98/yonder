@@ -69,7 +69,7 @@
             Star on GitHub
           </a>
         </div>
-        <p class="platform-links reveal d2" data-other-os>Available for <a href="https://github.com/RMoura98/yonder/releases/latest">Windows</a>, <a href="https://github.com/RMoura98/yonder/releases/latest">macOS</a> and <a href="https://github.com/RMoura98/yonder/releases/latest">Linux</a> — or build from source.</p>
+        <p class="platform-links reveal d2" data-other-os>Available for <a href="https://github.com/RMoura98/yonder/releases/latest">Windows</a>, <a href="#install-snippet">macOS (Homebrew)</a> and <a href="https://github.com/RMoura98/yonder/releases/latest">Linux</a> — or build from source.</p>
 
         <div class="badges reveal d3" aria-label="Release info">
           <span class="badge accent"><i class="dot"></i>v1.0.0</span>
@@ -80,10 +80,10 @@
         </div>
 
         <div class="snippet reveal d3">
-          <pre id="install-snippet"><code><span class="p">$ </span>git clone https://github.com/RMoura98/yonder
-<span class="p">$ </span>cd yonder/app &amp;&amp; npm install
-<span class="p">$ </span>npm run tauri dev</code></pre>
-          <button class="copy-btn" type="button" data-copy="install-snippet" aria-label="Copy build commands">
+          <pre id="install-snippet"><code><span class="p"># macOS, with Homebrew</span>
+<span class="p">$ </span>brew tap rmoura98/yonder https://github.com/RMoura98/yonder
+<span class="p">$ </span>brew install --cask yonder</code></pre>
+          <button class="copy-btn" type="button" data-copy="install-snippet" aria-label="Copy the Homebrew install commands">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
             <span>Copy</span>
           </button>

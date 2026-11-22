@@ -1,0 +1,54 @@
+name: Update Homebrew cask
+
+# When a release is published, point Casks/yonder.rb at the new universal .dmg
+# and pin its checksum, so `brew upgrade` picks it up.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to package (e.g. v1.0.0)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  cask:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Resolve version
+        id: v
+        run: |
+          TAG="${{ github.event.release.tag_name || inputs.tag }}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Download the universal .dmg and hash it
+        id: sha
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download "${{ steps.v.outputs.tag }}" --pattern "*_universal.dmg" --dir dist
+          DMG=$(ls dist/*_universal.dmg | head -n1)
+          echo "file=$(basename "$DMG")" >> "$GITHUB_OUTPUT"
+          echo "sha256=$(sha256sum "$DMG" | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - name: Update the cask
+        run: |
+          sed -i -E 's/^  version ".*"/  version "${{ steps.v.outputs.version }}"/' Casks/yonder.rb
+          sed -i -E 's/^  sha256 .*/  sha256 "${{ steps.sha.outputs.sha256 }}"/' Casks/yonder.rb
+          cat Casks/yonder.rb | head -n 5
+
+      - name: Commit
+        run: |
+          if git diff --quiet; then echo "Cask already up to date"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "chore(brew): update cask to ${{ steps.v.outputs.version }}"
+          git push origin HEAD:main

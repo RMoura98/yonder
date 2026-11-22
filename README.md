@@ -42,6 +42,23 @@ desktop into a calm break screen, and stays out of the way while you're in a cal
 
 <sub>Teasers are recorded from the app's real UI pages (MP4 versions in <a href="media/">media/</a>).</sub>
 
+## Install
+
+**macOS** (Homebrew, no App Store needed):
+
+```sh
+brew tap rmoura98/yonder https://github.com/RMoura98/yonder
+brew install --cask yonder
+```
+
+Update with `brew upgrade --cask yonder`. Yonder isn't notarized yet, so the cask clears the macOS quarantine flag after
+installing; if you download the `.dmg` yourself instead, right-click Yonder.app → **Open** the first time.
+
+**Windows:** download the `.exe` (or `.msi`) installer from the [latest release](https://github.com/RMoura98/yonder/releases/latest).
+SmartScreen may warn about an unrecognized app: choose **More info → Run anyway**.
+
+**Linux:** grab the `.AppImage`, `.deb` or `.rpm` from the [latest release](https://github.com/RMoura98/yonder/releases/latest).
+
 ## Platform notes
 
 | Feature | Windows | macOS | Linux |
