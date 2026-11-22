@@ -1,0 +1,50 @@
+name: Announce release
+
+# Posts new releases to Bluesky and Mastodon. Each network is skipped when its
+# secrets aren't set, so this never blocks a release.
+#
+# Setup (Settings → Secrets and variables → Actions):
+#   secrets   BLUESKY_HANDLE        e.g. yonder.bsky.social
+#             BLUESKY_APP_PASSWORD  Bluesky → Settings → Privacy and security → App passwords
+#             MASTODON_TOKEN        your instance → Preferences → Development → New application (scope: write:statuses)
+#   variable  MASTODON_INSTANCE     e.g. https://mastodon.social
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to announce (e.g. v1.0.0)"
+        required: true
+      dry_run:
+        description: "Only print the posts"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  announce:
+    # Don't announce pre-releases automatically.
+    if: github.event_name == 'workflow_dispatch' || !github.event.release.prerelease
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Post
+        env:
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+          RELEASE_URL: ${{ github.event.release.html_url }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || 'false' }}
+          BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
+          BLUESKY_APP_PASSWORD: ${{ secrets.BLUESKY_APP_PASSWORD }}
+          MASTODON_INSTANCE: ${{ vars.MASTODON_INSTANCE }}
+          MASTODON_TOKEN: ${{ secrets.MASTODON_TOKEN }}
+        run: node .github/scripts/announce.mjs
