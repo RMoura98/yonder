@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Yonder — Look up. Look far. Get back to it.</title>
-  <meta name="description" content="Yonder is a free, open-source break reminder for Windows, macOS and Linux. Gentle 20-20-20 breaks, posture and blink reminders — no account, no telemetry.">
+  <meta name="description" content="Yonder is a free, open-source break reminder for Windows, macOS and Linux — an alternative to LookAway, Stretchly and Time Out. Gentle 20-20-20 breaks, posture and blink reminders, no account, no telemetry.">
   <meta name="theme-color" content="#061215" media="(prefers-color-scheme: dark)">
   <meta name="theme-color" content="#F2F6F5" media="(prefers-color-scheme: light)">
   <meta property="og:title" content="Yonder — Look up. Look far. Get back to it.">
@@ -469,6 +469,7 @@
         </div>
         <div class="faq">
           <details class="reveal"><summary>Is Yonder really free?</summary><div class="answer"><p>Yes. Yonder is open source under the MIT license. There's no paid tier, no trial and no feature held back.</p></div></details>
+          <details class="reveal"><summary>How is Yonder different from LookAway?</summary><div class="answer"><p><a href="https://lookaway.com">LookAway</a> is a polished, paid break reminder for the Mac, and it inspired a lot of Yonder&rsquo;s feel &mdash; if you&rsquo;re on a Mac and happy to pay, it&rsquo;s a great choice. Yonder is a free, open-source (MIT) alternative that also runs on Windows and Linux, with no account and no telemetry. LookAway has things Yonder doesn&rsquo;t, like an iPhone and iPad companion. Yonder is an independent project, not affiliated with LookAway or Mystical Bits.</p></div></details>
           <details class="reveal"><summary>Which platforms does it run on?</summary><div class="answer"><p>Windows 10 and newer, macOS 10.15 and newer, and most modern Linux desktops. Installers are attached to every <a href="https://github.com/RMoura98/yonder/releases/latest">GitHub release</a>, or you can build it yourself. A few features differ by platform — the <a href="docs.html#smart-pause">docs</a> list them.</p></div></details>
           <details class="reveal"><summary>Does Yonder collect any data?</summary><div class="answer"><p>No. There are no analytics, no crash reporters and no accounts. Settings and stats are stored locally, and nothing is sent over the network. The blurred-desktop and split-screen styles take a snapshot of your screen for the break screen; it never leaves your computer.</p></div></details>
           <details class="reveal"><summary>How does smart pause know I'm in a meeting?</summary><div class="answer"><p>It uses simple local system signals. On Windows it checks whether your microphone or camera is in use; on Linux, whether something is actively recording from the mic via PulseAudio/PipeWire; on macOS, whether Zoom's meeting helper is running. Fullscreen detection is Windows-only for now, and focus apps — matched by process name — work everywhere. Smart pause never records audio or video.</p></div></details>

@@ -5,7 +5,8 @@
 <h1 align="center">yonder</h1>
 
 <p align="center"><b>Look up. Look far. Get back to it.</b><br/>
-A tiny, open-source break reminder for Windows, macOS and Linux.</p>
+A tiny, open-source break reminder for Windows, macOS and Linux.<br/>
+<sub>A free alternative to LookAway, Stretchly, Time Out and BreakTimer.</sub></p>
 
 <p align="center">
   <img src="media/hero.gif" width="900" alt="A heads-up card counts down, a small countdown follows the cursor, then the desktop blurs into Yonder's break screen and sharpens back." />
@@ -58,6 +59,22 @@ installing; if you download the `.dmg` yourself instead, right-click Yonder.app 
 SmartScreen may warn about an unrecognized app: choose **More info → Run anyway**.
 
 **Linux:** grab the `.AppImage`, `.deb` or `.rpm` from the [latest release](https://github.com/RMoura98/yonder/releases/latest).
+
+## Yonder vs. LookAway
+
+[LookAway](https://lookaway.com) is a polished, paid break reminder for the Mac, and it inspired a lot of
+Yonder's feel. If you're on a Mac and happy to pay, it's a great choice. Yonder exists for everyone else:
+
+| | Yonder | LookAway |
+|---|---|---|
+| Price | Free | Paid (one-time license) |
+| Source | Open source (MIT) | Closed source |
+| Platforms | Windows, macOS, Linux | macOS (Windows announced as coming soon) |
+| Account / telemetry | None | — |
+| iPhone / iPad companion | No | Yes |
+
+Comparison based on lookaway.com as of November 2026. Yonder is an independent project, not affiliated
+with or endorsed by LookAway or Mystical Bits; product names belong to their owners.
 
 ## Platform notes
 
