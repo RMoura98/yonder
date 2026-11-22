@@ -13,11 +13,12 @@ use stats::Stats;
 
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::Mutex;
-use std::time::Duration;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
 
-use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, Submenu};
-use tauri::tray::TrayIconBuilder;
+use tauri::menu::{IsMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu};
+use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, WebviewUrl, WebviewWindow, WebviewWindowBuilder, Wry};
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
@@ -54,6 +55,10 @@ struct AppState {
     tray_look: Mutex<Option<(bool, bool)>>,
     /// Newer release found by the update checker (and not skipped).
     update: Mutex<Option<UpdateInfo>>,
+    /// Where the tray icon is (physical x, y, w, h), or the cursor, for placing the popover.
+    popover_anchor: Mutex<Option<(f64, f64, f64, f64)>>,
+    /// When the popover last closed, so the tray click that blurred it doesn't reopen it.
+    popover_closed: Mutex<Option<Instant>>,
 }
 
 fn state(app: &AppHandle) -> tauri::State<'_, AppState> {
@@ -96,15 +101,20 @@ fn open_settings(app: &AppHandle) {
 }
 
 fn cursor_monitor(app: &AppHandle) -> Option<tauri::Monitor> {
-    let pos = app.cursor_position().ok();
+    let pos = app.cursor_position().ok().map(|p| (p.x, p.y));
+    monitor_at(app, pos)
+}
+
+/// The monitor containing a physical point (the primary one if it is off every screen).
+fn monitor_at(app: &AppHandle, pos: Option<(f64, f64)>) -> Option<tauri::Monitor> {
     let monitors = app.available_monitors().ok()?;
-    if let Some(p) = pos {
+    if let Some((px, py)) = pos {
         for m in &monitors {
             let (mp, ms) = (m.position(), m.size());
-            if p.x >= mp.x as f64
-                && p.y >= mp.y as f64
-                && p.x < (mp.x + ms.width as i32) as f64
-                && p.y < (mp.y + ms.height as i32) as f64
+            if px >= mp.x as f64
+                && py >= mp.y as f64
+                && px < (mp.x + ms.width as i32) as f64
+                && py < (mp.y + ms.height as i32) as f64
             {
                 return Some(m.clone());
             }
@@ -198,6 +208,82 @@ fn show_cursor_pill(app: &AppHandle) {
             std::thread::sleep(Duration::from_millis(16));
         }
     });
+}
+
+// ================================================================== popover
+
+const POPOVER_W: f64 = 332.0; // 300px card + room for its shadow
+
+/// Opens or closes the tray popover. `anchor` is the tray icon rect (physical px);
+/// without one the popover appears at the mouse pointer.
+fn toggle_popover(app: &AppHandle, anchor: Option<(f64, f64, f64, f64)>) {
+    if app.get_webview_window("popover").is_some() {
+        close_window(app, "popover");
+        return;
+    }
+    // The click that blurred (and so closed) the popover must not reopen it.
+    let recent = state(app).popover_closed.lock().unwrap().map_or(false, |t| t.elapsed() < Duration::from_millis(350));
+    if !recent {
+        show_popover(app, anchor);
+    }
+}
+
+fn show_popover(app: &AppHandle, anchor: Option<(f64, f64, f64, f64)>) {
+    if let Some(w) = app.get_webview_window("popover") {
+        let _ = w.set_focus();
+        return;
+    }
+    let anchor = anchor.or_else(|| app.cursor_position().ok().map(|p| (p.x, p.y, 0.0, 0.0)));
+    *state(app).popover_anchor.lock().unwrap() = anchor;
+    let Ok(w) = WebviewWindowBuilder::new(app, "popover", WebviewUrl::App("popover.html".into()))
+        .title("Yonder")
+        .inner_size(POPOVER_W, 420.0)
+        .decorations(false)
+        .transparent(true)
+        .shadow(false)
+        .always_on_top(true)
+        .skip_taskbar(true)
+        .resizable(false)
+        .visible(false)
+        .build()
+    else {
+        return;
+    };
+    // Close when it loses focus (a click anywhere else). Ignore a blur that arrives
+    // before it ever had focus.
+    let had_focus = Arc::new(AtomicBool::new(false));
+    let handle = app.clone();
+    w.on_window_event(move |ev| match ev {
+        tauri::WindowEvent::Focused(true) => had_focus.store(true, Ordering::SeqCst),
+        tauri::WindowEvent::Focused(false) if had_focus.load(Ordering::SeqCst) => {
+            let h = handle.clone();
+            std::thread::spawn(move || close_window(&h, "popover"));
+        }
+        tauri::WindowEvent::Destroyed => *state(&handle).popover_closed.lock().unwrap() = Some(Instant::now()),
+        _ => {}
+    });
+    // shown (and focused) by the page via fit_window once it has laid out
+}
+
+/// Puts the popover next to the tray icon: above it when the tray is in the lower half
+/// of its screen (Windows taskbar), below it otherwise (macOS menu bar), clamped on screen.
+fn place_popover(app: &AppHandle, win: &WebviewWindow) {
+    let anchor = *state(app).popover_anchor.lock().unwrap();
+    let Some((ax, ay, aw, ah)) = anchor else { return place_top(app, win, true) };
+    let Some(m) = monitor_at(app, Some((ax + aw / 2.0, ay + ah / 2.0))) else { return };
+    let scale = m.scale_factor();
+    let size = win.outer_size().unwrap_or(PhysicalSize::new(332, 400));
+    let (mp, ms) = (m.position(), m.size());
+    let (w, h) = (size.width as f64, size.height as f64);
+    let (mx, my, mw, mh) = (mp.x as f64, mp.y as f64, ms.width as f64, ms.height as f64);
+    // the page keeps 16px of shadow room around the card; the card sits 8px off the icon
+    let off = 8.0 * scale;
+    let y = if ay + ah / 2.0 > my + mh / 2.0 { ay - h + off } else { ay + ah - off };
+    let x = ax + aw / 2.0 - w / 2.0;
+    let edge = 4.0 * scale;
+    let x = x.clamp(mx + edge, (mx + mw - w - edge).max(mx + edge));
+    let y = y.clamp(my, (my + mh - h).max(my));
+    let _ = win.set_position(PhysicalPosition::new(x as i32, y as i32));
 }
 
 fn close_window(app: &AppHandle, label: &str) {
@@ -697,10 +783,18 @@ async fn fit_window(window: WebviewWindow, width: f64, height: f64, align: Optio
         return;
     }
     let _ = window.set_size(tauri::LogicalSize::new(width, height));
-    if window.label() != "cursor" {
-        place_top(&app, &window, align.as_deref() == Some("right"));
+    match window.label() {
+        "cursor" => {}
+        "popover" => place_popover(&app, &window),
+        _ => place_top(&app, &window, align.as_deref() == Some("right")),
     }
-    if !window.is_visible().unwrap_or(true) {
+    if window.label() == "popover" {
+        // the one floating window that takes focus: you just clicked the tray for it
+        if !window.is_visible().unwrap_or(true) {
+            let _ = window.show();
+        }
+        let _ = window.set_focus();
+    } else if !window.is_visible().unwrap_or(true) {
         // only the small floating windows go through here; never let them take focus
         show_quietly(&window);
     }
@@ -753,30 +847,38 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
         &[&p30.0, &p60.0, &p120.0, &ptomorrow.0, &pforever.0],
     )?;
     let resume = item("resume", "Resume", false)?;
+    let show_status = item("show_status", "Show status", true)?;
     let settings_item = item("open_settings", "Settings…", true)?;
     let quit = item("quit", "Quit Yonder", true)?;
     let (settings, quit_item) = (&settings_item.0, &quit.0);
-    let menu = Menu::with_items(
-        app,
-        &[
-            &status,
-            &PredefinedMenuItem::separator(app)?,
-            &take.0,
-            &skip.0,
-            &pause,
-            &resume.0,
-            &PredefinedMenuItem::separator(app)?,
-            settings,
-            quit_item,
-        ],
-    )?;
+    let (sep1, sep2) = (PredefinedMenuItem::separator(app)?, PredefinedMenuItem::separator(app)?);
+    let linux = cfg!(target_os = "linux");
+    let mut items: Vec<&dyn IsMenuItem<Wry>> = vec![&status, &sep1];
+    // Many AppIndicator hosts never report tray clicks, so Linux opens the popover from the menu.
+    if linux {
+        items.push(&show_status.0);
+    }
+    items.extend([&take.0 as &dyn IsMenuItem<Wry>, &skip.0, &pause, &resume.0, &sep2, settings, quit_item]);
+    let menu = Menu::with_items(app, &items)?;
 
     TrayIconBuilder::with_id("main")
         .icon(tray_icon(platform::taskbar_is_light(), false))
         .icon_as_template(cfg!(target_os = "macos"))
         .tooltip("Yonder")
         .menu(&menu)
-        .show_menu_on_left_click(true)
+        // Left click opens the popover (right click keeps the menu); Linux hosts keep the menu.
+        .show_menu_on_left_click(linux)
+        .on_tray_icon_event(|tray, ev| {
+            if let TrayIconEvent::Click { button: MouseButton::Left, button_state: MouseButtonState::Up, rect, .. } = ev {
+                if cfg!(target_os = "linux") {
+                    return;
+                }
+                let p = rect.position.to_physical::<f64>(1.0);
+                let s = rect.size.to_physical::<f64>(1.0);
+                let app = tray.app_handle().clone();
+                std::thread::spawn(move || toggle_popover(&app, Some((p.x, p.y, s.width, s.height))));
+            }
+        })
         .on_menu_event(|app, ev| {
             let id = ev.id().as_ref();
             match id {
@@ -784,6 +886,10 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
                 "pause_60" => run_action(app, "pause", Some(60)),
                 "pause_120" => run_action(app, "pause", Some(120)),
                 "pause_forever" => run_action(app, "pause", None),
+                "show_status" => {
+                    let app = app.clone();
+                    std::thread::spawn(move || show_popover(&app, None));
+                }
                 "update" => {
                     let url = state(app).update.lock().unwrap().as_ref().map(|u| u.url.clone());
                     match url {
@@ -796,7 +902,8 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
         })
         .build(app)?;
 
-    let labeled = vec![take.clone(), skip.clone(), p30, p60, p120, ptomorrow, pforever, resume.clone(), settings_item.clone(), quit.clone()];
+    let mut labeled = vec![take.clone(), skip.clone(), p30, p60, p120, ptomorrow, pforever, resume.clone(), settings_item.clone(), quit.clone()];
+    labeled.push(show_status.clone());
     *state(app).tray.lock().unwrap() = Some(TrayItems {
         menu,
         status,
@@ -1027,6 +1134,8 @@ pub fn run() {
                 tray: Mutex::new(None),
                 tray_look: Mutex::new(None),
                 update: Mutex::new(None),
+                popover_anchor: Mutex::new(None),
+                popover_closed: Mutex::new(None),
             });
 
             let handle = app.handle().clone();

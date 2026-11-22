@@ -380,6 +380,7 @@
   "Screen recorders like OBS, and mirrored displays.": "OBS などの画面録画アプリと、ミラーリング中のディスプレイ。",
   "Screen recorders like OBS, and PipeWire screen sharing.": "OBS などの画面録画アプリと、PipeWire の画面共有。",
   "you're sharing or recording your screen": "画面を共有または録画中",
+  "Show status": "ステータスを表示",
   "Show countdown next to the icon": "アイコンの横にカウントダウンを表示",
   "Shows the time until your next break beside the tray icon, where your system supports it (macOS menu bar, some Linux panels).": "システムが対応している場合（macOS のメニューバー、一部の Linux パネル）、トレイアイコンの横に次の休憩までの時間を表示します。"
 }

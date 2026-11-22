@@ -15,6 +15,7 @@ Whenever a change alters something visible in a teaser, re-record the affected s
 | `settings` | settings window tour (dark) |
 | `settingsLight` | settings window still (light), saved as `media/settings-light.png` |
 | `split` | split-screen break |
+| `popover` | tray popover: click the icon, live countdown and score, pause menu |
 
 ## Usage
 

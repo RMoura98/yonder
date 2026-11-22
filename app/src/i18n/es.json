@@ -380,6 +380,7 @@
   "Screen recorders like OBS, and mirrored displays.": "Grabadores de pantalla como OBS y pantallas duplicadas.",
   "Screen recorders like OBS, and PipeWire screen sharing.": "Grabadores de pantalla como OBS y pantalla compartida con PipeWire.",
   "you're sharing or recording your screen": "estás compartiendo o grabando la pantalla",
+  "Show status": "Mostrar estado",
   "Show countdown next to the icon": "Mostrar la cuenta atrás junto al icono",
   "Shows the time until your next break beside the tray icon, where your system supports it (macOS menu bar, some Linux panels).": "Muestra el tiempo hasta tu próximo descanso junto al icono de la bandeja, donde tu sistema lo permita (barra de menús de macOS, algunos paneles de Linux)."
 }

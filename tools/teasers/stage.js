@@ -28,13 +28,13 @@ const settings = {
   },
   shortcuts: { take_break: "CmdOrCtrl+Alt+B", toggle_pause: "CmdOrCtrl+Alt+P", skip_break: "CmdOrCtrl+Alt+S" },
   hooks: { on_break_start: "", on_break_end: "" },
-  launch_at_login: true, theme: "system", onboarded: true, language: "en", check_updates: true, skipped_update: "",
+  launch_at_login: true, theme: "system", onboarded: true, language: "en", check_updates: true, tray_countdown: true, skipped_update: "",
 };
 if (scene === "hero") Object.assign(settings, { prebreak_secs: 10, prebreak_visible_secs: 3 });
 if (scene === "split") Object.assign(settings, { break_style: "split", texture: "mat_teal" });
 if (scene === "gentle") Object.assign(settings, { break_style: "gentle" });
 if (scene === "setup") Object.assign(settings, { onboarded: false, theme: "light" });
-if (scene === "settings") settings.theme = "dark";
+if (scene === "settings" || scene === "popover") settings.theme = "dark";
 if (scene === "settingsLight") settings.theme = "light";
 
 // 14 days of plausible demo stats
@@ -113,7 +113,12 @@ function fit(win, { width, height }) {
   if (height <= 0) { f.remove(); return null; }
   f.style.width = width + "px";
   f.style.height = height + "px";
-  if (f.dataset.role !== "cursor") {
+  if (f.dataset.role === "popover") {
+    // anchored above the tray icon, like the real window (16px of the frame is shadow room)
+    const tray = document.querySelector("#taskbar .yd").getBoundingClientRect();
+    f.style.left = Math.round(Math.min(W - width - 4, tray.left + tray.width / 2 - width / 2)) + "px";
+    f.style.top = Math.round(tray.top - 8 - height + 8) + "px";
+  } else if (f.dataset.role !== "cursor") {
     f.style.left = Math.round((W - width) / 2) + "px";
     f.style.top = "48px";
   }
@@ -227,6 +232,29 @@ const SCENES = {
     await sleep(4300);
     overlays.querySelectorAll('iframe[data-role="reminders"]').forEach((f) => f.remove());
     await sleep(300);
+  },
+
+  async popover() {
+    // click the tray icon: the popover opens above it with the live countdown and the score of today
+    let next = 872;
+    const ticker = setInterval(() => setState(snapWorking(--next)), 1000);
+    setState(snapWorking(next));
+    await sleep(500);
+    const tray = document.querySelector("#taskbar .yd").getBoundingClientRect();
+    await moveCursor(tray.left + tray.width / 2 - 4, tray.top + tray.height / 2 - 4, 900);
+    await sleep(150);
+    clickRipple();
+    const f = openFrame("popover", "/app/popover.html", { left: "1300px", top: "600px", width: "332px", height: "420px", colorScheme: "dark" });
+    await sleep(2600);
+    await clickIn(f, "#pause", 700);
+    await sleep(1800);
+    // click elsewhere: it closes, like a blur
+    await moveCursor(700, 420, 700);
+    await sleep(150);
+    clickRipple();
+    f.remove();
+    await sleep(600);
+    clearInterval(ticker);
   },
 
   async gentle() {
