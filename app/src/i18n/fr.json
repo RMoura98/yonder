@@ -324,5 +324,7 @@
   "Slate": "Ardoise",
   "Terrazzo": "Terrazzo",
   "Paper": "Papier",
-  "Denim": "Denim"
+  "Denim": "Denim",
+  "Waiting for a pause in your typing…": "En attente d'une pause dans ta saisie…",
+  "Break when you pause typing": "Pause dès que tu arrêtes de taper"
 }

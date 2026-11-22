@@ -37,9 +37,21 @@
     await initI18n(settings.language);
     // the number keeps its own element so it can animate
     document.getElementById("label").innerHTML = t("Starting break in {n}", { n: '<span id="n">5</span>' });
-    const n = document.getElementById("n");
+    let n = document.getElementById("n");
+    let holding = false;
     const render = (s) => {
       if (s.phase !== "working") return;
+      // Due, but waiting for a pause in typing: don't freeze at "in 1".
+      if (s.holding !== holding) {
+        holding = s.holding;
+        document.getElementById("label").textContent = holding ? t("Break when you pause typing") : "";
+        if (!holding) document.getElementById("label").innerHTML = t("Starting break in {n}", { n: '<span id="n">1</span>' });
+        n = document.getElementById("n") || n;
+        const r = pill.getBoundingClientRect();
+        invoke("fit_window", { width: Math.ceil(r.width + 40), height: Math.ceil(r.height + 40) });
+        if (holding) return;
+      }
+      if (holding) return;
       const left = Math.max(1, s.next_break_in);
       setClock(pill, 1 - Math.min(1, (left - 1) / 5));
       const v = String(left);

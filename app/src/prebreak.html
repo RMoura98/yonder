@@ -129,7 +129,14 @@
         $("msg").textContent = t(s.next_is_long ? "Long break in a few seconds." : "Starting in a few seconds.");
         if (card.classList.contains("mini")) mini(false);
       }
+      // Due, but you're typing: say so instead of sitting at 00:00.
+      if (s.holding && !holdingShown) {
+        holdingShown = true;
+        $("msg").textContent = t("Waiting for a pause in your typing…");
+        if (card.classList.contains("mini")) mini(false);
+      }
     };
+    let holdingShown = false;
     const first = await invoke("get_state");
     render(first);
     listen("state", render);
