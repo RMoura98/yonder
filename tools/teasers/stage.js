@@ -33,6 +33,7 @@ const settings = {
 if (scene === "hero") Object.assign(settings, { prebreak_secs: 10, prebreak_visible_secs: 3 });
 if (scene === "split") Object.assign(settings, { break_style: "split", texture: "mat_teal" });
 if (scene === "gentle") Object.assign(settings, { break_style: "gentle" });
+if (scene === "setup") Object.assign(settings, { onboarded: false, theme: "light" });
 if (scene === "settings") settings.theme = "dark";
 if (scene === "settingsLight") settings.theme = "light";
 
@@ -229,9 +230,43 @@ const SCENES = {
   },
 
   async gentle() {
+    // the screen dims, and the cursor keeps working underneath (clicks pass through)
     await sleep(500);
+    const work = (async () => {
+      await sleep(1400);
+      const spots = [[520, 330], [880, 300], [640, 640], [1060, 560], [760, 420]];
+      for (const [x, y] of spots) {
+        await moveCursor(x, y, 650);
+        await sleep(120);
+        clickRipple();
+        await sleep(380);
+      }
+    })();
     await runBreak(230);
+    await work;
+    await moveCursor(700, 520, 600);
+    await sleep(400);
+  },
+
+  async setup() {
+    const f = settingsFrame;
+    await sleep(1400);
+    await clickIn(f, "#setupNext", 650);
+    await sleep(900);
+    await clickIn(f, '#setupModes button[data-v="eye_care"]', 600);
     await sleep(500);
+    await clickIn(f, '#setupModes button[data-v="balanced"]', 500);
+    await sleep(600);
+    await clickIn(f, "#setupNext", 550);
+    await sleep(900);
+    await clickIn(f, '#setupStyles button[data-v="gentle"]', 600);
+    await sleep(700);
+    await clickIn(f, '#setupStyles button[data-v="fullscreen"]', 500);
+    await sleep(600);
+    await clickIn(f, "#setupNext", 600);
+    await sleep(1100);
+    await moveCursor(700, 520, 600);
+    await sleep(400);
   },
 
   async split() {
@@ -262,7 +297,11 @@ const SCENES = {
     await clickIn(f, '#bgSwatches [data-bg="aurora"]', 500);
     await sleep(550);
     await clickIn(f, '#bgSwatches [data-bg="blur"]', 400);
-    await sleep(500);
+    await sleep(450);
+    await clickIn(f, '#styleCards button[data-v="gentle"]', 500);
+    await sleep(600);
+    await clickIn(f, '#styleCards button[data-v="fullscreen"]', 450);
+    await sleep(450);
     await clickIn(f, '#nav a[data-page="today"]', 600);
     await moveCursor(700, 520, 650);
     await sleep(500);
@@ -280,8 +319,8 @@ const SCENES = {
 
 // Settings scenes: open the window before recording so frame 0 is fully rendered.
 let settingsFrame = null;
-if (scene === "settings" || scene === "settingsLight") {
-  if (scene === "settings") document.body.classList.add("dim");
+if (scene === "settings" || scene === "settingsLight" || scene === "setup") {
+  if (scene !== "settingsLight") document.body.classList.add("dim");
   settingsFrame = openFrame("settings", "/app/index.html", { left: "310px", top: "130px", width: "980px", height: "690px" });
   settingsFrame.classList.add("settings");
 }

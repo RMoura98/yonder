@@ -26,6 +26,8 @@ const SCENES = {
   reminders: { poster: 2.9, gifw: 960, fps: 18 },
   settings: { poster: 3.4, gifw: 960, fps: 18 },
   split: { poster: 4.0, gifw: 960, fps: 18 },
+  gentle: { poster: 4.5, gifw: 960, fps: 18 },
+  setup: { poster: 5.0, gifw: 960, fps: 18 },
 };
 
 const wanted = process.argv.slice(2).length ? process.argv.slice(2) : [...Object.keys(SCENES), "settingsLight"];
