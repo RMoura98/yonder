@@ -60,6 +60,9 @@ SmartScreen may warn about an unrecognized app: choose **More info → Run anywa
 
 **Linux:** grab the `.AppImage`, `.deb` or `.rpm` from the [latest release](https://github.com/RMoura98/yonder/releases/latest).
 
+**Stay up to date:** follow the [releases feed](https://github.com/RMoura98/yonder/releases.atom) in any RSS reader (no account
+needed), or click **Watch → Custom → Releases** on this repo. News and questions live in [Discussions](https://github.com/RMoura98/yonder/discussions).
+
 ## Yonder vs. LookAway
 
 [LookAway](https://lookaway.com) is a polished, paid break reminder for the Mac, and it inspired a lot of
