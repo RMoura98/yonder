@@ -1,0 +1,695 @@
+import { invoke, listen, action, applyTheme, fmtClock, fmtHuman } from "./api.js";
+import { SOUNDS, playSound } from "./sounds.js";
+import { ANIMATED, GRADIENTS, TEXTURES } from "./backgrounds.js";
+import { icon as baseIcon, hydrateIcons, PICKABLE, ICON_PATHS } from "./icons.js";
+
+// Prefer a filled glyph when asked for "<name>_fill", falling back to the outline.
+const icon = (name, size, cls) =>
+  baseIcon(ICON_PATHS[name] ? name : name.replace(/_fill$/, ""), size, cls);
+
+const $ = (s, root = document) => root.querySelector(s);
+const $$ = (s, root = document) => [...root.querySelectorAll(s)];
+const DAYS = ["M", "T", "W", "T", "F", "S", "S"];
+const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const X = () => icon("close", 16);
+const PRESETS = {
+  balanced: { work_mins: 20, break_secs: 20, long_enabled: false, long_mins: 5, long_every: 3 },
+  deep_focus: { work_mins: 45, break_secs: 30, long_enabled: true, long_mins: 5, long_every: 3 },
+  eye_care: { work_mins: 15, break_secs: 15, long_enabled: true, long_mins: 3, long_every: 4 },
+  wellness: { work_mins: 25, break_secs: 45, long_enabled: true, long_mins: 5, long_every: 2 },
+};
+const BREAK_LENGTHS = [10, 15, 20, 30, 45, 60, 90, 120, 180, 300];
+
+let S; // settings
+let platform = "windows";
+
+// ------------------------------------------------------------------ helpers
+const get = (path) => path.split(".").reduce((o, k) => o?.[k], S);
+function set(path, value) {
+  const keys = path.split(".");
+  const last = keys.pop();
+  keys.reduce((o, k) => o[k], S)[last] = value;
+}
+let saveTimer;
+function save() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    try {
+      await invoke("save_settings", { settings: S });
+    } catch (e) {
+      toast("Couldn't save: " + e);
+    }
+  }, 250);
+  refreshVisibility();
+  refreshSummaries();
+}
+function toast(msg) {
+  let t = $(".toast");
+  if (!t) document.body.appendChild((t = Object.assign(document.createElement("div"), { className: "toast" })));
+  t.textContent = msg;
+  t.classList.add("on");
+  clearTimeout(t._h);
+  t._h = setTimeout(() => t.classList.remove("on"), 1800);
+}
+const el = (html) => {
+  const t = document.createElement("template");
+  t.innerHTML = html.trim();
+  return t.content.firstElementChild;
+};
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const uid = () => Math.random().toString(36).slice(2, 9);
+const ordinal = (n) => n + (n % 10 === 1 && n !== 11 ? "st" : n % 10 === 2 && n !== 12 ? "nd" : n % 10 === 3 && n !== 13 ? "rd" : "th");
+const secsLabel = (s) => (s < 60 ? `${s} seconds` : s % 60 ? `${Math.floor(s / 60)} min ${s % 60} s` : `${s / 60} minute${s === 60 ? "" : "s"}`);
+
+/** Fills `[data-tile][data-ic]` elements with their glyph (nav items get a tile + label). */
+function paintTiles() {
+  for (const a of $$("#nav a")) {
+    const label = a.textContent;
+    a.innerHTML = `<span class="tile" data-tile="${a.dataset.tile}">${icon(a.dataset.ic + "_fill", 17)}</span><span>${esc(label)}</span>`;
+  }
+  for (const t of $$("span.tile[data-ic]")) t.innerHTML = icon(t.dataset.ic + "_fill", 17);
+}
+
+/** A button showing the current icon; opens a small grid of Material icons. */
+function iconPicker(current, onPick) {
+  const wrap = el(`<div class="icon-pick"><button type="button" class="icon-btn" title="Choose icon">${icon(current, 18)}</button></div>`);
+  const btn = wrap.firstChild;
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const open = $(".icon-pop", wrap);
+    $$(".icon-pop").forEach((p) => p.remove());
+    if (open) return;
+    const pop = el(`<div class="icon-pop" role="listbox"></div>`);
+    for (const n of PICKABLE) {
+      const b = el(`<button type="button" title="${n.replaceAll("_", " ")}" class="${n === current ? "on" : ""}">${icon(n, 20)}</button>`);
+      b.onclick = (ev) => {
+        ev.stopPropagation();
+        current = n;
+        btn.innerHTML = icon(n, 18);
+        onPick(n);
+        pop.remove();
+      };
+      pop.appendChild(b);
+    }
+    wrap.appendChild(pop);
+  });
+  return wrap;
+}
+document.addEventListener("click", () => $$(".icon-pop").forEach((p) => p.remove()));
+
+// ------------------------------------------------------------------ binding
+function bindAll() {
+  for (const input of $$("[data-bind]")) {
+    const path = input.dataset.bind;
+    if (input.classList.contains("seg")) {
+      const paint = () => $$("button", input).forEach((b) => b.classList.toggle("on", b.dataset.v === String(get(path))));
+      paint();
+      $$("button", input).forEach((b) =>
+        b.addEventListener("click", () => {
+          set(path, b.dataset.v);
+          paint();
+          if (path === "theme") applyTheme(S.theme);
+          save();
+        })
+      );
+      continue;
+    }
+    const isNum = input.type === "number" || input.type === "range" || input.dataset.type === "number";
+    if (input.type === "checkbox") input.checked = !!get(path);
+    else {
+      // make sure a select can show a value that isn't one of its presets
+      if (input.tagName === "SELECT" && get(path) != null && ![...input.options].some((o) => o.value === String(get(path)))) {
+        input.add(new Option(String(get(path)), String(get(path))));
+      }
+      input.value = get(path) ?? "";
+    }
+    input.addEventListener(input.type === "text" ? "input" : "change", () => {
+      let v = input.type === "checkbox" ? input.checked : input.value;
+      if (isNum) {
+        v = Number(v);
+        if (input.min !== "" && v < Number(input.min)) v = Number(input.min);
+        if (input.max !== "" && v > Number(input.max)) v = Number(input.max);
+        input.value = v;
+      }
+      set(path, v);
+      if (input.hasAttribute("data-custom")) markCustomMode();
+      save();
+    });
+  }
+}
+
+function refreshVisibility() {
+  for (const n of $$("[data-show]")) {
+    const [path, val] = n.dataset.show.split("=");
+    const v = get(path);
+    n.toggleAttribute("data-hidden", !(val === undefined ? !!v : String(v) === val));
+  }
+}
+
+// -------------------------------------------------------------------- nav
+let current = "today";
+function go(page) {
+  const sec = $("#page-" + page);
+  if (!sec) return;
+  current = page;
+  const parent = sec.dataset.parent;
+  const navKey = parent || page;
+  $$("#nav a").forEach((a) => a.classList.toggle("active", a.dataset.page === navKey));
+  $$(".page").forEach((p) => p.classList.toggle("active", p === sec));
+  const navItem = $(`#nav a[data-page="${navKey}"]`);
+  $("#barTitle").textContent = sec.dataset.title;
+  $("#back").hidden = !parent;
+  $("#barTile").hidden = !!parent;
+  if (parent) $("#backLabel").textContent = $("#page-" + parent).dataset.title;
+  else {
+    $("#barTile").dataset.tile = navItem.dataset.tile;
+    $("#barTile").innerHTML = icon(navItem.dataset.ic + "_fill", 20);
+  }
+  $("#scroll").scrollTop = 0;
+  if (page === "stats") renderStats();
+}
+
+function initNav() {
+  $$("#nav a").forEach((a) => a.addEventListener("click", () => go(a.dataset.page)));
+  $$("[data-go]").forEach((a) => a.addEventListener("click", () => go(a.dataset.go)));
+  $("#back").addEventListener("click", () => go($("#page-" + current).dataset.parent));
+  $$("[data-act]").forEach((b) => b.addEventListener("click", () => action(b.dataset.act)));
+  $$("[data-break]").forEach((b) => b.addEventListener("click", () => action("take_break", Number(b.dataset.break))));
+  // external links open in the system browser
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest("a[href^='https://']");
+    if (!a) return;
+    e.preventDefault();
+    invoke("open_url", { url: a.href });
+  });
+}
+
+// ------------------------------------------------------------ screen breaks
+function markCustomMode() {
+  const match = Object.entries(PRESETS).find(([, p]) => Object.entries(p).every(([k, v]) => S[k] === v));
+  S.mode = match ? match[0] : "custom";
+  paintBreaks();
+}
+
+function paintBreaks() {
+  $("#modeSel").value = S.mode in PRESETS ? S.mode : "custom";
+  $("#workH").value = Math.floor(S.work_mins / 60);
+  $("#workM").value = S.work_mins % 60;
+  const sel = $("#breakSel");
+  const lengths = [...new Set([...BREAK_LENGTHS, S.break_secs])].sort((a, b) => a - b);
+  sel.innerHTML = lengths.map((s) => `<option value="${s}">${secsLabel(s)}</option>`).join("");
+  sel.value = S.break_secs;
+  $$("#enforce button").forEach((b) => b.classList.toggle("on", b.dataset.v === S.skip_difficulty));
+}
+
+function refreshSummaries() {
+  if (!S) return;
+  const bgName = S.break_style === "split" ? "Split screen" : ({ blur: "Blurred desktop", image: "Your image", gradient: "Gradient" }[S.background] || (ANIMATED.find((a) => a.id === S.background)?.name ?? ""));
+  $("#vScreen").textContent = bgName;
+  $("#vLong").textContent = S.long_enabled ? `Every ${ordinal(S.long_every)} break is a ${S.long_mins} min long break` : "Off";
+  const oh = S.office_hours;
+  const days = oh.days.every(Boolean) ? "every day" : oh.days.slice(0, 5).every(Boolean) && !oh.days[5] && !oh.days[6] ? "weekdays" : oh.days.map((d, i) => (d ? DAY_NAMES[i] : null)).filter(Boolean).join(", ");
+  $("#vHours").textContent = oh.enabled ? `${oh.start} to ${oh.end} ${days}` : "Always on";
+  const n = S.planned.filter((p) => p.enabled).length;
+  $("#vPlanned").textContent = n ? `${n} planned` : "None";
+}
+
+function initBreaks() {
+  paintBreaks();
+  $("#modeSel").addEventListener("change", (e) => {
+    const m = e.target.value;
+    if (PRESETS[m]) Object.assign(S, PRESETS[m]);
+    S.mode = m;
+    // refresh the controls the preset touched
+    $$("[data-custom]").forEach((i) => (i.type === "checkbox" ? (i.checked = !!get(i.dataset.bind)) : (i.value = get(i.dataset.bind))));
+    paintBreaks();
+    save();
+  });
+  const setWork = () => {
+    const h = Math.max(0, Math.min(4, Number($("#workH").value) || 0));
+    const m = Math.max(0, Math.min(59, Number($("#workM").value) || 0));
+    S.work_mins = Math.max(1, h * 60 + m);
+    markCustomMode();
+    save();
+  };
+  $("#workH").addEventListener("change", setWork);
+  $("#workM").addEventListener("change", setWork);
+  $("#breakSel").addEventListener("change", (e) => {
+    S.break_secs = Number(e.target.value);
+    markCustomMode();
+    save();
+  });
+  $$("#enforce button").forEach((b) =>
+    b.addEventListener("click", () => {
+      S.skip_difficulty = b.dataset.v;
+      paintBreaks();
+      save();
+    })
+  );
+}
+
+// ----------------------------------------------------------- break screen
+function soundOptions(sel, withNone) {
+  sel.innerHTML = (withNone ? `<option value="none">None</option>` : "") + SOUNDS.map((s) => `<option value="${s.id}">${s.name}</option>`).join("");
+}
+
+function initScreen() {
+  // style cards
+  const paintStyle = () => $$("#styleCards button").forEach((b) => b.classList.toggle("on", b.dataset.v === S.break_style));
+  $$("#styleCards button").forEach((b) =>
+    b.addEventListener("click", () => {
+      if (b.disabled) return;
+      S.break_style = b.dataset.v;
+      paintStyle();
+      save();
+    })
+  );
+  paintStyle();
+  if (platform === "linux") {
+    $("#splitBtn").disabled = true;
+    $("#splitBtn span:last-child").textContent = "Not available on Linux yet";
+  }
+
+  // backgrounds
+  const box = $("#bgSwatches");
+  const paint = () =>
+    $$(".swatch", box).forEach((s) => {
+      const on = s.dataset.bg === S.background && (S.background !== "gradient" || s.dataset.g === S.gradient);
+      s.classList.toggle("on", on);
+    });
+  const preview = {
+    aurora: "radial-gradient(circle at 25% 35%,#1f7a7a 0,transparent 55%),radial-gradient(circle at 75% 40%,#f4c26b 0,transparent 50%),radial-gradient(circle at 50% 90%,#2e62a6 0,transparent 60%),#0b1f24",
+    nebula: "radial-gradient(circle at 35% 40%,#3d2a6b 0,transparent 50%),radial-gradient(circle at 65% 60%,#1d4e89 0,transparent 50%),#06060f",
+    ripple: "repeating-radial-gradient(circle at 50% 50%,rgba(159,216,203,.28) 0 2px,transparent 2px 16px),linear-gradient(135deg,#0e3b43,#12253d)",
+  };
+  if (platform !== "linux") {
+    box.appendChild(el(`<button class="swatch blurprev" data-bg="blur" title="Your desktop, frosted behind the countdown"><span>Blurred desktop</span></button>`));
+  }
+  for (const a of ANIMATED) box.appendChild(el(`<button class="swatch" data-bg="${a.id}" style="background:${preview[a.id]}"><span>${a.name}</span></button>`));
+  for (const [id, g] of Object.entries(GRADIENTS)) {
+    box.appendChild(el(`<button class="swatch" data-bg="gradient" data-g="${id}" style="background:${g}"><span>${id[0].toUpperCase() + id.slice(1)}</span></button>`));
+  }
+  const img = el(`<button class="swatch upload" data-bg="image" title="Click to choose, double-click to replace"><span>Your image</span><b class="plus">${icon("add", 26)}</b></button>`);
+  box.appendChild(img);
+  if (S.has_image) invoke("get_background").then((u) => { if (u) { img.style.backgroundImage = `url(${u})`; $(".plus", img)?.remove(); } });
+  box.addEventListener("click", (e) => {
+    const s = e.target.closest(".swatch");
+    if (!s) return;
+    if (s.dataset.bg === "image" && !S.has_image) return $("#imgInput").click();
+    S.background = s.dataset.bg;
+    if (s.dataset.g) S.gradient = s.dataset.g;
+    paint();
+    save();
+  });
+  img.addEventListener("dblclick", () => $("#imgInput").click());
+  $("#imgInput").addEventListener("change", (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = async () => {
+      try {
+        await invoke("save_background", { dataUrl: r.result });
+        S.has_image = true;
+        S.background = "image";
+        img.style.backgroundImage = `url(${r.result})`;
+        $(".plus", img)?.remove();
+        paint();
+        save();
+        toast("Background image saved");
+      } catch (err) {
+        toast(String(err));
+      }
+    };
+    r.readAsDataURL(f);
+  });
+  paint();
+
+  // textures
+  const tb = $("#texSwatches");
+  for (const [id, t] of Object.entries(TEXTURES)) {
+    const s = el(`<button class="swatch" data-t="${id}"><span>${t.name}</span></button>`);
+    s.style.cssText += t.css;
+    tb.appendChild(s);
+  }
+  const paintT = () => $$(".swatch", tb).forEach((s) => s.classList.toggle("on", s.dataset.t === S.texture));
+  tb.addEventListener("click", (e) => {
+    const s = e.target.closest(".swatch");
+    if (!s) return;
+    S.texture = s.dataset.t;
+    paintT();
+    save();
+  });
+  paintT();
+
+  // messages
+  const renderMsgs = () => {
+    const list = $("#msgList");
+    list.innerHTML = S.messages.length ? "" : `<div class="empty">No messages yet. A default one will be used.</div>`;
+    S.messages.forEach((m, i) => {
+      const row = el(`<div class="item-row"><div class="grow"><input type="text" maxlength="140" value="${esc(m)}" /></div><button class="x" title="Remove">${X()}</button></div>`);
+      $("input", row).addEventListener("input", (e) => { S.messages[i] = e.target.value; save(); });
+      $(".x", row).onclick = () => { S.messages.splice(i, 1); renderMsgs(); save(); };
+      list.appendChild(row);
+    });
+  };
+  const addMsg = () => {
+    const v = $("#msgNew").value.trim();
+    if (!v) return;
+    S.messages.push(v);
+    $("#msgNew").value = "";
+    renderMsgs();
+    save();
+  };
+  $("#msgAdd").onclick = addMsg;
+  $("#msgNew").addEventListener("keydown", (e) => e.key === "Enter" && addMsg());
+  renderMsgs();
+}
+
+function initSounds() {
+  soundOptions($("#soundSel"), false);
+  $("#soundSel").value = S.sound;
+  $("#soundTest").onclick = () => playSound(S.sound, S.volume);
+}
+
+// --------------------------------------------------------------- wellness
+function reminderCard(r, { builtin, onRemove }) {
+  const card = el(`<div class="rem">
+    <div class="rem-head">
+      ${builtin ? `<span class="icon-badge">${icon(r.icon, 18)}</span>` : `<span class="pick"></span>`}
+      ${builtin ? `<div class="title">${esc(builtin)}</div>` : `<input type="text" class="title" maxlength="40" value="${esc(r.title)}" placeholder="Title" />`}
+      <input type="checkbox" class="switch en" ${r.enabled ? "checked" : ""} />
+      ${onRemove ? `<button class="x" title="Delete">${X()}</button>` : ""}
+    </div>
+    <div class="rem-grid">
+      <label>Every <input type="number" class="iv" min="1" max="480" value="${r.interval_mins}" /> min</label>
+      <label>Size <span class="stepper"><select class="sz"><option value="small">Small</option><option value="medium">Medium</option><option value="large">Large</option></select></span></label>
+      <label>Sound <span class="stepper"><select class="snd"></select></span></label>
+      <label><input type="checkbox" class="switch sticky" ${r.sticky ? "checked" : ""} /> Stay until done</label>
+    </div>
+    ${builtin ? "" : `<div style="margin-top:8px"><input type="text" class="body" maxlength="80" style="width:100%" value="${esc(r.body)}" placeholder="Optional description" /></div>`}
+  </div>`);
+  $(".pick", card)?.replaceWith(iconPicker(r.icon, (n) => { r.icon = n; save(); }));
+  soundOptions($(".snd", card), true);
+  $(".snd", card).value = r.sound;
+  $(".sz", card).value = r.size;
+  const on = (sel, ev, fn) => $(sel, card)?.addEventListener(ev, (e) => { fn(e.target); save(); });
+  on(".en", "change", (t) => (r.enabled = t.checked));
+  on(".iv", "change", (t) => (r.interval_mins = Math.max(1, Number(t.value) || 1)));
+  on(".sz", "change", (t) => (r.size = t.value));
+  on(".snd", "change", (t) => { r.sound = t.value; playSound(r.sound, S.volume); });
+  on(".sticky", "change", (t) => (r.sticky = t.checked));
+  on("input.title", "input", (t) => (r.title = t.value));
+  on(".body", "input", (t) => (r.body = t.value));
+  if (onRemove) $(".x", card).onclick = onRemove;
+  return card;
+}
+
+function initWellness() {
+  const b = $("#builtinReminders");
+  b.appendChild(reminderCard(S.wellness.posture, { builtin: "Posture" }));
+  b.appendChild(reminderCard(S.wellness.blink, { builtin: "Blink" }));
+
+  const renderCustom = () => {
+    const box = $("#customReminders");
+    box.innerHTML = "";
+    S.wellness.custom.forEach((r, i) =>
+      box.appendChild(reminderCard(r, { onRemove: () => { S.wellness.custom.splice(i, 1); renderCustom(); save(); } }))
+    );
+    $("#customCount").textContent = `${S.wellness.custom.length} of 5`;
+    $("#addReminder").disabled = S.wellness.custom.length >= 5;
+  };
+  $("#addReminder").onclick = () => {
+    if (S.wellness.custom.length >= 5) return;
+    S.wellness.custom.push({
+      id: "c_" + uid(), enabled: true, title: "Drink water", body: "", icon: "water_drop",
+      interval_mins: 45, size: "medium", sound: "drop", sticky: false,
+    });
+    renderCustom();
+    save();
+  };
+  renderCustom();
+}
+
+// ------------------------------------------------------------------ smart
+function initSmart() {
+  if (platform === "macos") {
+    $("#meetNote").textContent = "Detected while a Zoom meeting is running. Add other call apps under Focus apps.";
+    $("#fsNote").textContent = "Not available on macOS yet. Add specific apps below instead.";
+  } else if (platform === "linux") {
+    $("#meetNote").textContent = "When any app is recording from your microphone.";
+    $("#fsNote").textContent = "Not available on Linux yet. Add specific apps below instead.";
+  }
+  const render = () => {
+    const list = $("#appList");
+    list.innerHTML = S.smart.apps.length ? "" : `<div class="empty">No focus apps yet.</div>`;
+    S.smart.apps.forEach((a, i) => {
+      const row = el(`<div class="item-row"><div class="grow">${esc(a)}</div><button class="x" title="Remove">${X()}</button></div>`);
+      $(".x", row).onclick = () => { S.smart.apps.splice(i, 1); render(); save(); };
+      list.appendChild(row);
+    });
+  };
+  const add = () => {
+    const v = $("#appNew").value.trim();
+    if (!v || S.smart.apps.includes(v)) return;
+    S.smart.apps.push(v);
+    $("#appNew").value = "";
+    render();
+    save();
+  };
+  $("#appAdd").onclick = add;
+  $("#appNew").addEventListener("keydown", (e) => e.key === "Enter" && add());
+  render();
+}
+
+// --------------------------------------------------------------- schedule
+function daysPicker(arr) {
+  const box = el(`<div class="days"></div>`);
+  DAYS.forEach((d, i) => {
+    const b = el(`<button class="${arr[i] ? "on" : ""}" title="${DAY_NAMES[i]}">${d}</button>`);
+    b.onclick = () => { arr[i] = !arr[i]; b.classList.toggle("on", arr[i]); save(); };
+    box.appendChild(b);
+  });
+  return box;
+}
+
+function initSchedule() {
+  $("#ohDays").replaceWith(daysPicker(S.office_hours.days));
+  const render = () => {
+    const box = $("#plannedList");
+    box.innerHTML = "";
+    S.planned.forEach((p, i) => {
+      const card = el(`<div class="rem">
+        <div class="rem-head">
+          <span class="pick"></span>
+          <input type="text" class="title" maxlength="40" value="${esc(p.title)}" />
+          <input type="checkbox" class="switch en" ${p.enabled ? "checked" : ""} />
+          <button class="x" title="Delete">${X()}</button>
+        </div>
+        <div class="rem-grid">
+          <label>At <input type="time" class="tm" value="${esc(p.time)}" /></label>
+          <label>For <input type="number" class="du" min="1" max="240" value="${p.duration_mins}" /> min</label>
+          <span class="dp"></span>
+        </div></div>`);
+      $(".dp", card).replaceWith(daysPicker(p.days));
+      $(".pick", card).replaceWith(iconPicker(p.icon, (n) => { p.icon = n; save(); }));
+      const on = (sel, ev, fn) => $(sel, card).addEventListener(ev, (e) => { fn(e.target); save(); });
+      on(".title", "input", (t) => (p.title = t.value));
+      on(".en", "change", (t) => (p.enabled = t.checked));
+      on(".tm", "change", (t) => (p.time = t.value));
+      on(".du", "change", (t) => (p.duration_mins = Math.max(1, Number(t.value) || 1)));
+      $(".x", card).onclick = () => { S.planned.splice(i, 1); render(); save(); };
+      box.appendChild(card);
+    });
+  };
+  $("#addPlanned").onclick = () => {
+    const first = !S.planned.length;
+    S.planned.push({
+      id: "p_" + uid(), enabled: true,
+      title: first ? "Lunch" : "Afternoon walk", icon: first ? "restaurant" : "directions_walk",
+      time: first ? "12:30" : "16:00", duration_mins: first ? 30 : 10,
+      days: [true, true, true, true, true, false, false],
+    });
+    render();
+    save();
+  };
+  render();
+}
+
+// -------------------------------------------------------------- shortcuts
+function accelFrom(e) {
+  const mods = [];
+  if (e.ctrlKey || e.metaKey) mods.push("CmdOrCtrl");
+  if (e.altKey) mods.push("Alt");
+  if (e.shiftKey) mods.push("Shift");
+  let k = e.key;
+  if (["Control", "Meta", "Alt", "Shift"].includes(k)) return null;
+  if (e.code.startsWith("Key")) k = e.code.slice(3);
+  else if (e.code.startsWith("Digit")) k = e.code.slice(5);
+  else if (k === " ") k = "Space";
+  else if (k.length === 1) k = k.toUpperCase();
+  if (!mods.length && !/^F\d+$/.test(k)) return null;
+  return [...mods, k].join("+");
+}
+const pretty = (a) => {
+  if (!a) return "Not set";
+  const mac = platform === "macos";
+  return a.replace("CmdOrCtrl", mac ? "⌘" : "Ctrl").replace("Alt", mac ? "⌥" : "Alt").replace("Shift", mac ? "⇧" : "Shift").replaceAll("+", mac ? " " : " + ");
+};
+
+function initShortcuts() {
+  for (const input of $$("[data-keys]")) {
+    const path = input.dataset.keys;
+    input.value = pretty(get(path));
+    input.addEventListener("focus", () => (input.value = "Press keys…"));
+    input.addEventListener("blur", () => (input.value = pretty(get(path))));
+    input.addEventListener("keydown", (e) => {
+      e.preventDefault();
+      if (e.key === "Backspace" || e.key === "Delete") { set(path, ""); input.blur(); save(); return; }
+      if (e.key === "Escape") return input.blur();
+      const a = accelFrom(e);
+      if (!a) return;
+      set(path, a);
+      input.blur();
+      save();
+      toast("Shortcut saved");
+    });
+  }
+}
+
+// ------------------------------------------------------------------ stats
+const dayKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+function score(d) {
+  if (!d || !d.screen_secs) return "—";
+  const expected = Math.max(1, Math.floor(d.screen_secs / (S.work_mins * 60)));
+  const ratio = Math.min(1, ((d.breaks_taken || 0) + (d.natural_breaks || 0)) / expected);
+  const skipPenalty = Math.min(0.3, (d.breaks_skipped || 0) * 0.05);
+  return Math.round(Math.max(0, ratio - skipPenalty) * 100);
+}
+
+async function renderStats() {
+  const stats = await invoke("get_stats");
+  const days = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    days.push({ date: d, ...(stats.days[dayKey(d)] || {}) });
+  }
+  const last7 = days.slice(-7);
+  const sum = (arr, k) => arr.reduce((a, d) => a + (d[k] || 0), 0);
+  const activeDays = last7.filter((d) => d.screen_secs > 0).length || 1;
+  $("#sScore").textContent = score(days[13]);
+  $("#sAvg").textContent = fmtHuman(sum(last7, "screen_secs") / activeDays);
+  $("#sTaken").textContent = sum(last7, "breaks_taken");
+  $("#sNatural").textContent = sum(last7, "natural_breaks");
+
+  const max = Math.max(3600, ...days.map((d) => d.screen_secs || 0));
+  const maxB = Math.max(1, ...days.map((d) => d.breaks_taken || 0));
+  const chart = $("#chart");
+  chart.innerHTML = "";
+  for (const d of days) {
+    chart.appendChild(el(`<div class="bar" title="${d.date.toDateString()}\nScreen time: ${fmtHuman(d.screen_secs || 0)}\nBreaks taken: ${d.breaks_taken || 0} · skipped: ${d.breaks_skipped || 0}">
+      <div class="a" style="height:${((d.screen_secs || 0) / max) * 82}%"></div>
+      <div class="b" style="opacity:${0.25 + 0.75 * ((d.breaks_taken || 0) / maxB)}"></div>
+      <div class="d">${d.date.toLocaleDateString(undefined, { weekday: "short" }).slice(0, 2)}</div></div>`));
+  }
+}
+
+let confirmReset = 0;
+function initStats() {
+  $("#exportStats").onclick = async () => {
+    const stats = await invoke("get_stats");
+    const blob = new Blob([JSON.stringify(stats, null, 2)], { type: "application/json" });
+    Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: "yonder-stats.json" }).click();
+  };
+  $("#resetStats").onclick = async () => {
+    // two clicks within 3 s, instead of a modal dialog
+    if (Date.now() - confirmReset > 3000) {
+      confirmReset = Date.now();
+      $("#resetStats").textContent = "Click again to delete all stats";
+      setTimeout(() => ($("#resetStats").textContent = "Reset stats"), 3000);
+      return;
+    }
+    await invoke("reset_stats");
+    $("#resetStats").textContent = "Reset stats";
+    renderStats();
+    refreshToday();
+  };
+}
+
+// ------------------------------------------------------------------ today
+async function refreshToday() {
+  const stats = await invoke("get_stats");
+  const d = stats.days[dayKey(new Date())] || {};
+  $("#tScreen").textContent = fmtHuman(d.screen_secs || 0);
+  $("#tTaken").textContent = d.breaks_taken || 0;
+  $("#tSkipped").textContent = d.breaks_skipped || 0;
+  $("#tStretch").textContent = fmtHuman(d.longest_stretch_secs || 0);
+}
+
+const PHASES = { working: "Working", break: "On a break", paused: "Paused", smart: "Holding breaks", offhours: "Off the clock", away: "Away" };
+function renderState(s) {
+  const left = Math.max(0, s.next_break_in);
+  const ring = $("#homeRing");
+  if (s.phase === "break" && s.break) {
+    $("#homeCount").textContent = fmtClock(s.break.total_secs - s.break.elapsed_secs);
+    $("#homeSub").textContent = "of break left";
+    ring.style.strokeDashoffset = String(326.7 * (s.break.elapsed_secs / s.break.total_secs));
+  } else {
+    $("#homeCount").textContent = fmtClock(left);
+    $("#homeSub").textContent = s.next_is_long ? "until long break" : "until next break";
+    ring.style.strokeDashoffset = String(326.7 * Math.min(1, s.work_secs / s.interval_secs));
+  }
+  $("#homePhase").textContent = PHASES[s.phase] || "Working";
+  $("#homeLabel").textContent = s.label;
+  $("#homeSkip").disabled = s.skip_difficulty === "hardcore";
+  const pause = $("#homePause");
+  pause.textContent = s.phase === "paused" ? "Resume" : "Pause 30 min";
+  pause.onclick = () => (s.phase === "paused" ? action("resume") : action("pause", 30));
+  const side = $("#sideStatus");
+  side.textContent = s.label;
+  side.className = "status " + (s.phase === "paused" || s.phase === "offhours" ? "paused" : s.phase === "break" ? "break" : "");
+}
+
+// --------------------------------------------------------- window controls
+function initWindowControls() {
+  if (platform === "macos") {
+    document.body.classList.add("mac"); // native traffic lights float over the sidebar
+    return;
+  }
+  const win = window.__TAURI__.window.getCurrentWindow();
+  $("#winctl").hidden = false;
+  $("#wMin").onclick = () => win.minimize();
+  $("#wMax").onclick = () => win.toggleMaximize();
+  $("#wClose").onclick = () => win.close();
+}
+
+// ------------------------------------------------------------------- init
+async function init() {
+  [S, platform] = await Promise.all([invoke("get_settings"), invoke("platform_name")]);
+  applyTheme(S.theme);
+  initWindowControls();
+  paintTiles();
+  hydrateIcons();
+  initNav();
+  bindAll();
+  initBreaks();
+  initScreen();
+  initSounds();
+  initWellness();
+  initSmart();
+  initSchedule();
+  initShortcuts();
+  initStats();
+  refreshVisibility();
+  refreshSummaries();
+  go("today");
+  renderState(await invoke("get_state"));
+  refreshToday();
+  setInterval(refreshToday, 30000);
+  listen("state", renderState);
+  if (!S.onboarded) {
+    S.onboarded = true;
+    save();
+  }
+}
+init();

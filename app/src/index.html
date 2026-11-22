@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Yonder</title>
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/settings.css" />
+</head>
+<body>
+<div class="app">
+  <!-- ================================================================ SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand" data-tauri-drag-region><img src="assets/logo.svg" alt="" /><span>yonder<i></i></span></div>
+    <nav id="nav">
+      <a data-page="today" data-tile="sun" data-ic="today">Today</a>
+      <a data-page="general" data-tile="slate" data-ic="settings">General</a>
+      <h4>Focus &amp; Wellbeing</h4>
+      <a data-page="breaks" data-tile="lagoon" data-ic="wb_twilight">Screen Breaks</a>
+      <a data-page="smart" data-tile="blue" data-ic="pause">Smart Pause</a>
+      <a data-page="wellness" data-tile="coral" data-ic="favorite">Wellness Reminders</a>
+      <h4>Behavior &amp; Feedback</h4>
+      <a data-page="screen" data-tile="violet" data-ic="palette">Break Screen</a>
+      <a data-page="alerts" data-tile="amber" data-ic="notifications_active">Heads-up</a>
+      <a data-page="sounds" data-tile="pink" data-ic="volume_up">Sounds</a>
+      <a data-page="shortcuts" data-tile="graphite" data-ic="keyboard_command_key">Keyboard Shortcuts</a>
+      <h4>Integrations</h4>
+      <a data-page="automation" data-tile="green" data-ic="sync_alt">Automation</a>
+      <h4>Yonder</h4>
+      <a data-page="stats" data-tile="teal" data-ic="bar_chart">Stats</a>
+      <a data-page="about" data-tile="gold" data-ic="info">About</a>
+    </nav>
+    <div class="side-foot">
+      <div class="status" id="sideStatus">—</div>
+      <a class="donate" href="https://github.com/sponsors/RMoura98"><i data-icon="favorite_fill" data-size="15"></i>Support Yonder</a>
+    </div>
+  </aside>
+
+  <!-- ================================================================ CONTENT -->
+  <main class="content">
+    <header class="topbar" id="bar" data-tauri-drag-region>
+      <button class="back" id="back" hidden><i data-icon="chevron_left" data-size="20"></i><span id="backLabel"></span></button>
+      <span class="tile big" id="barTile"></span>
+      <h1 id="barTitle">Today</h1>
+      <div class="winctl" id="winctl" hidden><button id="wMin" title="Minimize"><svg viewBox="0 0 10 10"><path d="M1 5h8"/></svg></button><button id="wMax" title="Maximize"><svg viewBox="0 0 10 10"><rect x="1.5" y="1.5" width="7" height="7" rx="1"/></svg></button><button id="wClose" class="close" title="Close"><svg viewBox="0 0 10 10"><path d="M1.5 1.5l7 7M8.5 1.5l-7 7"/></svg></button></div>
+    </header>
+
+    <div class="scroll" id="scroll">
+
+    <!-- ============================================================== TODAY -->
+    <section class="page" id="page-today" data-title="Today">
+      <div class="hero list">
+        <div class="ring">
+          <svg viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="52"/><circle class="progress" id="homeRing" cx="60" cy="60" r="52"/></svg>
+          <div class="ring-text"><div class="v" id="homeCount">—</div><div class="l" id="homeSub">until next break</div></div>
+        </div>
+        <div class="hero-side">
+          <div class="phase" id="homePhase">Working</div>
+          <p class="muted" id="homeLabel"></p>
+          <div class="btn-row">
+            <button class="btn primary" data-act="take_break">Take a break now</button>
+            <button class="btn" data-act="skip" id="homeSkip">Skip next</button>
+            <button class="btn" id="homePause">Pause 30 min</button>
+          </div>
+          <div class="quick">
+            <span class="muted">Longer break</span>
+            <button class="chip" data-break="5">5 min</button>
+            <button class="chip" data-break="10">10 min</button>
+            <button class="chip" data-break="15">15 min</button>
+            <button class="chip" data-break="30">30 min</button>
+          </div>
+        </div>
+      </div>
+      <h3>Today so far</h3>
+      <div class="tiles">
+        <div class="stat"><div class="l">Screen time</div><div class="v" id="tScreen">—</div></div>
+        <div class="stat"><div class="l">Breaks taken</div><div class="v" id="tTaken">—</div></div>
+        <div class="stat"><div class="l">Skipped</div><div class="v" id="tSkipped">—</div></div>
+        <div class="stat"><div class="l">Longest stretch</div><div class="v" id="tStretch">—</div></div>
+      </div>
+      <div class="tip"><b>Look over yonder.</b> Every 20 minutes, look at something about 20 feet (6 m) away for 20 seconds. It lets the focusing muscles in your eyes relax.</div>
+    </section>
+
+    <!-- ============================================================ GENERAL -->
+    <section class="page" id="page-general" data-title="General">
+      <h3>Startup</h3>
+      <div class="list">
+        <div class="row"><label>Launch Yonder at login</label><input type="checkbox" class="switch" data-bind="launch_at_login" /></div>
+      </div>
+      <h3>Appearance</h3>
+      <div class="list">
+        <div class="row"><label>Theme</label><div class="seg" data-bind="theme">
+          <button data-v="system">System</button><button data-v="light">Light</button><button data-v="dark">Dark</button></div></div>
+      </div>
+    </section>
+
+    <!-- ============================================================= BREAKS -->
+    <section class="page" id="page-breaks" data-title="Screen Breaks">
+      <h3>General</h3>
+      <div class="list">
+        <div class="row">
+          <label>Show breaks after</label>
+          <div class="inline wrap">
+            <span class="stepper"><select id="modeSel">
+              <option value="balanced">Balanced</option><option value="deep_focus">Deep focus</option>
+              <option value="eye_care">Eye care</option><option value="wellness">Wellness</option><option value="custom">Custom</option>
+            </select></span>
+            <span class="hm"><input type="number" id="workH" min="0" max="4" /><em>H</em></span>
+            <span class="hm"><input type="number" id="workM" min="0" max="59" /><em>M</em></span>
+            <span class="muted">of focused screen time</span>
+          </div>
+        </div>
+        <div class="row"><label>Break duration</label><span class="stepper"><select id="breakSel"></select></span></div>
+      </div>
+
+      <div class="list">
+        <a class="row nav" data-go="screen"><span class="tile" data-tile="violet" data-ic="palette"></span><label>Customize break screen</label><span class="val" id="vScreen"></span></a>
+        <a class="row nav" data-go="long"><span class="tile" data-tile="lagoon" data-ic="hiking"></span><label>Long breaks</label><span class="val" id="vLong"></span></a>
+        <a class="row nav" data-go="hours"><span class="tile" data-tile="blue" data-ic="calendar_month"></span><label>Office hours</label><span class="val" id="vHours"></span></a>
+        <a class="row nav" data-go="planned"><span class="tile" data-tile="coral" data-ic="event"></span><label>Planned breaks</label><span class="val" id="vPlanned"></span></a>
+      </div>
+
+      <h3>Break enforcement</h3>
+      <div class="list pad">
+        <div class="enforce" id="enforce">
+          <button data-v="casual"><div class="pv"><span class="glass"><i data-icon="keyboard_double_arrow_right" data-size="18"></i>Skip break</span></div><b>Casual</b><span>Skip anytime</span></button>
+          <button data-v="balanced"><div class="pv"><span class="glass"><i class="spin" data-icon="progress_activity" data-size="18"></i>Skip break</span></div><b>Balanced</b><span>Skip after a few seconds</span></button>
+          <button data-v="hardcore"><div class="pv"><span class="glass dim"><i data-icon="block" data-size="18"></i>Skip break</span></div><b>Hardcore</b><span>No skips, no snoozes</span></button>
+        </div>
+      </div>
+
+      <h3>More</h3>
+      <div class="list">
+        <div class="row"><label>Don't start a break while I'm typing<small>Waits up to 30 seconds for a pause in your input.</small></label><input type="checkbox" class="switch" data-bind="wait_while_typing" /></div>
+        <div class="row"><label>Let me “End break” early if nearly done</label><input type="checkbox" class="switch" data-bind="allow_end_early" /></div>
+        <div class="row"><label>Lock my computer when a break starts</label><input type="checkbox" class="switch" data-bind="lock_on_break" /></div>
+        <div class="row"><label>Treat time away as a break after<small>Stepping away from the computer resets the timer.</small></label>
+          <span class="stepper"><select data-bind="idle_reset_mins" data-type="number"><option value="2">2 minutes</option><option value="3">3 minutes</option><option value="5">5 minutes</option><option value="10">10 minutes</option><option value="15">15 minutes</option></select></span></div>
+      </div>
+    </section>
+
+    <!-- sub-pages of Screen Breaks -->
+    <section class="page" id="page-long" data-title="Long breaks" data-parent="breaks">
+      <div class="list">
+        <div class="row"><label>Long breaks</label><input type="checkbox" class="switch" data-bind="long_enabled" data-custom /></div>
+        <div class="row" data-show="long_enabled"><label>Every</label><span class="stepper"><select data-bind="long_every" data-type="number" data-custom>
+          <option value="2">2nd break</option><option value="3">3rd break</option><option value="4">4th break</option><option value="5">5th break</option><option value="6">6th break</option></select></span></div>
+        <div class="row" data-show="long_enabled"><label>Long break lasts</label><span class="stepper"><select data-bind="long_mins" data-type="number" data-custom>
+          <option value="2">2 minutes</option><option value="3">3 minutes</option><option value="5">5 minutes</option><option value="10">10 minutes</option><option value="15">15 minutes</option></select></span></div>
+      </div>
+      <p class="foot">Long breaks are a good moment to stand up, stretch and refill your water.</p>
+    </section>
+
+    <section class="page" id="page-hours" data-title="Office hours" data-parent="breaks">
+      <div class="list">
+        <div class="row"><label>Only remind me during office hours</label><input type="checkbox" class="switch" data-bind="office_hours.enabled" /></div>
+        <div class="row" data-show="office_hours.enabled"><label>Days</label><div class="days" id="ohDays"></div></div>
+        <div class="row" data-show="office_hours.enabled"><label>From</label><input type="time" data-bind="office_hours.start" /></div>
+        <div class="row" data-show="office_hours.enabled"><label>To</label><input type="time" data-bind="office_hours.end" /></div>
+      </div>
+      <p class="foot">Outside these hours Yonder stays quiet and doesn't count screen time.</p>
+    </section>
+
+    <section class="page" id="page-planned" data-title="Planned breaks" data-parent="breaks">
+      <p class="foot top">Fixed-time breaks like lunch or an afternoon walk. If you're in a call, they wait up to 30 minutes.</p>
+      <div id="plannedList"></div>
+      <button class="btn" id="addPlanned"><i data-icon="add" data-size="18"></i>Add planned break</button>
+    </section>
+
+    <!-- ============================================================== SMART -->
+    <section class="page" id="page-smart" data-title="Smart Pause">
+      <p class="foot top">Yonder holds breaks while you're busy and catches up when you're done.</p>
+      <div class="list">
+        <div class="row"><label>Smart pause</label><input type="checkbox" class="switch" data-bind="smart.enabled" /></div>
+      </div>
+      <div data-show="smart.enabled">
+        <h3>Automatically pause during</h3>
+        <div class="list">
+          <div class="row"><span class="tile" data-tile="blue" data-ic="headphones"></span><label>Meetings &amp; calls<small id="meetNote">When your microphone or camera is in use.</small></label><input type="checkbox" class="switch" data-bind="smart.meetings" /></div>
+          <div class="row"><span class="tile" data-tile="violet" data-ic="desktop_windows"></span><label>Fullscreen apps<small id="fsNote">Games, presentations and fullscreen video.</small></label><input type="checkbox" class="switch" data-bind="smart.fullscreen" /></div>
+          <div class="row"><label>Wait after the activity ends</label><span class="stepper"><select data-bind="smart.cooldown_secs" data-type="number">
+            <option value="0">No delay</option><option value="60">1 minute</option><option value="120">2 minutes</option><option value="300">5 minutes</option></select></span></div>
+        </div>
+        <h3>Focus apps</h3>
+        <div class="list" id="appList"></div>
+        <div class="add-row"><input type="text" id="appNew" placeholder="Process name, e.g. obs64, Keynote, code, POWERPNT" /><button class="btn" id="appAdd">Add</button></div>
+        <p class="foot">Breaks wait while any of these apps is open. Use the name from Task Manager (Details), Activity Monitor or <code>ps</code>.</p>
+      </div>
+    </section>
+
+    <!-- =========================================================== WELLNESS -->
+    <section class="page" id="page-wellness" data-title="Wellness Reminders">
+      <p class="foot top">Gentle nudges between breaks. They never take over your screen.</p>
+      <h3>Built-in <button class="link" data-act="test_reminder">Preview</button></h3>
+      <div class="list" id="builtinReminders"></div>
+      <h3>Custom reminders <small id="customCount"></small></h3>
+      <div id="customReminders"></div>
+      <button class="btn" id="addReminder"><i data-icon="add" data-size="18"></i>Create new</button>
+      <h3>Timing</h3>
+      <div class="list">
+        <div class="row"><label>Combine reminders that are due together<small>Shown at once, with one sound.</small></label><input type="checkbox" class="switch" data-bind="wellness.combine" /></div>
+        <div class="row"><label>Reset reminder timers after a break<small>Otherwise they keep counting through breaks.</small></label><input type="checkbox" class="switch" data-bind="wellness.reset_after_break" /></div>
+        <div class="row"><label>Ripple when a reminder appears</label><input type="checkbox" class="switch" data-bind="wellness.ripple" /></div>
+      </div>
+    </section>
+
+    <!-- ======================================================= BREAK SCREEN -->
+    <section class="page" id="page-screen" data-title="Break Screen">
+      <h3>Style <button class="link" data-act="take_break">Preview a break</button></h3>
+      <div class="list pad">
+        <div class="styles" id="styleCards">
+          <button data-v="fullscreen"><div class="pv full"><span>00:20</span></div><b>Full screen</b><span>A calm backdrop on every display</span></button>
+          <button data-v="split" id="splitBtn"><div class="pv split"><i></i><i></i><span>00:20</span></div><b>Split screen</b><span>Your desktop parts to reveal a texture</span></button>
+        </div>
+      </div>
+      <div data-show="break_style=fullscreen">
+        <h3>Background</h3>
+        <div class="swatches" id="bgSwatches"></div>
+        <input type="file" id="imgInput" accept="image/*" hidden />
+      </div>
+      <div data-show="break_style=split">
+        <h3>Texture</h3>
+        <div class="swatches" id="texSwatches"></div>
+      </div>
+      <h3>Messages <small>One is shown per break, in rotation</small></h3>
+      <div class="list" id="msgList"></div>
+      <div class="add-row"><input type="text" id="msgNew" placeholder="Add a message, e.g. “Unclench your jaw.”" maxlength="140" /><button class="btn" id="msgAdd">Add</button></div>
+    </section>
+
+    <!-- ============================================================= ALERTS -->
+    <section class="page" id="page-alerts" data-title="Heads-up">
+      <h3>Before a break <button class="link" data-act="test_prebreak">Preview</button></h3>
+      <div class="list">
+        <div class="row"><label>Show a heads-up before a break</label><input type="checkbox" class="switch" data-bind="prebreak_enabled" /></div>
+        <div class="row" data-show="prebreak_enabled"><label>Show it</label><span class="stepper"><select data-bind="prebreak_secs" data-type="number">
+          <option value="15">15 seconds before</option><option value="30">30 seconds before</option><option value="60">1 minute before</option><option value="120">2 minutes before</option><option value="300">5 minutes before</option></select></span></div>
+        <div class="row" data-show="prebreak_enabled"><label>Keep it expanded for<small>Then it shrinks into a small countdown.</small></label><span class="stepper"><select data-bind="prebreak_visible_secs" data-type="number">
+          <option value="5">5 seconds</option><option value="10">10 seconds</option><option value="20">20 seconds</option><option value="60">1 minute</option></select></span></div>
+      </div>
+      <p class="foot">In the last five seconds a small countdown follows your cursor, so a break never catches you mid-sentence.</p>
+    </section>
+
+    <!-- ============================================================= SOUNDS -->
+    <section class="page" id="page-sounds" data-title="Sounds">
+      <div class="list">
+        <div class="row"><label>Play sounds</label><input type="checkbox" class="switch" data-bind="sound_enabled" /></div>
+        <div class="row" data-show="sound_enabled"><label>Break starts</label><div class="inline"><button class="btn ghost icon-only" id="soundTest" title="Preview"><i data-icon="play_arrow_fill" data-size="18"></i></button><span class="stepper"><select data-bind="sound" id="soundSel"></select></span></div></div>
+        <div class="row" data-show="sound_enabled"><label>Volume</label><input type="range" min="0" max="1" step="0.05" data-bind="volume" data-type="number" /></div>
+      </div>
+      <p class="foot">All sounds are synthesized on the fly, so there's nothing to download. Reminder sounds are set per reminder.</p>
+    </section>
+
+    <!-- ========================================================== SHORTCUTS -->
+    <section class="page" id="page-shortcuts" data-title="Keyboard Shortcuts">
+      <div class="list">
+        <div class="row"><label>Take a break now</label><input class="keys" readonly data-keys="shortcuts.take_break" /></div>
+        <div class="row"><label>Pause / resume</label><input class="keys" readonly data-keys="shortcuts.toggle_pause" /></div>
+        <div class="row"><label>Skip next break</label><input class="keys" readonly data-keys="shortcuts.skip_break" /></div>
+      </div>
+      <p class="foot">Click a shortcut and press a new combination. Backspace clears it. During a break, press Esc twice to skip.</p>
+    </section>
+
+    <!-- ========================================================= AUTOMATION -->
+    <section class="page" id="page-automation" data-title="Automation">
+      <p class="foot top">Run your own command when a break starts or ends: pause music, mute notifications, dim the lights.</p>
+      <div class="list">
+        <div class="row col"><label>When a break starts</label><input type="text" class="mono" data-bind="hooks.on_break_start" placeholder="e.g. nircmd mutesysvolume 1" /></div>
+        <div class="row col"><label>When a break ends or is skipped</label><input type="text" class="mono" data-bind="hooks.on_break_end" placeholder="e.g. curl -X POST http://localhost:8123/api/webhook/break-over" /></div>
+      </div>
+      <p class="foot">Commands run in your shell with <code>YONDER_EVENT</code> (break-start, break-end, break-skip), <code>YONDER_BREAK_KIND</code> and <code>YONDER_BREAK_SECS</code> set.</p>
+    </section>
+
+    <!-- ============================================================== STATS -->
+    <section class="page" id="page-stats" data-title="Stats">
+      <div class="tiles">
+        <div class="stat"><div class="l">Screen score today</div><div class="v" id="sScore">—</div></div>
+        <div class="stat"><div class="l">Avg. screen time (7d)</div><div class="v" id="sAvg">—</div></div>
+        <div class="stat"><div class="l">Breaks taken (7d)</div><div class="v" id="sTaken">—</div></div>
+        <div class="stat"><div class="l">Natural breaks (7d)</div><div class="v" id="sNatural">—</div></div>
+      </div>
+      <h3>Last 14 days</h3>
+      <div class="list chart" id="chart"></div>
+      <div class="legend"><span><i class="sw a"></i>Screen time</span><span><i class="sw b"></i>Breaks taken</span></div>
+      <div class="btn-row"><button class="btn" id="exportStats"><i data-icon="download" data-size="18"></i>Export JSON</button><button class="btn danger" id="resetStats">Reset stats</button></div>
+      <p class="foot">Everything stays on this computer.</p>
+    </section>
+
+    <!-- ============================================================== ABOUT -->
+    <section class="page" id="page-about" data-title="About">
+      <div class="about list">
+        <img src="assets/logo.svg" alt="" />
+        <div>
+          <div class="wordmark">yonder<i></i></div>
+          <p class="muted">Version 1.0.0 · Look up. Look far. Get back to it.</p>
+          <p>Free and open source under the MIT license. No account, no tracking: your settings and stats never leave this computer.</p>
+          <div class="btn-row">
+            <a class="btn primary" href="https://github.com/sponsors/RMoura98"><i data-icon="favorite_fill" data-size="16"></i>Donate</a>
+            <a class="btn" href="https://github.com/RMoura98/yonder">GitHub</a>
+            <a class="btn" href="https://github.com/RMoura98/yonder/issues/new">Report an issue</a>
+          </div>
+        </div>
+      </div>
+      <div class="list"><button class="row nav danger-row" data-act="quit"><label>Quit Yonder</label></button></div>
+    </section>
+
+    </div>
+  </main>
+</div>
+<script type="module" src="js/settings.js"></script>
+</body>
+</html>
