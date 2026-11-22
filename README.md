@@ -58,7 +58,14 @@ Update with `brew upgrade --cask yonder`. Yonder isn't notarized yet, so the cas
 installing; if you download the `.dmg` yourself instead, right-click Yonder.app → **Open** the first time.
 (Installed with the older `brew tap rmoura98/yonder …` command? That keeps working too.)
 
-**Windows:** download the `.exe` (or `.msi`) installer from the [latest release](https://github.com/RMoura98/yonder/releases/latest).
+**Windows:** with [Scoop](https://scoop.sh):
+
+```powershell
+scoop bucket add yonder https://github.com/RMoura98/scoop-bucket
+scoop install yonder/yonder
+```
+
+or download the `.exe` (or `.msi`) installer from the [latest release](https://github.com/RMoura98/yonder/releases/latest).
 SmartScreen may warn about an unrecognized app: choose **More info → Run anyway**.
 
 **Linux:** grab the `.AppImage`, `.deb` or `.rpm` from the [latest release](https://github.com/RMoura98/yonder/releases/latest).
