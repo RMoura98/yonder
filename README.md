@@ -104,7 +104,7 @@ Yonder is free forever. If it helps you, you can [sponsor its development](https
 Thanks to everyone who has helped make Yonder better. Issues and pull requests are welcome.
 
 <a href="https://github.com/RMoura98/yonder/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=RMoura98/yonder" alt="Contributors to Yonder" />
+  <img src="https://contrib.rocks/image?repo=RMoura98/yonder&max=24&columns=12" alt="Contributors to Yonder" />
 </a>
 
 ## Star history
