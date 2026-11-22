@@ -1,6 +1,6 @@
 cask "yonder" do
   version "1.0.0"
-  sha256 :no_check # replaced with the real checksum by .github/workflows/homebrew.yml on release
+  sha256 "84191afe5bb387a00105cfdc146fb221c619c97a12f434a22200b7511bf279de"
 
   url "https://github.com/RMoura98/yonder/releases/download/v#{version}/Yonder_#{version}_universal.dmg"
   name "Yonder"
