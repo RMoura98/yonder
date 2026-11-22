@@ -375,5 +375,9 @@
   "Do Not Disturb / Focus": "勿扰 / 专注模式",
   "When your system's Do Not Disturb or Focus mode is on.": "当系统的勿扰或专注模式开启时。",
   "Reads macOS Focus when possible; may need Full Disk Access for Yonder.": "尽可能读取 macOS 专注模式；Yonder 可能需要“完全磁盘访问权限”。",
-  "Works with GNOME Do Not Disturb and desktops that inhibit notifications, such as KDE.": "适用于 GNOME 的勿扰模式，以及会抑制通知的桌面环境（如 KDE）。"
+  "Works with GNOME Do Not Disturb and desktops that inhibit notifications, such as KDE.": "适用于 GNOME 的勿扰模式，以及会抑制通知的桌面环境（如 KDE）。",
+  "Screen sharing & recording": "屏幕共享与录制",
+  "Screen recorders like OBS, and mirrored displays.": "OBS 等屏幕录制软件，以及镜像显示器。",
+  "Screen recorders like OBS, and PipeWire screen sharing.": "OBS 等屏幕录制软件，以及 PipeWire 屏幕共享。",
+  "you're sharing or recording your screen": "你正在共享或录制屏幕"
 }

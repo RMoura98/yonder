@@ -87,6 +87,8 @@ pub struct SmartPause {
     pub fullscreen: bool,
     /// Hold breaks while the system's Do Not Disturb / Focus mode is on.
     pub dnd: bool,
+    /// Hold breaks while sharing or recording the screen.
+    pub screen_share: bool,
     pub apps: Vec<String>,
     pub cooldown_secs: u32,
     /// Longest a due break may be held by smart pause, in minutes. 0 = no limit.
@@ -100,6 +102,7 @@ impl Default for SmartPause {
             meetings: true,
             fullscreen: true,
             dnd: true,
+            screen_share: true,
             apps: vec![],
             cooldown_secs: 60,
             max_hold_mins: 60,

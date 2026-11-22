@@ -929,7 +929,12 @@ fn smart_reason(s: &Settings, scanner: &mut platform::ProcessScanner, frame: u64
     if reason.is_none() && s.smart.dnd && platform::dnd_active() {
         reason = Some(i18n::tr(lang, "Do Not Disturb is on", &[]));
     }
-    let need_scan = !s.smart.apps.is_empty() || (s.smart.meetings && cfg!(target_os = "macos"));
+    if reason.is_none() && s.smart.screen_share && platform::screen_shared_by_system() {
+        reason = Some(i18n::tr(lang, "you're sharing or recording your screen", &[]));
+    }
+    let need_scan = !s.smart.apps.is_empty()
+        || s.smart.screen_share
+        || (s.smart.meetings && cfg!(target_os = "macos"));
     if reason.is_none() && need_scan {
         let names = scanner.names();
         if s.smart.meetings
@@ -938,6 +943,8 @@ fn smart_reason(s: &Settings, scanner: &mut platform::ProcessScanner, frame: u64
                 .any(|n| platform::MEETING_PROCESS_HINTS.iter().any(|h| n == h))
         {
             reason = Some(i18n::tr(lang, "you're in a call", &[]));
+        } else if s.smart.screen_share && platform::screen_capture_app(&names).is_some() {
+            reason = Some(i18n::tr(lang, "you're sharing or recording your screen", &[]));
         } else if let Some(app) = s.smart.apps.iter().find(|a| {
             let a = a.trim().to_lowercase();
             let a = a.trim_end_matches(".exe").trim_end_matches(".app");

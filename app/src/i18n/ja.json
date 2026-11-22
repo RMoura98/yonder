@@ -375,5 +375,9 @@
   "Do Not Disturb / Focus": "おやすみモード / 集中モード",
   "When your system's Do Not Disturb or Focus mode is on.": "システムのおやすみモードまたは集中モードがオンのとき。",
   "Reads macOS Focus when possible; may need Full Disk Access for Yonder.": "可能な場合は macOS の集中モードを読み取ります。Yonder にフルディスクアクセスが必要な場合があります。",
-  "Works with GNOME Do Not Disturb and desktops that inhibit notifications, such as KDE.": "GNOME のおやすみモードや、KDE など通知を抑制するデスクトップで動作します。"
+  "Works with GNOME Do Not Disturb and desktops that inhibit notifications, such as KDE.": "GNOME のおやすみモードや、KDE など通知を抑制するデスクトップで動作します。",
+  "Screen sharing & recording": "画面共有と録画",
+  "Screen recorders like OBS, and mirrored displays.": "OBS などの画面録画アプリと、ミラーリング中のディスプレイ。",
+  "Screen recorders like OBS, and PipeWire screen sharing.": "OBS などの画面録画アプリと、PipeWire の画面共有。",
+  "you're sharing or recording your screen": "画面を共有または録画中"
 }

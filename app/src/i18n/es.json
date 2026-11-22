@@ -375,5 +375,9 @@
   "Do Not Disturb / Focus": "No molestar / Concentración",
   "When your system's Do Not Disturb or Focus mode is on.": "Cuando el modo No molestar o Concentración del sistema está activo.",
   "Reads macOS Focus when possible; may need Full Disk Access for Yonder.": "Lee el modo Concentración de macOS cuando es posible; puede requerir Acceso total al disco para Yonder.",
-  "Works with GNOME Do Not Disturb and desktops that inhibit notifications, such as KDE.": "Funciona con No molestar de GNOME y con escritorios que inhiben las notificaciones, como KDE."
+  "Works with GNOME Do Not Disturb and desktops that inhibit notifications, such as KDE.": "Funciona con No molestar de GNOME y con escritorios que inhiben las notificaciones, como KDE.",
+  "Screen sharing & recording": "Compartir y grabar pantalla",
+  "Screen recorders like OBS, and mirrored displays.": "Grabadores de pantalla como OBS y pantallas duplicadas.",
+  "Screen recorders like OBS, and PipeWire screen sharing.": "Grabadores de pantalla como OBS y pantalla compartida con PipeWire.",
+  "you're sharing or recording your screen": "estás compartiendo o grabando la pantalla"
 }

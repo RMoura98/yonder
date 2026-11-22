@@ -490,9 +490,140 @@ pub fn mic_or_camera_in_use() -> bool {
 
 #[cfg(target_os = "macos")]
 pub fn mic_or_camera_in_use() -> bool {
-    // Fallback heuristic: well-known meeting apps that are in an active call
-    // spawn helper processes. Handled by the process scan in the engine.
-    false
+    mac_av::mic_in_use() || mac_av::camera_in_use()
+}
+
+/// CoreAudio / CoreMediaIO "is something using this device" queries.
+///
+/// These only read device properties; they never open a stream, so macOS does
+/// not show a microphone or camera permission prompt and no entitlement is
+/// needed. They never touch audio or video data. (Zoom's meeting helper check
+/// in the process scan stays as an extra fallback.)
+#[cfg(target_os = "macos")]
+mod mac_av {
+    use std::os::raw::c_void;
+
+    #[repr(C)]
+    struct Address {
+        selector: u32,
+        scope: u32,
+        element: u32,
+    }
+
+    const fn fourcc(s: &[u8; 4]) -> u32 {
+        ((s[0] as u32) << 24) | ((s[1] as u32) << 16) | ((s[2] as u32) << 8) | s[3] as u32
+    }
+
+    const SYSTEM_OBJECT: u32 = 1;
+    const SCOPE_GLOBAL: u32 = fourcc(b"glob");
+    const SCOPE_INPUT: u32 = fourcc(b"inpt");
+    const SCOPE_OUTPUT: u32 = fourcc(b"outp");
+    const DEVICES: u32 = fourcc(b"dev#"); // kAudioHardwarePropertyDevices / kCMIOHardwarePropertyDevices
+    const STREAMS: u32 = fourcc(b"stm#"); // kAudioDevicePropertyStreams
+    const RUNNING_SOMEWHERE: u32 = fourcc(b"gone"); // kAudioDevicePropertyDeviceIsRunningSomewhere (same value in CMIO)
+    const PROCESS_LIST: u32 = fourcc(b"prs#"); // kAudioHardwarePropertyProcessObjectList (macOS 14.2+)
+    const PROCESS_RUNNING_INPUT: u32 = fourcc(b"piri"); // kAudioProcessPropertyIsRunningInput (macOS 14.2+)
+
+    #[link(name = "CoreAudio", kind = "framework")]
+    extern "C" {
+        fn AudioObjectGetPropertyDataSize(id: u32, addr: *const Address, qsize: u32, q: *const c_void, size: *mut u32) -> i32;
+        fn AudioObjectGetPropertyData(id: u32, addr: *const Address, qsize: u32, q: *const c_void, size: *mut u32, data: *mut c_void) -> i32;
+    }
+
+    #[link(name = "CoreMediaIO", kind = "framework")]
+    extern "C" {
+        fn CMIOObjectGetPropertyDataSize(id: u32, addr: *const Address, qsize: u32, q: *const c_void, size: *mut u32) -> i32;
+        fn CMIOObjectGetPropertyData(id: u32, addr: *const Address, qsize: u32, q: *const c_void, size: u32, used: *mut u32, data: *mut c_void) -> i32;
+    }
+
+    type SizeFn = unsafe fn(u32, &Address) -> Option<u32>;
+    type DataFn = unsafe fn(u32, &Address, u32, *mut c_void) -> bool;
+
+    unsafe fn audio_size(id: u32, a: &Address) -> Option<u32> {
+        let mut n = 0u32;
+        (AudioObjectGetPropertyDataSize(id, a, 0, std::ptr::null(), &mut n) == 0).then_some(n)
+    }
+    unsafe fn audio_data(id: u32, a: &Address, size: u32, out: *mut c_void) -> bool {
+        let mut n = size;
+        AudioObjectGetPropertyData(id, a, 0, std::ptr::null(), &mut n, out) == 0
+    }
+    unsafe fn cmio_size(id: u32, a: &Address) -> Option<u32> {
+        let mut n = 0u32;
+        (CMIOObjectGetPropertyDataSize(id, a, 0, std::ptr::null(), &mut n) == 0).then_some(n)
+    }
+    unsafe fn cmio_data(id: u32, a: &Address, size: u32, out: *mut c_void) -> bool {
+        let mut used = 0u32;
+        CMIOObjectGetPropertyData(id, a, 0, std::ptr::null(), size, &mut used, out) == 0
+    }
+
+    fn addr(selector: u32, scope: u32) -> Address {
+        Address { selector, scope, element: 0 }
+    }
+
+    unsafe fn ids(size_fn: SizeFn, data_fn: DataFn, object: u32, a: &Address) -> Option<Vec<u32>> {
+        let bytes = size_fn(object, a)?;
+        let mut v = vec![0u32; bytes as usize / 4];
+        if v.is_empty() {
+            return Some(v);
+        }
+        data_fn(object, a, bytes, v.as_mut_ptr() as *mut c_void).then_some(v)
+    }
+
+    unsafe fn flag(data_fn: DataFn, object: u32, a: &Address) -> bool {
+        let mut v = 0u32;
+        data_fn(object, a, 4, &mut v as *mut u32 as *mut c_void) && v != 0
+    }
+
+    /// True while any app is capturing audio input.
+    pub fn mic_in_use() -> bool {
+        unsafe {
+            // macOS 14.2+: ask per client process whether it is running input.
+            // Precise: a headset that is only playing audio does not count.
+            if let Some(procs) = ids(audio_size, audio_data, SYSTEM_OBJECT, &addr(PROCESS_LIST, SCOPE_GLOBAL)) {
+                let a = addr(PROCESS_RUNNING_INPUT, SCOPE_GLOBAL);
+                return procs.iter().any(|p| flag(audio_data, *p, &a));
+            }
+            // Older macOS: input-only devices (built-in/USB mics). Duplex devices
+            // (headsets) are skipped because "running" is also true while they
+            // merely play audio.
+            let Some(devs) = ids(audio_size, audio_data, SYSTEM_OBJECT, &addr(DEVICES, SCOPE_GLOBAL)) else {
+                return false;
+            };
+            let running = addr(RUNNING_SOMEWHERE, SCOPE_GLOBAL);
+            devs.iter().any(|d| {
+                let has = |scope| audio_size(*d, &addr(STREAMS, scope)).unwrap_or(0) > 0;
+                has(SCOPE_INPUT) && !has(SCOPE_OUTPUT) && flag(audio_data, *d, &running)
+            })
+        }
+    }
+
+    /// True while any app is capturing from a camera.
+    pub fn camera_in_use() -> bool {
+        unsafe {
+            let Some(devs) = ids(cmio_size, cmio_data, SYSTEM_OBJECT, &addr(DEVICES, SCOPE_GLOBAL)) else {
+                return false;
+            };
+            let running = addr(RUNNING_SOMEWHERE, SCOPE_GLOBAL);
+            devs.iter().any(|d| flag(cmio_data, *d, &running))
+        }
+    }
+
+    #[link(name = "CoreGraphics", kind = "framework")]
+    extern "C" {
+        fn CGGetActiveDisplayList(max: u32, ids: *mut u32, count: *mut u32) -> i32;
+        fn CGDisplayIsInMirrorSet(id: u32) -> u32;
+    }
+
+    /// True while displays are mirrored (presenting on a projector or TV).
+    /// Idea from EyeBreak's quiet mode (MIT, github.com/sviatil0/eyebreak).
+    pub fn display_mirrored() -> bool {
+        let mut ids = [0u32; 16];
+        let mut n = 0u32;
+        unsafe {
+            CGGetActiveDisplayList(16, ids.as_mut_ptr(), &mut n) == 0
+                && ids[..(n as usize).min(16)].iter().any(|d| CGDisplayIsInMirrorSet(*d) != 0)
+        }
+    }
 }
 
 #[cfg(target_os = "linux")]
@@ -511,6 +642,86 @@ pub fn mic_or_camera_in_use() -> bool {
 
 /// Process names that only exist while a meeting is in progress.
 pub const MEETING_PROCESS_HINTS: &[&str] = &["cpthost", "zoom.us.cpthost", "aomhost"];
+
+// ------------------------------------------------- screen share / recording
+
+/// Recorders and streamers that normally run only while in use, matched by
+/// lower-cased process name. Nothing can tell which app is capturing the
+/// screen (Windows Graphics Capture and macOS ScreenCaptureKit expose no such
+/// query), so this is a curated list: an app counts while it is open, not
+/// strictly while it records. Always-on tray apps (Loom, ShareX, CleanShot)
+/// are left out on purpose.
+const SCREEN_CAPTURE_APPS: &[&str] = &[
+    "obs64", "obs32", "obs", "streamlabs desktop", "streamlabs obs", "slobs",
+    "xsplit.core", "xsplit.broadcaster", "camrecorder", "camtasia", "screenflow",
+    "simplescreenrecorder", "kooha", "vokoscreenng", "wf-recorder", "peek", "bdcam",
+];
+
+/// First running process that is a known screen recorder, if any.
+pub fn screen_capture_app(names: &[String]) -> Option<&'static str> {
+    SCREEN_CAPTURE_APPS
+        .iter()
+        .copied()
+        .find(|h| names.iter().any(|n| n == h || (h.len() >= 8 && n.starts_with(*h))))
+}
+
+/// True if a `pw-dump` JSON document has a PipeWire stream reading video that
+/// looks like a screencast (the portal tags it with a "screen" role or name).
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+pub fn pipewire_screencast(dump: &str) -> bool {
+    let Ok(serde_json::Value::Array(objs)) = serde_json::from_str::<serde_json::Value>(dump) else {
+        return false;
+    };
+    objs.iter().any(|o| {
+        let props = &o["info"]["props"];
+        props["media.class"] == "Stream/Input/Video"
+            && ["media.role", "media.name", "node.name"]
+                .iter()
+                .any(|k| props[*k].as_str().is_some_and(|s| s.to_lowercase().contains("screen")))
+    })
+}
+
+/// True while displays are mirrored (macOS, Windows) or a PipeWire screencast
+/// is active (Linux). Recorder processes are matched by the caller.
+pub fn screen_shared_by_system() -> bool {
+    #[cfg(target_os = "macos")]
+    {
+        mac_av::display_mirrored()
+    }
+    #[cfg(windows)]
+    {
+        win_display_mirrored()
+    }
+    #[cfg(target_os = "linux")]
+    {
+        Command::new("pw-dump")
+            .output()
+            .map(|o| o.status.success() && pipewire_screencast(&String::from_utf8_lossy(&o.stdout)))
+            .unwrap_or(false)
+    }
+}
+
+/// Duplicate display mode: two active paths share one source.
+#[cfg(windows)]
+fn win_display_mirrored() -> bool {
+    use windows_sys::Win32::Devices::Display::*;
+    unsafe {
+        let (mut np, mut nm) = (0u32, 0u32);
+        if GetDisplayConfigBufferSizes(QDC_ONLY_ACTIVE_PATHS, &mut np, &mut nm) != 0 || np < 2 {
+            return false;
+        }
+        let mut paths: Vec<DISPLAYCONFIG_PATH_INFO> = vec![std::mem::zeroed(); np as usize];
+        let mut modes: Vec<DISPLAYCONFIG_MODE_INFO> = vec![std::mem::zeroed(); nm as usize];
+        if QueryDisplayConfig(QDC_ONLY_ACTIVE_PATHS, &mut np, paths.as_mut_ptr(), &mut nm, modes.as_mut_ptr(), std::ptr::null_mut()) != 0 {
+            return false;
+        }
+        let src: Vec<(i32, u32, u32)> = paths[..np as usize]
+            .iter()
+            .map(|p| (p.sourceInfo.adapterId.HighPart, p.sourceInfo.adapterId.LowPart, p.sourceInfo.id))
+            .collect();
+        src.iter().enumerate().any(|(i, a)| src[i + 1..].contains(a))
+    }
+}
 
 // ------------------------------------------------------------- process scan
 
@@ -626,6 +837,24 @@ mod tests {
     #[ignore]
     fn print_dnd_state() {
         println!("dnd_active = {}", super::dnd_active());
+    }
+
+    #[test]
+    fn matches_screen_recorders() {
+        let n = |v: &[&str]| v.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+        assert_eq!(super::screen_capture_app(&n(&["chrome", "obs64"])), Some("obs64"));
+        assert_eq!(super::screen_capture_app(&n(&["camtasia 2024"])), Some("camtasia"));
+        assert_eq!(super::screen_capture_app(&n(&["chrome", "explorer", "obsidian"])), None);
+        assert_eq!(super::screen_capture_app(&[]), None);
+    }
+
+    #[test]
+    fn detects_pipewire_screencast() {
+        let yes = r#"[{"info":{"props":{"media.class":"Stream/Input/Video","media.role":"Screen"}}}]"#;
+        let cam = r#"[{"info":{"props":{"media.class":"Stream/Input/Video","media.role":"Camera"}}}]"#;
+        assert!(super::pipewire_screencast(yes));
+        assert!(!super::pipewire_screencast(cam));
+        assert!(!super::pipewire_screencast("not json"));
     }
 
     #[test]

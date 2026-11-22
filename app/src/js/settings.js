@@ -541,9 +541,9 @@ function initWellness() {
 // ------------------------------------------------------------------ smart
 function initSmart() {
   if (platform === "macos") {
-    $("#meetNote").textContent = t("Detected while a Zoom meeting is running. Add other call apps under Focus apps.");
     $("#dndNote").textContent = t("Reads macOS Focus when possible; may need Full Disk Access for Yonder.");
   } else if (platform === "linux") {
+    $("#shareNote").textContent = t("Screen recorders like OBS, and PipeWire screen sharing.");
     $("#meetNote").textContent = t("When any app is recording from your microphone.");
     $("#fsNote").textContent = t("Not available on Linux yet. Add specific apps below instead.");
     $("#dndNote").textContent = t("Works with GNOME Do Not Disturb and desktops that inhibit notifications, such as KDE.");

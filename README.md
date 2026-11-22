@@ -111,7 +111,7 @@ it's a great choice. Yonder is for everyone else: **every desktop, older Macs, f
 | Your own sounds, images, gradients, messages | Yes | Yes |
 | Custom reminders | Up to 5 | Up to 5 |
 | Automation | Shell commands on break start/end, on every OS; global hotkeys | Shortcuts, AppleScript, Siri, Focus Filters |
-| Smart pause on macOS | Zoom meetings and apps you choose | Camera/mic meetings, video, fullscreen, screen recording |
+| Smart pause on macOS | Mic/camera in use (CoreAudio, CoreMediaIO), fullscreen, mirrored displays, known screen recorders and apps you choose | Camera/mic meetings, video, fullscreen, screen recording |
 | Stats | Screen time, breaks, daily history, JSON export | Includes app and website usage |
 | iPhone / iPad companion | No | Yes |
 | Signed & notarized | Not yet ([#6](https://github.com/RMoura98/yonder/issues/6)) | Yes |
@@ -132,7 +132,8 @@ see an optometrist or ophthalmologist.
 |---|---|---|---|
 | Breaks, reminders, stats, shortcuts | ✓ | ✓ | ✓ |
 | Blurred desktop & split-screen | ✓ | ✓ (needs Screen Recording permission) | — |
-| Meeting detection | mic/camera in use | Zoom meeting helper | mic recording (PulseAudio/PipeWire) |
+| Meeting detection | mic/camera in use | mic/camera in use (any app, no permission prompt) + Zoom meeting helper | mic recording (PulseAudio/PipeWire) |
+| Screen sharing & recording | known recorders (OBS...), mirrored display | known recorders (OBS...), mirrored display | known recorders, PipeWire screencast |
 | Fullscreen detection | ✓ | ✓ | — |
 | Do Not Disturb / Focus | ✓ | best effort (needs Full Disk Access) | GNOME, KDE |
 | Focus apps (by process name) | ✓ | ✓ | ✓ |

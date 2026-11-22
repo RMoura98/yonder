@@ -164,14 +164,16 @@ sudo apt update &amp;&amp; sudo apt install yonder</code></pre>
           <table>
             <thead><tr><th>Rule</th><th>Windows</th><th>macOS</th><th>Linux</th></tr></thead>
             <tbody>
-              <tr><td><strong>Meetings &amp; calls</strong></td><td>Microphone or camera in use by any app</td><td>Zoom's meeting helper is running</td><td>Active microphone recording via PulseAudio / PipeWire</td></tr>
+              <tr><td><strong>Meetings &amp; calls</strong></td><td>Microphone or camera in use by any app</td><td>Microphone or camera in use by any app (read from CoreAudio and CoreMediaIO; no permission prompt), plus Zoom's meeting helper</td><td>Active microphone recording via PulseAudio / PipeWire</td></tr>
               <tr><td><strong>Fullscreen</strong></td><td>Games, presentations and fullscreen video in browsers and players</td><td>Any app running fullscreen on a display</td><td>Not yet</td></tr>
               <tr><td><strong>Do Not Disturb / Focus</strong></td><td>Focus assist / Do not disturb is on</td><td>Focus is on, read from macOS's Do Not Disturb database when Yonder has Full Disk Access (not possible on every macOS version)</td><td>GNOME Do Not Disturb, or notifications inhibited on desktops such as KDE</td></tr>
+              <tr><td><strong>Screen sharing &amp; recording</strong></td><td>A known recorder is open (OBS, Streamlabs, XSplit, Camtasia and similar), or displays are duplicated</td><td>A known recorder is open (OBS, ScreenFlow, Camtasia and similar), or displays are mirrored</td><td>A known recorder is open, or a PipeWire screencast is active</td></tr>
               <tr><td><strong>Focus apps</strong></td><td colspan="3">The active app's process name is on your focus-apps list (e.g. a DAW or a video editor)</td></tr>
               <tr><td><strong>Idle detection</strong></td><td colspan="3">Time since the last keyboard or mouse input. After you've been away long enough, the break timer resets — stepping away counts as a break. On Linux this works on X11 (needs <code>xprintidle</code>), GNOME and KDE Plasma; on other Wayland compositors (Sway, Hyprland) it isn't detected yet.</td></tr>
             </tbody>
           </table>
         </div>
+                <p><strong>Screen sharing.</strong> Windows and macOS offer no way to ask which app is capturing the screen, so Yonder cannot see a Teams, Zoom or Meet screen share directly. Those calls are normally held by the microphone/camera rule. The recorder list matches apps that are <em>open</em>, not only while they record.</p>
         <p>When a smart pause ends, Yonder gives you a short grace period before the next break rather than jumping straight in.</p>
         <p><strong>Hold limit.</strong> If something keeps smart pause on for a long time (an app that never releases the microphone, a fullscreen window left open), the break goes ahead anyway after <em>Hold breaks for at most</em>: 30 minutes, 1 hour (the default), 2 hours or never. The heads-up then says you've been busy for a while.</p>
       </section>

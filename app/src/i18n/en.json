@@ -375,5 +375,9 @@
   "Do Not Disturb / Focus": "Do Not Disturb / Focus",
   "When your system's Do Not Disturb or Focus mode is on.": "When your system's Do Not Disturb or Focus mode is on.",
   "Reads macOS Focus when possible; may need Full Disk Access for Yonder.": "Reads macOS Focus when possible; may need Full Disk Access for Yonder.",
-  "Works with GNOME Do Not Disturb and desktops that inhibit notifications, such as KDE.": "Works with GNOME Do Not Disturb and desktops that inhibit notifications, such as KDE."
+  "Works with GNOME Do Not Disturb and desktops that inhibit notifications, such as KDE.": "Works with GNOME Do Not Disturb and desktops that inhibit notifications, such as KDE.",
+  "Screen sharing & recording": "Screen sharing & recording",
+  "Screen recorders like OBS, and mirrored displays.": "Screen recorders like OBS, and mirrored displays.",
+  "Screen recorders like OBS, and PipeWire screen sharing.": "Screen recorders like OBS, and PipeWire screen sharing.",
+  "you're sharing or recording your screen": "you're sharing or recording your screen"
 }
