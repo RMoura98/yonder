@@ -382,5 +382,10 @@
   "you're sharing or recording your screen": "you're sharing or recording your screen",
   "Show status": "Show status",
   "Show countdown next to the icon": "Show countdown next to the icon",
-  "Shows the time until your next break beside the tray icon, where your system supports it (macOS menu bar, some Linux panels).": "Shows the time until your next break beside the tray icon, where your system supports it (macOS menu bar, some Linux panels)."
+  "Shows the time until your next break beside the tray icon, where your system supports it (macOS menu bar, some Linux panels).": "Shows the time until your next break beside the tray icon, where your system supports it (macOS menu bar, some Linux panels).",
+  "Notification": "Notification",
+  "Just a desktop notification and a chime": "Just a desktop notification and a chime",
+  "Time for a {n}-second break — look at something far away": "Time for a {n}-second break — look at something far away",
+  "Time for a {n}-minute break — look at something far away": "Time for a {n}-minute break — look at something far away",
+  "Time for a {n}-minute break — stand up, stretch, refill your water": "Time for a {n}-minute break — stand up, stretch, refill your water"
 }

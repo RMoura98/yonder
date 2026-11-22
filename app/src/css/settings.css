@@ -138,8 +138,7 @@ input[type="range"] { accent-color: var(--accent); width: 200px; }
 .seg button.on { background: var(--panel); color: var(--ink); box-shadow: var(--shadow); }
 
 /* enforcement + style cards */
-.enforce, .styles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-.styles { grid-template-columns: repeat(3, 1fr); }
+.enforce, .styles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
 .enforce button, .styles button { border: 0; background: none; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--ink-2); font-size: 12.5px; }
 .enforce b, .styles b { color: var(--ink); font-weight: 550; margin-top: 8px; font-size: 13px; }
 .enforce button.on b, .styles button.on b { font-weight: 700; }
@@ -167,6 +166,16 @@ button.on > .pv { outline-color: var(--accent); }
 .pv.gentle { background: linear-gradient(135deg, #e9eef0, #c7d3d8); }
 .pv.gentle::before { content: ""; position: absolute; inset: 0; background: rgba(6, 14, 18, .5); }
 .pv.gentle i { position: absolute; left: 22%; right: 22%; top: 28%; bottom: 28%; border-radius: 8px; background: rgba(14, 30, 36, .85); box-shadow: 0 4px 14px rgba(0,0,0,.35); }
+.pv.notify { background: linear-gradient(135deg, #cfdfe3, #8fb0b8); }
+.pv.notify i {
+  position: absolute; right: 9%; top: 17%; width: 56%; height: 38%; border-radius: 7px;
+  background:
+    radial-gradient(circle at 11px 50%, #F0A45F 0 5px, transparent 5.5px),
+    linear-gradient(rgba(255,255,255,.8), rgba(255,255,255,.8)) 26px 34% / 58% 3px no-repeat,
+    linear-gradient(rgba(255,255,255,.4), rgba(255,255,255,.4)) 26px 66% / 38% 3px no-repeat,
+    rgba(14, 30, 36, .9);
+  box-shadow: 0 4px 12px rgba(0,0,0,.35);
+}
 .pv.split span { color: #3b3329; text-shadow: none; }
 
 /* today */

@@ -382,5 +382,10 @@
   "you're sharing or recording your screen": "du teilst oder zeichnest deinen Bildschirm auf",
   "Show status": "Status anzeigen",
   "Show countdown next to the icon": "Countdown neben dem Symbol anzeigen",
-  "Shows the time until your next break beside the tray icon, where your system supports it (macOS menu bar, some Linux panels).": "Zeigt die Zeit bis zur nächsten Pause neben dem Tray-Symbol an, wo dein System das unterstützt (macOS-Menüleiste, einige Linux-Leisten)."
+  "Shows the time until your next break beside the tray icon, where your system supports it (macOS menu bar, some Linux panels).": "Zeigt die Zeit bis zur nächsten Pause neben dem Tray-Symbol an, wo dein System das unterstützt (macOS-Menüleiste, einige Linux-Leisten).",
+  "Notification": "Benachrichtigung",
+  "Just a desktop notification and a chime": "Nur eine Desktop-Benachrichtigung und ein Signalton",
+  "Time for a {n}-second break — look at something far away": "Zeit für eine Pause von {n} Sekunden — schau in die Ferne",
+  "Time for a {n}-minute break — look at something far away": "Zeit für eine Pause von {n} Minuten — schau in die Ferne",
+  "Time for a {n}-minute break — stand up, stretch, refill your water": "Zeit für eine Pause von {n} Minuten — steh auf, streck dich, füll dein Wasser auf"
 }

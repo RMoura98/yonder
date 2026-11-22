@@ -382,5 +382,10 @@
   "you're sharing or recording your screen": "estás compartiendo o grabando la pantalla",
   "Show status": "Mostrar estado",
   "Show countdown next to the icon": "Mostrar la cuenta atrás junto al icono",
-  "Shows the time until your next break beside the tray icon, where your system supports it (macOS menu bar, some Linux panels).": "Muestra el tiempo hasta tu próximo descanso junto al icono de la bandeja, donde tu sistema lo permita (barra de menús de macOS, algunos paneles de Linux)."
+  "Shows the time until your next break beside the tray icon, where your system supports it (macOS menu bar, some Linux panels).": "Muestra el tiempo hasta tu próximo descanso junto al icono de la bandeja, donde tu sistema lo permita (barra de menús de macOS, algunos paneles de Linux).",
+  "Notification": "Notificación",
+  "Just a desktop notification and a chime": "Solo una notificación de escritorio y un aviso sonoro",
+  "Time for a {n}-second break — look at something far away": "Hora de un descanso de {n} segundos — mira algo a lo lejos",
+  "Time for a {n}-minute break — look at something far away": "Hora de un descanso de {n} minutos — mira algo a lo lejos",
+  "Time for a {n}-minute break — stand up, stretch, refill your water": "Hora de un descanso de {n} minutos — levántate, estírate, rellena tu agua"
 }

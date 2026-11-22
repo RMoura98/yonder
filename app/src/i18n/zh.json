@@ -382,5 +382,10 @@
   "you're sharing or recording your screen": "你正在共享或录制屏幕",
   "Show status": "显示状态",
   "Show countdown next to the icon": "在图标旁显示倒计时",
-  "Shows the time until your next break beside the tray icon, where your system supports it (macOS menu bar, some Linux panels).": "在系统支持的位置（macOS 菜单栏、部分 Linux 面板），于托盘图标旁显示距下次休息的时间。"
+  "Shows the time until your next break beside the tray icon, where your system supports it (macOS menu bar, some Linux panels).": "在系统支持的位置（macOS 菜单栏、部分 Linux 面板），于托盘图标旁显示距下次休息的时间。",
+  "Notification": "通知",
+  "Just a desktop notification and a chime": "仅显示桌面通知并播放提示音",
+  "Time for a {n}-second break — look at something far away": "该休息 {n} 秒了 — 看看远处",
+  "Time for a {n}-minute break — look at something far away": "该休息 {n} 分钟了 — 看看远处",
+  "Time for a {n}-minute break — stand up, stretch, refill your water": "该休息 {n} 分钟了 — 站起来，伸展一下，续杯水"
 }

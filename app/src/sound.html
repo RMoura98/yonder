@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Yonder sound</title>
+</head>
+<body>
+  <!-- Notification-only break style: this hidden, never-shown window just plays the break sounds
+       (they're Web Audio / user files, which only a page can play). It is closed with the break. -->
+  <script type="module">
+    import { invoke, listen } from "./js/api.js";
+    import { playSound } from "./js/sounds.js";
+    const s = await invoke("get_settings");
+    if (s.sound_enabled) playSound(s.sound, s.volume * 0.8);
+    listen("break-ending", (delay) => {
+      if (s.sound_enabled && delay > 1000) playSound("soft", s.volume * 0.7);
+    });
+  </script>
+</body>
+</html>

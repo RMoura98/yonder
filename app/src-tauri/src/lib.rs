@@ -22,6 +22,7 @@ use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent}
 use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, WebviewUrl, WebviewWindow, WebviewWindowBuilder, Wry};
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
+use tauri_plugin_notification::NotificationExt;
 
 struct Paths {
     settings: PathBuf,
@@ -292,7 +293,43 @@ fn close_window(app: &AppHandle, label: &str) {
     }
 }
 
+/// "Notification only" style: no window at all, just a native notification plus the
+/// break sound (played by a tiny hidden page, since sounds are Web Audio).
+fn notify_break(app: &AppHandle) {
+    let (lang, brk, sound) = {
+        let st = state(app);
+        let c = st.core.lock().unwrap();
+        (i18n::resolve(&c.settings.language), c.e.brk.clone(), c.settings.sound_enabled)
+    };
+    if let Some(b) = brk {
+        let body = if b.kind == "short" && b.total_secs < 60 {
+            i18n::tr(lang, "Time for a {n}-second break — look at something far away", &[("n", &b.total_secs.to_string())])
+        } else {
+            let n = ((b.total_secs + 30) / 60).max(1).to_string();
+            if b.kind == "long" {
+                i18n::tr(lang, "Time for a {n}-minute break — stand up, stretch, refill your water", &[("n", &n)])
+            } else {
+                i18n::tr(lang, "Time for a {n}-minute break — look at something far away", &[("n", &n)])
+            }
+        };
+        let _ = app.notification().builder().title("Yonder").body(body).show();
+    }
+    if sound && app.get_webview_window("break-sound").is_none() {
+        // closed with the other "break-" windows when the break ends
+        let _ = WebviewWindowBuilder::new(app, "break-sound", WebviewUrl::App("sound.html".into()))
+            .title("Yonder sound")
+            .focusable(false)
+            .focused(false)
+            .skip_taskbar(true)
+            .visible(false)
+            .build();
+    }
+}
+
 fn start_break_windows(app: &AppHandle) {
+    if state(app).core.lock().unwrap().settings.break_style == "notify" {
+        return notify_break(app);
+    }
     let Ok(monitors) = app.available_monitors() else { return };
     let needs_shot = {
         let st = state(app);
@@ -1104,6 +1141,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| open_settings(app)))
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, Some(vec!["--background"])))
         .setup(|app| {
             #[cfg(target_os = "macos")]

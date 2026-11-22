@@ -382,5 +382,10 @@
   "you're sharing or recording your screen": "画面を共有または録画中",
   "Show status": "ステータスを表示",
   "Show countdown next to the icon": "アイコンの横にカウントダウンを表示",
-  "Shows the time until your next break beside the tray icon, where your system supports it (macOS menu bar, some Linux panels).": "システムが対応している場合（macOS のメニューバー、一部の Linux パネル）、トレイアイコンの横に次の休憩までの時間を表示します。"
+  "Shows the time until your next break beside the tray icon, where your system supports it (macOS menu bar, some Linux panels).": "システムが対応している場合（macOS のメニューバー、一部の Linux パネル）、トレイアイコンの横に次の休憩までの時間を表示します。",
+  "Notification": "通知",
+  "Just a desktop notification and a chime": "デスクトップ通知とチャイムだけ",
+  "Time for a {n}-second break — look at something far away": "{n} 秒の休憩の時間です — 遠くを見ましょう",
+  "Time for a {n}-minute break — look at something far away": "{n} 分の休憩の時間です — 遠くを見ましょう",
+  "Time for a {n}-minute break — stand up, stretch, refill your water": "{n} 分の休憩の時間です — 立ち上がって、ストレッチして、水を補給しましょう"
 }
