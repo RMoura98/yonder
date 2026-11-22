@@ -68,7 +68,15 @@ scoop install yonder/yonder
 or download the `.exe` (or `.msi`) installer from the [latest release](https://github.com/RMoura98/yonder/releases/latest).
 SmartScreen may warn about an unrecognized app: choose **More info → Run anyway**.
 
-**Linux:** grab the `.AppImage`, `.deb` or `.rpm` from the [latest release](https://github.com/RMoura98/yonder/releases/latest).
+**Linux (Debian, Ubuntu and derivatives):** add the signed apt repository once, then updates come with `apt upgrade`:
+
+```sh
+curl -fsSL https://rmoura98.github.io/yonder/apt/yonder.gpg | sudo tee /usr/share/keyrings/yonder.gpg > /dev/null
+echo "deb [signed-by=/usr/share/keyrings/yonder.gpg] https://rmoura98.github.io/yonder/apt stable main" | sudo tee /etc/apt/sources.list.d/yonder.list
+sudo apt update && sudo apt install yonder
+```
+
+**Other Linux:** grab the `.AppImage`, `.deb` or `.rpm` from the [latest release](https://github.com/RMoura98/yonder/releases/latest).
 
 **Stay up to date:** follow the [releases feed](https://github.com/RMoura98/yonder/releases.atom) in any RSS reader (no account
 needed), or click **Watch → Custom → Releases** on this repo. News and questions live in [Discussions](https://github.com/RMoura98/yonder/discussions).
