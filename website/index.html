@@ -80,14 +80,26 @@
           <span class="badge">MIT</span>
         </div>
 
-        <div class="snippet reveal d3">
-          <pre id="install-snippet"><code><span class="p"># macOS, with Homebrew</span>
-<span class="p">$ </span>brew tap rmoura98/yonder https://github.com/RMoura98/yonder
+        <div class="install reveal d3" id="install">
+          <div class="install-tabs" role="tablist" aria-label="Install Yonder">
+            <button type="button" role="tab" id="tab-mac" aria-controls="panel-mac" aria-selected="true" data-os="mac">macOS</button>
+            <button type="button" role="tab" id="tab-win" aria-controls="panel-win" aria-selected="false" data-os="win">Windows</button>
+            <button type="button" role="tab" id="tab-linux" aria-controls="panel-linux" aria-selected="false" data-os="linux">Linux</button>
+          </div>
+          <div class="snippet" role="tabpanel" id="panel-mac" aria-labelledby="tab-mac">
+            <pre id="install-snippet"><code><span class="p">$ </span>brew tap rmoura98/yonder https://github.com/RMoura98/yonder
 <span class="p">$ </span>brew install --cask yonder</code></pre>
-          <button class="copy-btn" type="button" data-copy="install-snippet" aria-label="Copy the Homebrew install commands">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
-            <span>Copy</span>
-          </button>
+            <button class="copy-btn" type="button" data-copy="install-snippet" aria-label="Copy the Homebrew install commands">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+              <span>Copy</span>
+            </button>
+          </div>
+          <div class="snippet links" role="tabpanel" id="panel-win" aria-labelledby="tab-win" hidden>
+            <p>Windows 10 and 11: get <a href="https://github.com/RMoura98/yonder/releases/latest">the .exe installer</a> (or the .msi) from the latest release. If SmartScreen asks, choose <em>More info → Run anyway</em>.</p>
+          </div>
+          <div class="snippet links" role="tabpanel" id="panel-linux" aria-labelledby="tab-linux" hidden>
+            <p>Get the <a href="https://github.com/RMoura98/yonder/releases/latest">.AppImage, .deb or .rpm</a> from the latest release. For the .deb: <code>sudo apt install ./Yonder_*_amd64.deb</code></p>
+          </div>
         </div>
 
         <!-- Autoplaying recreation of the app flow -->

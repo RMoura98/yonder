@@ -561,3 +561,16 @@ tr:last-child td { border-bottom: 0; }
 .reel figcaption b { color: var(--ink); }
 @media (max-width: 760px) { .reels { grid-template-columns: minmax(0, 1fr); } }
 @media (prefers-reduced-motion: reduce) { .reel video { animation: none; } }
+
+/* ---------- install tabs ---------- */
+.install { margin: 26px auto 0; max-width: 520px; text-align: left; }
+.install-tabs { display: flex; gap: 4px; margin-bottom: 8px; justify-content: center; }
+.install-tabs button { border: 1px solid var(--line-2); background: transparent; color: var(--muted); font: inherit; font-size: .85rem; font-weight: 600;
+  padding: 6px 14px; border-radius: 999px; cursor: pointer; transition: background .15s, color .15s, border-color .15s; }
+.install-tabs button:hover { color: var(--ink); }
+.install-tabs button[aria-selected="true"] { background: var(--sun); border-color: var(--sun); color: #071A1E; }
+.install .snippet { margin: 0; max-width: none; }
+.install .snippet[hidden] { display: none; }
+.snippet.links p { margin: 0; padding: 13px 16px; font-size: .85rem; line-height: 1.6; color: #C9D8D6; }
+.snippet.links a { color: var(--sun); }
+.snippet.links code { font-size: .78rem; background: rgba(255,255,255,.08); padding: 1px 6px; border-radius: 5px; color: #E4EFED; white-space: nowrap; }

@@ -256,3 +256,20 @@
   }, { threshold: 0.2 });
   vids.forEach(function (v) { io.observe(v); });
 })();
+
+// Install tabs: pick the visitor's OS, switch on click.
+(function () {
+  var box = document.getElementById("install");
+  if (!box) return;
+  var tabs = box.querySelectorAll('[role="tab"]');
+  function show(os) {
+    tabs.forEach(function (t) {
+      var on = t.getAttribute("data-os") === os;
+      t.setAttribute("aria-selected", on ? "true" : "false");
+      document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
+    });
+  }
+  tabs.forEach(function (t) { t.addEventListener("click", function () { show(t.getAttribute("data-os")); }); });
+  var ua = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent || "";
+  show(/win/i.test(ua) ? "win" : /linux|x11/i.test(ua) && !/android/i.test(navigator.userAgent) ? "linux" : "mac");
+})();
