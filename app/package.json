@@ -1,0 +1,16 @@
+{
+  "name": "yonder",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Yonder — a tiny, open-source break reminder for Windows, macOS and Linux.",
+  "license": "MIT",
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "icons": "tauri icon ../brand/logo.svg -o src-tauri/icons"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}
