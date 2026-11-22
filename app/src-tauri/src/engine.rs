@@ -5,7 +5,7 @@ use crate::i18n;
 use crate::settings::{Reminder, Settings};
 use crate::stats::{today_key, Stats};
 use chrono::{Datelike, Local, Timelike};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
 /// Seconds of inactivity after which screen time stops counting.
@@ -96,6 +96,44 @@ pub struct Engine {
     stats_dirty_secs: u32,
 }
 
+/// A snapshot older than this is ignored on startup (the gap counts as a break).
+pub const RESTORE_MAX_AGE_SECS: i64 = 10 * 60;
+
+/// The small part of the engine worth surviving a restart, kept in `state.json`.
+/// Never describes an active break: those are saved as a fresh countdown.
+#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
+#[serde(default)]
+pub struct SavedState {
+    pub saved_at: i64,
+    pub work_secs: u64,
+    pub snooze_secs: u64,
+    pub short_count: u32,
+    pub paused: bool,
+    /// Epoch seconds the pause ends; `None` with `paused` means "until resumed".
+    pub pause_until: Option<i64>,
+    pub reminder_elapsed: HashMap<String, u64>,
+    pub held_secs: u64,
+    pub hold_overdue: bool,
+}
+
+impl SavedState {
+    pub fn load(path: &std::path::Path) -> Option<Self> {
+        serde_json::from_str(&std::fs::read_to_string(path).ok()?).ok()
+    }
+
+    pub fn save(&self, path: &std::path::Path) {
+        if let Some(dir) = path.parent() {
+            let _ = std::fs::create_dir_all(dir);
+        }
+        if let Ok(s) = serde_json::to_string(self) {
+            let tmp = path.with_extension("tmp");
+            if std::fs::write(&tmp, s).is_ok() {
+                let _ = std::fs::rename(&tmp, path);
+            }
+        }
+    }
+}
+
 pub struct Core {
     pub settings: Settings,
     pub stats: Stats,
@@ -110,6 +148,57 @@ fn parse_hm(s: &str) -> Option<u32> {
 impl Core {
     pub fn new(settings: Settings, stats: Stats) -> Self {
         Self { settings, stats, e: Engine::default() }
+    }
+
+    /// Snapshot of the countdown for `state.json`.
+    pub fn saved_state(&self) -> SavedState {
+        // A break in progress is saved as already done: a restart mid-break
+        // shouldn't resume the break or leave a full countdown behind.
+        let resting = self.e.brk.is_some();
+        SavedState {
+            saved_at: now_epoch(),
+            work_secs: if resting { 0 } else { self.e.work_secs },
+            snooze_secs: if resting { 0 } else { self.e.snooze_secs },
+            short_count: self.e.short_count,
+            paused: self.e.pause.is_some(),
+            pause_until: self.e.pause.flatten(),
+            reminder_elapsed: self.e.reminder_elapsed.clone(),
+            held_secs: self.e.held_secs,
+            hold_overdue: self.e.hold_overdue,
+        }
+    }
+
+    /// Restore a snapshot at startup. Returns false when it was too old (or from
+    /// the future) and the engine starts fresh. The time since the snapshot counts
+    /// as away: it is not added to the countdown, and if it is at least the
+    /// idle-reset threshold it counts as a natural break.
+    pub fn restore(&mut self, saved: &SavedState, now: i64) -> bool {
+        let gap = now - saved.saved_at;
+        if gap < 0 || gap >= RESTORE_MAX_AGE_SECS {
+            return false;
+        }
+        self.e.short_count = saved.short_count;
+        self.e.reminder_elapsed = saved.reminder_elapsed.clone();
+        let reset_after = self.settings.idle_reset_mins.max(1) as i64 * 60;
+        if gap >= reset_after {
+            if saved.work_secs > 0 {
+                self.stats.today().natural_breaks += 1;
+            }
+            self.e.natural_counted = true;
+        } else {
+            self.e.work_secs = saved.work_secs;
+            self.e.snooze_secs = saved.snooze_secs;
+            self.e.held_secs = saved.held_secs;
+            self.e.hold_overdue = saved.hold_overdue;
+        }
+        if saved.paused {
+            match saved.pause_until {
+                None => self.e.pause = Some(None),
+                Some(t) if t > now => self.e.pause = Some(Some(t)),
+                Some(_) => {}
+            }
+        }
+        true
     }
 
     pub fn interval_secs(&self) -> u64 {

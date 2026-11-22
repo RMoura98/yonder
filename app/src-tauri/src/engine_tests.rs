@@ -599,3 +599,96 @@ fn snapshot_reports_holding_while_typing() {
     assert!(snap.next_break_in <= 0);
     assert!(c.e.brk.is_none());
 }
+
+// ---------------------------------------------------------- restore (state.json)
+
+fn saved_at(c: &Core, age: i64) -> SavedState {
+    let mut s = c.saved_state();
+    s.saved_at = now_epoch() - age;
+    s
+}
+
+#[test]
+fn restore_recent_snapshot_keeps_countdown() {
+    let mut a = core(test_settings());
+    tick_n(&mut a, 30, 0);
+    a.e.short_count = 2;
+    a.e.snooze_secs = 15;
+    let saved = saved_at(&a, 20);
+    let mut b = core(test_settings());
+    assert!(b.restore(&saved, now_epoch()));
+    assert_eq!(b.e.work_secs, 30);
+    assert_eq!(b.e.snooze_secs, 15);
+    assert_eq!(b.e.short_count, 2);
+}
+
+#[test]
+fn restore_old_snapshot_starts_fresh() {
+    let mut a = core(test_settings());
+    tick_n(&mut a, 30, 0);
+    let saved = saved_at(&a, RESTORE_MAX_AGE_SECS + 5);
+    let mut b = core(test_settings());
+    assert!(!b.restore(&saved, now_epoch()));
+    assert_eq!(b.e.work_secs, 0);
+}
+
+#[test]
+fn restore_gap_past_idle_threshold_is_a_natural_break() {
+    let mut a = core(test_settings()); // idle_reset 2 min
+    tick_n(&mut a, 30, 0);
+    a.e.short_count = 1;
+    let saved = saved_at(&a, 180);
+    let mut b = core(test_settings());
+    assert!(b.restore(&saved, now_epoch()));
+    assert_eq!(b.e.work_secs, 0);
+    assert_eq!(b.stats.today().natural_breaks, 1);
+    assert_eq!(b.e.short_count, 1);
+}
+
+#[test]
+fn restore_never_resumes_a_break() {
+    let mut a = core(test_settings());
+    work_until_break(&mut a);
+    assert!(a.e.brk.is_some());
+    let saved = saved_at(&a, 5);
+    assert_eq!(saved.work_secs, 0);
+    let mut b = core(test_settings());
+    assert!(b.restore(&saved, now_epoch()));
+    assert!(b.e.brk.is_none());
+    assert_eq!(b.e.work_secs, 0);
+}
+
+#[test]
+fn restore_drops_expired_pause_keeps_live_ones() {
+    let mut a = core(test_settings());
+    a.pause(Some(10));
+    let mut saved = saved_at(&a, 5);
+    saved.pause_until = Some(now_epoch() - 1);
+    let mut b = core(test_settings());
+    assert!(b.restore(&saved, now_epoch()));
+    assert!(b.e.pause.is_none());
+
+    let mut c = core(test_settings());
+    assert!(c.restore(&saved_at(&a, 5), now_epoch()));
+    assert!(matches!(c.e.pause, Some(Some(_))));
+
+    a.pause(None);
+    let mut d = core(test_settings());
+    assert!(d.restore(&saved_at(&a, 5), now_epoch()));
+    assert_eq!(d.e.pause, Some(None));
+}
+
+#[test]
+fn corrupt_state_file_is_ignored() {
+    let dir = std::env::temp_dir().join("yonder-test-state-corrupt");
+    let _ = std::fs::create_dir_all(&dir);
+    let p = dir.join("state.json");
+    std::fs::write(&p, "{ not json").unwrap();
+    assert!(SavedState::load(&p).is_none());
+    assert!(SavedState::load(&dir.join("missing.json")).is_none());
+    let mut a = core(test_settings());
+    tick_n(&mut a, 5, 0);
+    a.saved_state().save(&p);
+    assert_eq!(SavedState::load(&p).unwrap().work_secs, 5);
+    let _ = std::fs::remove_dir_all(&dir);
+}

@@ -25,6 +25,8 @@ use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 struct Paths {
     settings: PathBuf,
     stats: PathBuf,
+    /// Countdown snapshot, restored after a quick restart.
+    state: PathBuf,
     background: PathBuf,
     /// Folder holding the user's added sounds as data URLs, one file per sound.
     sounds: PathBuf,
@@ -465,6 +467,7 @@ fn run_action(app: &AppHandle, name: &str, arg: Option<i64>) {
             let core = st.core.lock().unwrap();
             core.stats.save(&st.paths.stats);
             core.settings.save(&st.paths.settings);
+            core.saved_state().save(&st.paths.state);
             drop(core);
             app.exit(0);
         }
@@ -918,7 +921,7 @@ pub fn run() {
             let first_run = !settings.onboarded;
             let launch = settings.launch_at_login;
             app.manage(AppState {
-                core: Mutex::new(Core::new(settings, stats)),
+                core: Mutex::new(core),
                 paths,
                 snapshots: Mutex::new(HashMap::new()),
                 reminder_queue: Mutex::new(Vec::new()),
@@ -944,6 +947,12 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             get_settings,
             save_settings,
+fn save_state(app: &AppHandle) {
+    let st = state(app);
+    let saved = st.core.lock().unwrap().saved_state();
+    saved.save(&st.paths.state);
+}
+
             get_state,
             get_stats,
             reset_stats,
@@ -961,11 +970,17 @@ pub fn run() {
             check_updates_now,
             get_update,
             skip_update,
+            if frame % 60 == 0 {
+                save_state(&app);
+            }
             app_version
         ])
         .build(tauri::generate_context!())
         .expect("error while building Yonder")
-        .run(|_app, event| {
+        .run(|app, event| {
+            if let tauri::RunEvent::Exit = event {
+                save_state(app);
+            }
             if let tauri::RunEvent::ExitRequested { api, code, .. } = event {
                 // Closing the last window keeps Yonder running in the tray.
                 if code.is_none() {
@@ -974,3 +989,8 @@ pub fn run() {
             }
         });
 }
+                state: data.join("state.json"),
+            let mut core = Core::new(settings, stats);
+            if let Some(saved) = engine::SavedState::load(&paths.state) {
+                core.restore(&saved, engine::now_epoch());
+            }
