@@ -606,3 +606,7 @@ pub fn fmt_dur(secs: u64) -> String {
         format!("{}s", secs)
     }
 }
+
+#[cfg(test)]
+#[path = "engine_tests.rs"]
+mod tests;
