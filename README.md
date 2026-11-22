@@ -30,6 +30,7 @@ desktop into a calm break screen, and stays out of the way while you're in a cal
 - **Pauses your music.** Optionally pauses music and video when a break starts and resumes only what it paused (system media controls on Windows, Music/Spotify on macOS, playerctl on Linux).
 - **Set up in three steps.** The first time you open Yonder: language, rhythm and break style. Skip it if you like.
 - **Posture & blink reminders.** Small liquid-glass widgets that appear, animate and disappear. Up to five custom reminders with their own icon, interval and sound.
+- **Focus sessions.** An optional Pomodoro mode (25 min focus, 5 min break, a long break after the fourth period, all adjustable) started from the tray or the Today page. It runs alongside your eye breaks and merges the two: an eye break that would land within a few minutes of a focus break is folded into it, so you are never interrupted twice in a row.
 - **Skip difficulty.** Casual, Balanced, Firm (hold Skip for 2 seconds) or Hardcore.
 - **Office hours & planned breaks.** Only remind during work hours; schedule lunch or a walk.
 - **Shortcuts & automation.** Global hotkeys and shell hooks on break start/end (`YONDER_EVENT`, `YONDER_BREAK_KIND`, `YONDER_BREAK_SECS`).

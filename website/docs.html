@@ -59,6 +59,7 @@
           <li><a href="#smart-pause">Smart pause</a></li>
           <li><a href="#office-hours">Office hours</a></li>
           <li><a href="#planned-breaks">Planned breaks</a></li>
+          <li><a href="#focus-sessions">Focus sessions</a></li>
         </ul>
         <h4>Personalize</h4>
         <ul>
@@ -195,6 +196,22 @@ sudo apt update &amp;&amp; sudo apt install yonder</code></pre>
           <li>Yonder won't schedule a regular break right before a planned one.</li>
           <li>When a planned break starts, you get a friendly notification; the timer resets when it ends.</li>
         </ul>
+      </section>
+
+      <section class="doc-section" id="focus-sessions">
+        <h2>Focus sessions</h2>
+        <p>A focus session is an optional Pomodoro-style mode that runs alongside your eye breaks. Start it from the tray (<em>Start focus session</em>), from the <em>Today</em> page, or from <em>Settings → Focus session</em>; stop it the same way. There is also a shortcut you can assign under <em>Keyboard Shortcuts</em> (none by default).</p>
+        <p>By default a session is four focus periods of 25 minutes. After each one comes a 5 minute focus break, and after the fourth a 15 minute long focus break, which ends the session. Focus breaks use the normal break screen, titled <em>Focus break</em> or <em>Long focus break</em>. The <em>Today</em> page shows where you are, for example <em>Focus 2/4 · 12:30 left</em>. All lengths, and the number of focus periods per session, are set on the Focus session page.</p>
+        <h3>How it works with eye breaks</h3>
+        <ul>
+          <li>Your eye-break schedule keeps running during a session. If an eye break would land within the <em>merge window</em> (3 minutes by default) of a focus break, it is folded into that focus break, so you get one interruption instead of two. An eye break that is further away still happens as usual.</li>
+          <li>A focus break counts as a break and restarts the eye-break countdown.</li>
+          <li>A session only counts active screen time. It waits while you are away, paused, outside <a href="#office-hours">office hours</a>, or held back by <a href="#smart-pause">smart pause</a>, the same way regular breaks do.</li>
+          <li>When the last focus break ends, or when you stop the session, the normal eye-break schedule carries on. Stopping during a focus break lets that break finish.</li>
+          <li>Skipping a focus break (when your <a href="#skip-difficulty">skip difficulty</a> allows it) moves the session on to the next focus period.</li>
+          <li>Hooks receive <code>focus</code> as <code>YONDER_BREAK_KIND</code> for focus breaks.</li>
+        </ul>
+        <p>A session is not remembered across restarts: it ends when Yonder quits.</p>
       </section>
 
       <section class="doc-section" id="wellness">
