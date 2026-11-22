@@ -4,3 +4,4 @@ app/src-tauri/gen/
 .DS_Store
 Thumbs.db
 tools/teasers/out/
+.claude/
