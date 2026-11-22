@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Docs — Yonder</title>
+  <meta name="description" content="Documentation for Yonder, the free and open-source break reminder: installation, break modes, smart pause, office hours, shortcuts, building from source and contributing.">
+  <meta name="theme-color" content="#F2F6F5" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#061215" media="(prefers-color-scheme: dark)">
+  <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#docs-main">Skip to content</a>
+
+  <header class="nav">
+    <div class="container">
+      <a class="brand" href="./" aria-label="Yonder home">
+        <img src="assets/logo.svg" alt="" width="32" height="32">
+        <span class="wordmark">yonder</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a class="hide-sm" href="./#features">Features</a>
+        <a href="docs.html" aria-current="page">Docs</a>
+        <a class="hide-md" href="./#changelog">Changelog</a>
+        <a class="gh" href="https://github.com/RMoura98/yonder" aria-label="Yonder on GitHub">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span class="hide-sm">GitHub</span>
+        </a>
+        <a class="sponsor-link" href="https://github.com/sponsors/RMoura98" aria-label="Sponsor Yonder on GitHub Sponsors" title="Sponsor Yonder">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.3C.9 8.3 3 4.5 6.6 4.5c2 0 3.4 1 4.4 2.5 1-1.5 2.4-2.5 4.4-2.5 3.6 0 5.7 3.8 4.2 7.2C19.5 16.4 12 21 12 21z"/></svg>
+          <span class="hide-md">Sponsor</span>
+        </a>
+        <a class="btn btn-primary btn-sm" href="https://github.com/RMoura98/yonder/releases/latest" data-download>Download</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container docs-layout">
+    <aside class="docs-side">
+      <button class="docs-toggle" type="button" aria-expanded="false" aria-controls="docs-nav">
+        On this page
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <nav id="docs-nav" aria-label="Documentation">
+        <h4>Basics</h4>
+        <ul>
+          <li><a href="#getting-started">Getting started</a></li>
+          <li><a href="#installation">Installation</a></li>
+          <li><a href="#break-modes">Break modes</a></li>
+          <li><a href="#skip-difficulty">Skip difficulty</a></li>
+          <li><a href="#reminders">Reminders</a></li>
+        </ul>
+        <h4>Scheduling</h4>
+        <ul>
+          <li><a href="#smart-pause">Smart pause</a></li>
+          <li><a href="#office-hours">Office hours</a></li>
+          <li><a href="#planned-breaks">Planned breaks</a></li>
+        </ul>
+        <h4>Personalize</h4>
+        <ul>
+          <li><a href="#wellness">Wellness &amp; custom reminders</a></li>
+          <li><a href="#break-styles">Break screen styles</a></li>
+          <li><a href="#shortcuts">Keyboard shortcuts</a></li>
+          <li><a href="#stats">Stats</a></li>
+        </ul>
+        <h4>Develop</h4>
+        <ul>
+          <li><a href="#building">Building from source</a></li>
+          <li><a href="#contributing">Contributing</a></li>
+          <li><a href="#support">Support the project</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <main class="docs-content" id="docs-main">
+      <header>
+        <span class="eyebrow">Documentation</span>
+        <h1 style="margin-top:14px">Everything about <em>Yonder</em></h1>
+        <p>How to install it, set it up the way you like, and hack on it. If something here is unclear or out of date, <a href="https://github.com/RMoura98/yonder/issues">open an issue</a> — docs fixes are very welcome.</p>
+      </header>
+
+      <section class="doc-section" id="getting-started">
+        <h2>Getting started</h2>
+        <p>Yonder is a small desktop app that reminds you to take short breaks from your screen. Once installed, it lives in your system tray (Windows, Linux) or menu bar (macOS) and counts down to your next break.</p>
+        <ol>
+          <li><strong>Install</strong> Yonder for your platform (see <a href="#installation">Installation</a>).</li>
+          <li><strong>Launch it.</strong> On first run a short welcome screen lets you pick a <a href="#break-modes">break mode</a>.</li>
+          <li><strong>Keep working.</strong> About 30 seconds before a break, a small toast appears. When the break starts, the break screen fades in with a countdown.</li>
+          <li><strong>Tweak it</strong> any time from <em>Settings</em> in the tray menu.</li>
+        </ol>
+        <p>Settings are grouped into pages: <em>Overview</em>, <em>Breaks</em>, <em>Break screen</em>, <em>Wellness reminders</em>, <em>Smart pause</em>, <em>Schedule</em>, <em>Shortcuts &amp; automation</em>, <em>Stats</em> and <em>General</em>.</p>
+        <div class="callout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg><div>Yonder has no account and no telemetry. All settings and stats are stored locally in your user profile.</div></div>
+      </section>
+
+      <section class="doc-section" id="installation">
+        <h2>Installation</h2>
+        <p>Download the latest installer from the <a href="https://github.com/RMoura98/yonder/releases/latest">releases page</a>. Builds are roughly 10&nbsp;MB because Yonder uses Tauri and your system's built-in webview instead of bundling a browser.</p>
+        <h3>Windows</h3>
+        <p>Run the <code>.exe</code> (NSIS) setup or the <code>.msi</code> installer. Windows 10 and 11 are supported; the required WebView2 runtime ships with Windows 11 and is installed automatically on Windows 10 if missing. If SmartScreen warns about an unrecognized app, choose <em>More info → Run anyway</em>.</p>
+        <h3>macOS</h3>
+        <p>Open the <code>.dmg</code> and drag Yonder into <em>Applications</em>. Universal builds run natively on Apple Silicon and Intel. If macOS blocks the first launch, right-click the app and choose <em>Open</em>.</p>
+        <h3>Linux</h3>
+        <p>Use the <code>.AppImage</code> (make it executable with <code>chmod +x</code>), or install the <code>.deb</code> / <code>.rpm</code> package for your distribution. A tray requires a desktop with StatusNotifier / AppIndicator support (most do; on GNOME install the AppIndicator extension).</p>
+        <h3>Start at login</h3>
+        <p>Enable <em>Settings → General → Launch at login</em> so Yonder is always ready.</p>
+      </section>
+
+      <section class="doc-section" id="break-modes">
+        <h2>Break modes</h2>
+        <p>A mode is a preset for how long you work between breaks and how long each break lasts. Pick one to start, then adjust any value in Settings.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Mode</th><th>Work</th><th>Break</th><th>Good for</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Balanced</strong></td><td>20 min</td><td>20 s</td><td>Everyday screen work; follows the 20-20-20 rule.</td></tr>
+              <tr><td><strong>Deep Focus</strong></td><td>45 min</td><td>30 s</td><td>Long, focused sessions. Adds a longer stretch break every few cycles.</td></tr>
+              <tr><td><strong>Eye Care</strong></td><td>15 min</td><td>15 s</td><td>Tired or dry eyes; frequent, tiny pauses.</td></tr>
+              <tr><td><strong>Wellness</strong></td><td>25 min</td><td>45 s</td><td>Time to stand up, stretch and breathe.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p><strong>Long breaks</strong> can be enabled for any mode: choose how often (for example every 4th break) and how long (for example 5 minutes).</p>
+      </section>
+
+      <section class="doc-section" id="skip-difficulty">
+        <h2>Skip difficulty</h2>
+        <p>Sometimes you genuinely can't take a break. Skip difficulty decides how easy it is to dismiss one:</p>
+        <ul>
+          <li><strong>Casual</strong> — a Skip button is always visible.</li>
+          <li><strong>Balanced</strong> — the Skip button appears after a few seconds, giving you a moment to reconsider.</li>
+          <li><strong>Hardcore</strong> — no skipping; the break runs its full length.</li>
+        </ul>
+        <p>Set it in <em>Settings → Breaks</em>. When skipping is allowed, pressing <kbd class="k">Esc</kbd> during a break ends it.</p>
+        <div class="callout warm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg><div>Skipped breaks are counted separately in <a href="#stats">Stats</a>, so you can see how often you skip.</div></div>
+      </section>
+
+      <section class="doc-section" id="reminders">
+        <h2>Reminders</h2>
+        <p>Before every break Yonder shows a small <strong>heads-up toast</strong> — by default 30 seconds ahead. From the toast you can:</p>
+        <ul>
+          <li><strong>Start now</strong> — begin the break immediately.</li>
+          <li><strong>+1m / +5m</strong> — snooze the break by one or five minutes.</li>
+          <li>Ignore it — the break starts when the countdown ends.</li>
+        </ul>
+        <p>You can change the lead time, or turn the toast off entirely, in <em>Settings → Breaks</em>. If you're typing when a break is due, Yonder waits a few seconds for a natural pause before starting.</p>
+      </section>
+
+      <section class="doc-section" id="smart-pause">
+        <h2>Smart pause</h2>
+        <p>Smart pause automatically holds your reminders when a break would be disruptive. Each rule can be toggled on or off in <em>Settings → Smart pause</em>. All detection happens locally from simple system signals; smart pause never records audio or video.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Rule</th><th>Windows</th><th>macOS</th><th>Linux</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Meetings &amp; calls</strong></td><td>Microphone or camera in use by any app</td><td>Zoom's meeting helper is running</td><td>Active microphone recording via PulseAudio / PipeWire</td></tr>
+              <tr><td><strong>Fullscreen</strong></td><td>Games, presentations and fullscreen video in browsers and players</td><td>Not yet</td><td>Not yet</td></tr>
+              <tr><td><strong>Focus apps</strong></td><td colspan="3">The active app's process name is on your focus-apps list (e.g. a DAW or a video editor)</td></tr>
+              <tr><td><strong>Idle detection</strong></td><td colspan="3">Time since the last keyboard or mouse input. After you've been away long enough, the break timer resets — stepping away counts as a break.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>When a smart pause ends, Yonder gives you a short grace period before the next break rather than jumping straight in.</p>
+      </section>
+
+      <section class="doc-section" id="office-hours">
+        <h2>Office hours</h2>
+        <p>Office hours limit reminders to the times you actually work. Under <em>Settings → Schedule</em>, enable office hours and set a start and end time for each weekday. Days without hours are treated as days off.</p>
+        <p>Outside office hours the tray icon dims and no breaks or wellness reminders are shown. You can still start a break manually whenever you like.</p>
+      </section>
+
+      <section class="doc-section" id="planned-breaks">
+        <h2>Planned breaks</h2>
+        <p>Planned breaks are recurring blocks such as lunch or a daily walk. Add one with a name, a time, a duration and the days it repeats on.</p>
+        <ul>
+          <li>Yonder won't schedule a regular break right before a planned one.</li>
+          <li>When a planned break starts, you get a friendly notification; the timer resets when it ends.</li>
+        </ul>
+      </section>
+
+      <section class="doc-section" id="wellness">
+        <h2>Wellness &amp; custom reminders</h2>
+        <p>Besides screen breaks, Yonder can nudge you about small habits — configure them in <em>Settings → Wellness reminders</em>. Built-in wellness reminders include <strong>posture</strong>, <strong>blink</strong> and <strong>hydration</strong>, each with its own interval.</p>
+        <h3>Custom reminders</h3>
+        <p>Create up to <strong>5 custom reminders</strong>. Each one has a title, an optional message, an icon, a sound and an interval. Reminders appear as small, non-blocking cards in a corner of the screen.</p>
+        <h3>Stacking</h3>
+        <p>If several reminders come due at the same time, they collapse into a single <strong>orb</strong> showing how many are waiting. Click the orb to expand and dismiss them one by one, or all at once.</p>
+      </section>
+
+      <section class="doc-section" id="break-styles">
+        <h2>Break screen styles</h2>
+        <p>Choose how the break screen looks in <em>Settings → Break screen</em>:</p>
+        <ul>
+          <li><strong>Animated</strong> — Aurora, Nebula or Ripple: slow, calming motion behind the countdown.</li>
+          <li><strong>Gradient</strong> — a preset or your own two-color gradient.</li>
+          <li><strong>Image</strong> — any image file from your computer.</li>
+          <li><strong>Blurred desktop</strong> — your own screen, frozen and softly frosted behind the countdown, then sharpening back as the break ends. <em>Windows and macOS.</em></li>
+          <li><strong>Split screen</strong> — your desktop splits open across the middle, top half up and bottom half down, to reveal a texture: linen, felt, cork, cutting mat or brushed steel. <em>Windows and macOS; not available on Linux yet.</em></li>
+        </ul>
+        <p>Blurred desktop and split screen take a snapshot of your screen when the break starts. It's used only for the break screen and never leaves your computer.</p>
+        <p>You can also choose a break sound (soft synthesized chimes and tones, or silence), adjust its volume, and write your own <strong>custom messages</strong> to rotate through. Animations are disabled automatically when your OS requests reduced motion.</p>
+      </section>
+
+      <section class="doc-section" id="shortcuts">
+        <h2>Keyboard shortcuts</h2>
+        <p>Global shortcuts work from any app. Rebind them in <em>Settings → Shortcuts &amp; automation</em>. On macOS, <kbd class="k">Ctrl</kbd> is replaced by <kbd class="k">⌘</kbd>.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Action</th><th>Default</th></tr></thead>
+            <tbody>
+              <tr><td>Take a break now</td><td><kbd class="k">Ctrl</kbd> <kbd class="k">Alt</kbd> <kbd class="k">B</kbd></td></tr>
+              <tr><td>Pause / resume reminders</td><td><kbd class="k">Ctrl</kbd> <kbd class="k">Alt</kbd> <kbd class="k">P</kbd></td></tr>
+              <tr><td>Skip the next break</td><td><kbd class="k">Ctrl</kbd> <kbd class="k">Alt</kbd> <kbd class="k">S</kbd></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Inside a break, <kbd class="k">Esc</kbd> skips / ends the break when your <a href="#skip-difficulty">skip difficulty</a> allows it.</p>
+        <h3>Automation</h3>
+        <p>Under <em>Settings → Shortcuts &amp; automation</em> you can set a shell command (a hook) that runs when a break starts, ends or is skipped. Useful for pausing music, changing your chat status or dimming smart lights. The command receives these environment variables:</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Variable</th><th>Value</th></tr></thead>
+            <tbody>
+              <tr><td><code>YONDER_EVENT</code></td><td><code>break-start</code>, <code>break-end</code> or <code>break-skip</code></td></tr>
+              <tr><td><code>YONDER_BREAK_KIND</code></td><td>The kind of break (for example a regular or a long break)</td></tr>
+              <tr><td><code>YONDER_BREAK_SECS</code></td><td>The break's length in seconds</td></tr>
+            </tbody>
+          </table>
+        </div>
+<pre><code># Linux / macOS: pause media during breaks
+if [ "$YONDER_EVENT" = "break-start" ]; then
+  playerctl pause
+else
+  playerctl play
+fi</code></pre>
+        <div class="callout warm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg><div>Commands run with your user's permissions. Only add commands you understand.</div></div>
+      </section>
+
+      <section class="doc-section" id="stats">
+        <h2>Stats</h2>
+        <p>The Stats view shows breaks taken, skipped and snoozed per day and week, plus your current streak of days with most breaks taken. It's meant as a gentle mirror, not a scoreboard.</p>
+        <p>Stats are stored only on your machine. Open <em>Settings → Stats</em> and use <strong>Export JSON</strong> to save a copy, or <strong>Reset</strong> to start fresh.</p>
+      </section>
+
+      <section class="doc-section" id="building">
+        <h2>Building from source</h2>
+        <p>Yonder is built with <strong>Tauri 2</strong>: a Rust core with a web-based UI rendered by the system webview.</p>
+        <h3>Prerequisites</h3>
+        <ul>
+          <li><strong>Rust</strong> (stable), installed via <a href="https://rustup.rs">rustup</a></li>
+          <li><strong>Node.js 20+</strong> and npm</li>
+          <li>Platform webview and build dependencies as listed in the <a href="https://tauri.app/start/prerequisites/">Tauri prerequisites guide</a> (WebView2 + MSVC build tools on Windows, Xcode Command Line Tools on macOS, WebKitGTK and friends on Linux)</li>
+        </ul>
+        <h3>Run in development</h3>
+<pre><code>git clone https://github.com/RMoura98/yonder
+cd yonder/app
+npm install
+npm run tauri dev</code></pre>
+        <h3>Build an installer</h3>
+<pre><code>npm run tauri build</code></pre>
+        <p>Installers are written to <code>app/src-tauri/target/release/bundle/</code>.</p>
+      </section>
+
+      <section class="doc-section" id="contributing">
+        <h2>Contributing</h2>
+        <p>Yonder is a community project and contributions of every size are welcome — bug reports, translations, docs fixes, design ideas and code.</p>
+        <ol>
+          <li>Look through <a href="https://github.com/RMoura98/yonder/issues">open issues</a>, or open one to discuss a larger change first.</li>
+          <li>Fork the repo and create a branch for your change.</li>
+          <li>Run the app locally (see <a href="#building">Building from source</a>) and test on your platform.</li>
+          <li>Open a pull request describing what changed and why. Screenshots help for UI changes.</li>
+        </ol>
+        <p>Please be kind and constructive in issues and reviews. By contributing, you agree that your contributions are licensed under the MIT license.</p>
+        <p style="margin-top:24px"><a class="btn btn-primary" href="https://github.com/RMoura98/yonder">View on GitHub</a></p>
+      </section>
+
+      <section class="doc-section" id="support">
+        <h2>Support the project</h2>
+        <p>Yonder is free forever — no paid tier, no ads, no tracking. If it helps you, a small tip through GitHub Sponsors keeps development going.</p>
+        <p>Not in a position to donate? Starring the repo, reporting bugs and telling a friend help a lot too.</p>
+        <p style="margin-top:24px"><a class="btn btn-ghost" href="https://github.com/sponsors/RMoura98"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="color:var(--accent)"><path d="M12 21s-7.5-4.6-9.6-9.3C.9 8.3 3 4.5 6.6 4.5c2 0 3.4 1 4.4 2.5 1-1.5 2.4-2.5 4.4-2.5 3.6 0 5.7 3.8 4.2 7.2C19.5 16.4 12 21 12 21z"/></svg>Support Yonder</a></p>
+      </section>
+    </main>
+  </div>
+
+  <footer class="footer" style="margin-top:0">
+    <div class="container">
+      <div class="footer-bottom" style="margin-top:0;padding-top:0;border-top:0">
+        <span>Made with care <span class="heart">♥</span> · <a href="https://github.com/RMoura98/yonder/blob/main/LICENSE">MIT License</a></span>
+        <span><a href="./">Home</a> · <a href="https://github.com/RMoura98/yonder">GitHub</a></span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/main.js" defer></script>
+</body>
+</html>

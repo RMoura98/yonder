@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page not found — Yonder</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#F2F6F5" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#061215" media="(prefers-color-scheme: dark)">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <!-- 404 pages can be served at any path, so resolve assets against the site root. -->
+  <script>
+    (function () {
+      var base = location.hostname.endsWith("github.io") ? "/" + (location.pathname.split("/")[1] || "") + "/" : "/";
+      document.write('<base href="' + base + '">');
+    })();
+  </script>
+  <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <header class="nav">
+    <div class="container">
+      <a class="brand" href="./" aria-label="Yonder home">
+        <img src="assets/logo.svg" alt="" width="32" height="32">
+        <span class="wordmark">yonder</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="docs.html">Docs</a>
+        <a class="btn btn-primary btn-sm" href="https://github.com/RMoura98/yonder/releases/latest">Download</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="notfound">
+    <div class="container">
+      <svg class="horizon" viewBox="0 0 140 80" aria-hidden="true">
+        <defs>
+          <linearGradient id="sun404" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE3B0"/><stop offset="1" stop-color="#F4C26B"/></linearGradient>
+          <clipPath id="sky404"><rect x="0" y="0" width="140" height="44"/></clipPath>
+        </defs>
+        <g clip-path="url(#sky404)"><circle class="sun" cx="70" cy="44" r="26" fill="url(#sun404)"/></g>
+        <rect x="10" y="46" width="120" height="7" rx="3.5" fill="currentColor" style="color:var(--accent)"/>
+        <rect x="40" y="61" width="60" height="6" rx="3" fill="#9FD8CB" opacity=".75"/>
+        <rect x="58" y="73" width="24" height="5" rx="2.5" fill="#9FD8CB" opacity=".45"/>
+      </svg>
+      <div class="big">404</div>
+      <h1>This page went over <em>yonder</em>.</h1>
+      <p>We looked far and wide — at least 20 feet — but couldn't find what you were after.</p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="./">Back to home</a>
+        <a class="btn btn-ghost" href="docs.html">Read the docs</a>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

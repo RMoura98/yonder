@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Yonder — Look up. Look far. Get back to it.</title>
+  <meta name="description" content="Yonder is a free, open-source break reminder for Windows, macOS and Linux. Gentle 20-20-20 breaks, posture and blink reminders — no account, no telemetry.">
+  <meta name="theme-color" content="#061215" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#F2F6F5" media="(prefers-color-scheme: light)">
+  <meta property="og:title" content="Yonder — Look up. Look far. Get back to it.">
+  <meta property="og:description" content="The free, open-source break reminder your eyes thank you for. Windows, macOS and Linux.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="assets/logo.svg">
+  <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+  <link rel="apple-touch-icon" href="assets/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <a class="banner" href="https://github.com/RMoura98/yonder/releases/latest"><strong>Yonder 1.0 is out</strong> — free and open source<span class="arrow" aria-hidden="true">→</span></a>
+
+  <!-- ============ NAV ============ -->
+  <header class="nav">
+    <div class="container">
+      <a class="brand" href="./" aria-label="Yonder home">
+        <img src="assets/logo.svg" alt="" width="30" height="30">
+        <span class="wordmark">yonder</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a class="hide-sm" href="#features">Features</a>
+        <a href="docs.html">Docs</a>
+        <a class="hide-md" href="#changelog">Changelog</a>
+        <a class="gh" href="https://github.com/RMoura98/yonder" aria-label="Yonder on GitHub">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span class="hide-sm">GitHub</span>
+        </a>
+        <a class="sponsor-link" href="https://github.com/sponsors/RMoura98" aria-label="Sponsor Yonder on GitHub Sponsors" title="Sponsor Yonder">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.3C.9 8.3 3 4.5 6.6 4.5c2 0 3.4 1 4.4 2.5 1-1.5 2.4-2.5 4.4-2.5 3.6 0 5.7 3.8 4.2 7.2C19.5 16.4 12 21 12 21z"/></svg>
+          <span class="hide-md">Sponsor</span>
+        </a>
+        <a class="btn btn-primary btn-sm" href="https://github.com/RMoura98/yonder/releases/latest" data-download>Download</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- ============ HERO ============ -->
+    <section class="hero glow">
+      <div class="container">
+        <h1 class="reveal"><span class="line">The break reminder</span> <span class="line">your <em>eyes</em> thank you for</span></h1>
+        <p class="lead reveal d1">Yonder reminds you to look up from your screen every 20 minutes — gently, at the right moment, and never in the middle of a sentence. Free and open source for Windows, macOS and Linux.</p>
+
+        <div class="hero-cta reveal d2">
+          <a class="btn btn-primary" href="https://github.com/RMoura98/yonder/releases/latest" data-download>
+            <span data-os-icon aria-hidden="true">
+              <svg data-os="windows" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M3 5.5 10.5 4.5v7H3zM11.5 4.3 21 3v8.5h-9.5zM3 12.5h7.5v7L3 18.5zM11.5 12.5H21V21l-9.5-1.3z"/></svg>
+              <svg data-os="macos" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M16.4 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9-.7 0-1.8-.8-3-.8-1.5 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.3 0 2.1-1.1 2.8-2.3.9-1.3 1.3-2.6 1.3-2.6s-2.5-1-2.5-3.8zM14.1 5.8c.6-.8 1.1-1.8 1-2.8-.9 0-2 .6-2.7 1.4-.6.7-1.1 1.7-1 2.7 1 .1 2-.5 2.7-1.3z"/></svg>
+              <svg data-os="linux" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="m7 9 3 2.5L7 14M12 14h4"/></svg>
+              <svg data-os="default" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg>
+            </span>
+            <span data-download-label>Download Yonder</span>
+          </a>
+          <a class="btn btn-ghost" href="https://github.com/RMoura98/yonder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z"/></svg>
+            Star on GitHub
+          </a>
+        </div>
+        <p class="platform-links reveal d2" data-other-os>Available for <a href="https://github.com/RMoura98/yonder/releases/latest">Windows</a>, <a href="https://github.com/RMoura98/yonder/releases/latest">macOS</a> and <a href="https://github.com/RMoura98/yonder/releases/latest">Linux</a> — or build from source.</p>
+
+        <div class="badges reveal d3" aria-label="Release info">
+          <span class="badge accent"><i class="dot"></i>v1.0.0</span>
+          <span class="badge">Windows 10+</span>
+          <span class="badge">macOS 10.15+</span>
+          <span class="badge">Linux</span>
+          <span class="badge">MIT</span>
+        </div>
+
+        <div class="snippet reveal d3">
+          <pre id="install-snippet"><code><span class="p">$ </span>git clone https://github.com/RMoura98/yonder
+<span class="p">$ </span>cd yonder/app &amp;&amp; npm install
+<span class="p">$ </span>npm run tauri dev</code></pre>
+          <button class="copy-btn" type="button" data-copy="install-snippet" aria-label="Copy build commands">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+            <span>Copy</span>
+          </button>
+        </div>
+
+        <!-- Autoplaying recreation of the app flow -->
+        <div class="demo-wrap reveal d2">
+          <div class="demo" id="demo" data-phase="desktop" role="img" aria-label="Animated recreation of Yonder: a heads-up card appears over a code editor, a short countdown follows the cursor, then the desktop blurs into a 20-second break screen.">
+            <div class="desk" aria-hidden="true">
+              <div class="menubar">
+                <div class="mb-l"><strong>Code</strong><span>File</span><span>Edit</span><span>View</span></div>
+                <div class="mb-r"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 9A5 5 0 0 1 13 9Z"/><rect x="1" y="10" width="14" height="2" rx="1"/><rect x="5" y="13.5" width="6" height="1.5" rx=".75"/></svg><span>14:20</span></div>
+              </div>
+              <div class="editor">
+                <div class="tb"><i></i><i></i><i></i><span>scheduler.rs</span></div>
+                <div class="code">
+                  <div><span class="ln">1</span><span class="c">// Every 20 minutes, look 20 feet away</span></div>
+                  <div><span class="ln">2</span><span class="k">pub fn</span> <span class="f">next_break</span>(now: Instant) -&gt; Instant {</div>
+                  <div><span class="ln">3</span>&nbsp;&nbsp;now + Duration::<span class="f">from_secs</span>(<span class="s">20</span> * <span class="s">60</span>)</div>
+                  <div><span class="ln">4</span>}</div>
+                  <div><span class="ln">5</span></div>
+                  <div><span class="ln">6</span><span class="k">fn</span> <span class="f">should_hold</span>(ctx: &amp;Context) -&gt; <span class="k">bool</span> {</div>
+                  <div><span class="ln">7</span>&nbsp;&nbsp;ctx.in_meeting || ctx.typing<span class="caret"></span></div>
+                </div>
+              </div>
+              <div class="side-win"><b></b><b></b><b></b><b></b></div>
+              <div class="dock"><i></i><i></i><i></i><i></i><i></i></div>
+            </div>
+
+            <div class="hu" aria-hidden="true">
+              <div class="hu-top">
+                <span class="sun-badge"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 9A5 5 0 0 1 13 9Z"/><rect x="1" y="10" width="14" height="2" rx="1"/><rect x="5" y="13.5" width="6" height="1.5" rx=".75"/></svg></span>
+                <div><div class="hu-count" id="hu-count">00:05</div><p class="hu-line">Almost time. Wrap up your thought.</p></div>
+              </div>
+              <div class="hu-actions"><span class="primary">Start break now</span><span>+1m</span><span>+5m</span><span>+15m</span></div>
+            </div>
+
+            <div class="cursor" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M5 3l14 8-6 1.5L10 19z" fill="#fff" stroke="#071A1E" stroke-width="1.5" stroke-linejoin="round"/></svg>
+              <span class="cursor-pill">Starting break in <b id="cur-count">3</b></span>
+            </div>
+
+            <div class="brk" aria-hidden="true">
+              <div class="brk-clock">14:20</div>
+              <p class="brk-title">Eyes to the distance</p>
+              <p class="brk-sub">Find something far away and let your focus soften.</p>
+              <div class="brk-progress"><span id="brk-prog"></span></div>
+              <div class="odo" id="odo"><span class="sep">0</span><span class="sep">0</span><span class="sep">:</span><span class="col"><span class="strip" data-d="tens"></span></span><span class="col"><span class="strip" data-d="ones"></span></span></div>
+              <div class="brk-actions"><span class="pill-frost">Skip break</span><span class="pill-frost">Lock screen</span></div>
+              <p class="brk-hint">Press <kbd>Esc</kbd> twice to skip</p>
+            </div>
+          </div>
+          <p class="demo-caption">An in-browser recreation of Yonder's heads-up card and break screen — not a video.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VALUE PROPS ============ -->
+    <section class="values" aria-label="Why take breaks with Yonder">
+      <div class="container values-grid">
+        <article class="value reveal">
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></div>
+          <h3>Less eye strain</h3>
+          <p>Short, regular looks into the distance give your focusing muscles a rest from hours of near-screen work.</p>
+        </article>
+        <article class="value reveal d1">
+          <div class="icon sun"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></div>
+          <h3>Breaks that don't break your flow</h3>
+          <p>A heads-up first, a short countdown at your cursor, and automatic holds while you're in a call or still typing.</p>
+        </article>
+        <article class="value reveal d2">
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg></div>
+          <h3>Healthier habits, automatically</h3>
+          <p>Posture, blink and your own reminders run quietly in the background, so the good habits happen without you having to remember them.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ FACTS (instead of testimonials) ============ -->
+    <section class="facts" aria-label="Facts about Yonder">
+      <div class="container">
+        <div class="facts-grid reveal">
+          <div class="fact"><strong>Free &amp; MIT licensed</strong><span>No trial, no paid tier, no upsell.</span></div>
+          <div class="fact"><strong>No account, no telemetry</strong><span>Settings and stats stay on your machine.</span></div>
+          <div class="fact"><strong>~10 MB download</strong><span>Near-zero CPU while it waits in the background.</span></div>
+          <div class="fact"><strong>Windows · macOS · Linux</strong><span>One app, built with Tauri and Rust.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ WHY "YONDER" ============ -->
+    <section class="section" id="why-yonder">
+      <div class="container why-grid">
+        <div class="scene" id="scene" aria-hidden="false">
+          <div class="sky-glow"></div>
+          <div class="stars"><i style="left:12%;top:12%"></i><i style="left:28%;top:22%"></i><i style="left:46%;top:8%"></i><i style="left:66%;top:18%"></i><i style="left:84%;top:10%"></i><i style="left:76%;top:30%"></i><i style="left:20%;top:36%"></i></div>
+          <div class="sky"><div class="s-sun"></div></div>
+          <div class="s-horizon"></div>
+          <div class="s-ref r1"></div><div class="s-ref r2"></div><div class="s-ref r3"></div>
+          <div class="try" id="try" role="dialog" aria-live="polite" aria-label="20-second eye break">
+            <div>
+              <p class="t-title" id="try-title">Look at something far away</p>
+              <div class="t-count" id="try-count">20</div>
+              <p class="t-sub" id="try-sub">A window, a tree, the end of the hallway — at least 20 feet away. We'll wait.</p>
+              <div class="t-bar"><span id="try-bar"></span></div>
+              <button class="t-cancel" type="button" id="try-cancel">Stop</button>
+            </div>
+          </div>
+        </div>
+        <div class="why-copy reveal">
+          <span class="eyebrow">Why "Yonder"?</span>
+          <p class="word" style="margin-top:18px">yon·der<span>.</span></p>
+          <p class="pron">/ˈyän-dər/ · <i>adverb</i></p>
+          <p class="def">Over there, at a distance. Which is exactly where your eyes should be <em>every 20 minutes</em>.</p>
+          <p class="rule">That's the 20-20-20 rule: every 20 minutes, look at something about 20 feet (6 m) away for 20 seconds. The name is the instruction.</p>
+          <button class="btn btn-primary" type="button" id="try-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+            Try it now — 20 seconds
+          </button>
+          <p class="tiny">Runs right here in your browser. Nothing is recorded.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FLOW ============ -->
+    <section class="section glow" id="features" style="padding-top:40px">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow">Designed around focus</span>
+          <h2>Breaks that don't break your <em>flow</em></h2>
+          <p>A good reminder knows when to speak up and when to wait. Yonder is built to interrupt as little as possible — and only when it matters.</p>
+        </div>
+
+        <div class="cards-3">
+          <article class="card reveal">
+            <div class="stage" aria-hidden="true">
+              <div class="mini-hu">
+                <div class="hu-top"><span class="sun-badge" style="font-size:12px"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 9A5 5 0 0 1 13 9Z"/><rect x="1" y="10" width="14" height="2" rx="1"/><rect x="5" y="13.5" width="6" height="1.5" rx=".75"/></svg></span><div><div class="hu-count">00:31</div><p class="hu-line" style="font-size:.75rem">Almost time. Wrap up your thought.</p></div></div>
+                <div class="hu-actions" style="margin-top:10px"><span class="primary">Start break now</span><span>+1m</span><span>+5m</span><span>+15m</span></div>
+              </div>
+            </div>
+            <h3>A heads-up first</h3>
+            <p>A small card slides in before each break. Start right away, or snooze for one, five or fifteen minutes.</p>
+          </article>
+          <article class="card reveal d1">
+            <div class="stage" aria-hidden="true">
+              <div class="tray">
+                <div class="row"><span>Next break in 12:40</span></div>
+                <div class="sep"></div>
+                <div class="row hl"><span>Take a break now</span><kbd>Ctrl+Alt+B</kbd></div>
+                <div class="row"><span>Pause / resume</span><kbd>Ctrl+Alt+P</kbd></div>
+                <div class="row"><span>Skip next break</span><kbd>Ctrl+Alt+S</kbd></div>
+                <div class="sep"></div>
+                <div class="row"><span>Settings…</span></div>
+              </div>
+            </div>
+            <h3>Lives in your tray</h3>
+            <p>Take, pause or skip a break from the system tray or menu bar, and see the time until your next one at a glance.</p>
+          </article>
+          <article class="card reveal d2">
+            <div class="stage" aria-hidden="true">
+              <div class="cursor-demo">
+                <svg viewBox="0 0 24 24"><path d="M5 3l14 8-6 1.5L10 19z" fill="#fff" stroke="#071A1E" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                <span class="cursor-pill">Starting break in <b>3</b></span>
+              </div>
+            </div>
+            <h3>Countdown at your cursor</h3>
+            <p>Right before a break, a tiny pill follows your pointer and counts down from three — so it never comes as a surprise.</p>
+          </article>
+        </div>
+
+        <div class="holds reveal">
+          <h3>Automatically holds breaks during…</h3>
+          <div class="holds-grid">
+            <div class="hold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m23 7-7 5 7 5z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg><strong>Meetings &amp; calls</strong><span>Mic or camera in use on Windows; active mic recording on Linux (PulseAudio/PipeWire); Zoom meetings on macOS.</span></div>
+            <div class="hold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg><strong>Fullscreen apps</strong><span>Games, presentations and fullscreen video. Windows only, for now.</span></div>
+            <div class="hold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg><strong>Focus apps you choose</strong><span>Matched by process name. Works on every platform.</span></div>
+            <div class="hold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg><strong>Typing</strong><span>If you're mid-sentence, Yonder waits for a natural pause.</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ POSTURE & BLINK ============ -->
+    <section class="section" id="reminders">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow">More than eye breaks</span>
+          <h2>Posture &amp; <em>blink</em> reminders</h2>
+          <p>Tiny glass widgets appear on your screen, do their thing, and get out of the way. No windows to close.</p>
+        </div>
+        <div class="widgets">
+          <div class="widget-card teal posture reveal" role="img" aria-label="Posture reminder animation: a glass bead grows into a capsule while a sun orb's chevron becomes an up arrow">
+            <div class="wstage" aria-hidden="true">
+              <div class="glass">
+                <span class="w-orb">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path class="chev" d="M7 14l5-5 5 5"/>
+                    <g class="arrow"><path class="stem" d="M12 6v13"/><path d="M7 11l5-5 5 5"/></g>
+                  </svg>
+                </span>
+              </div>
+            </div>
+            <div class="label"><strong>Sit tall</strong><span>A posture nudge that rises up — and so do you.</span></div>
+          </div>
+          <div class="widget-card twilight blink reveal d1" role="img" aria-label="Blink reminder animation: a sun orb with a little face blinks twice">
+            <div class="wstage" aria-hidden="true">
+              <div class="glass">
+                <span class="w-orb">
+                  <svg viewBox="0 0 44 44" fill="currentColor">
+                    <ellipse class="eye" cx="15" cy="19" rx="2.6" ry="3.4"/>
+                    <ellipse class="eye" cx="29" cy="19" rx="2.6" ry="3.4"/>
+                    <path d="M15 28q7 5 14 0" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
+                  </svg>
+                </span>
+              </div>
+            </div>
+            <div class="label"><strong>Blink</strong><span>A friendly reminder to blink — screens make us forget.</span></div>
+          </div>
+        </div>
+        <p class="widgets-caption reveal">Plus <strong>up to 5 custom reminders</strong> — water, stretch, whatever you need — each with its own icon, interval and sound. They stay until you mark them done, and if several are due at once they stack into a single orb.</p>
+      </div>
+    </section>
+
+    <!-- ============ WORKFLOW ============ -->
+    <section class="section glow" id="customize">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow">Personal by default</span>
+          <h2>Fits your workflow like a <em>glove</em></h2>
+          <p>Start with a mode that matches your day, then tune the look, the sound and the rules of every break.</p>
+        </div>
+
+        <div class="modes">
+          <article class="mode featured reveal"><span class="tag">Default</span><h3>Balanced</h3><div class="nums"><div>20m<small>work</small></div><div>20s<small>break</small></div></div><p>The classic 20-20-20 rhythm.</p></article>
+          <article class="mode reveal d1"><span class="tag">Long sessions</span><h3>Deep Focus</h3><div class="nums"><div>45m<small>work</small></div><div>30s<small>break</small></div></div><p>Fewer interruptions, plus longer breaks every few cycles.</p></article>
+          <article class="mode reveal d2"><span class="tag">Tired eyes</span><h3>Eye Care</h3><div class="nums"><div>15m<small>work</small></div><div>15s<small>break</small></div></div><p>Frequent, tiny pauses.</p></article>
+          <article class="mode reveal d3"><span class="tag">Body &amp; mind</span><h3>Wellness</h3><div class="nums"><div>25m<small>work</small></div><div>45s<small>break</small></div></div><p>Room to stand, stretch and breathe.</p></article>
+        </div>
+
+        <div class="sub-head reveal"><h3>Break screen styles</h3><p>Pick a look in Settings → Break screen.</p></div>
+        <div class="styles-grid">
+          <figure class="style-tile reveal"><div class="sw blurred"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i><span>Blurred desktop</span></div><figcaption class="meta"><h4>Blurred desktop</h4><p>Your own screen, frozen and softly frosted, then sharpening back. Windows &amp; macOS.</p></figcaption></figure>
+          <figure class="style-tile reveal d1"><div class="sw split-s"><div class="inner"><span>Linen</span></div><div class="half t"></div><div class="half b"></div></div><figcaption class="meta"><h4>Split screen</h4><p>Your desktop splits open across the middle onto linen, felt, cork, cutting mat or brushed steel. Windows &amp; macOS.</p></figcaption></figure>
+          <figure class="style-tile reveal d2"><div class="sw aurora"><span>Aurora</span></div><figcaption class="meta"><h4>Animated</h4><p>Aurora, Nebula and Ripple drift slowly behind the countdown.</p></figcaption></figure>
+          <figure class="style-tile reveal"><div class="sw nebula"><span>Nebula</span></div><figcaption class="meta"><h4>Nebula</h4><p>A slow, starry drift. Motion turns off if you prefer reduced motion.</p></figcaption></figure>
+          <figure class="style-tile reveal d1"><div class="sw gradient"><span>Gradient</span></div><figcaption class="meta"><h4>Gradients</h4><p>Presets or your own two-colour blend.</p></figcaption></figure>
+          <figure class="style-tile reveal d2"><div class="sw image"><span>Your image</span></div><figcaption class="meta"><h4>Your own image</h4><p>Any picture from your computer.</p></figcaption></figure>
+        </div>
+
+        <div class="sub-head reveal"><h3>And the details</h3><p>All in Settings, all optional.</p></div>
+        <div class="extras">
+          <div class="extra reveal"><div class="icon sun"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div><div><h4>Calming synthesized sounds</h4><p>Soft chimes and tones generated on the fly — or complete silence.</p></div></div>
+          <div class="extra reveal d1"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div><h4>Your own messages</h4><p>Write the words you see on the break screen; Yonder rotates through them.</p></div></div>
+          <div class="extra reveal"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div><div><h4>Skip difficulty</h4><p>Casual (skip any time), Balanced (skip after a moment) or Hardcore (no skipping).</p></div></div>
+          <div class="extra reveal d1"><div class="icon sun"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><div><h4>Office hours &amp; planned breaks</h4><p>Set working hours per weekday, and plan around lunch or a daily walk.</p></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ AUTOMATIONS ============ -->
+    <section class="section">
+      <div class="container split">
+        <div class="copy reveal">
+          <span class="eyebrow">For power users</span>
+          <h2>Automations</h2>
+          <p>Control Yonder from the keyboard, and hook it into the rest of your setup with a shell command that runs on every break.</p>
+          <div class="kbd-list">
+            <div class="kbd-row"><span>Take a break now</span><span class="keys"><kbd class="k">Ctrl</kbd><kbd class="k">Alt</kbd><kbd class="k">B</kbd></span></div>
+            <div class="kbd-row"><span>Pause / resume</span><span class="keys"><kbd class="k">Ctrl</kbd><kbd class="k">Alt</kbd><kbd class="k">P</kbd></span></div>
+            <div class="kbd-row"><span>Skip the next break</span><span class="keys"><kbd class="k">Ctrl</kbd><kbd class="k">Alt</kbd><kbd class="k">S</kbd></span></div>
+          </div>
+          <p style="margin-top:14px;font-size:.88rem;color:var(--muted)"><kbd class="k">Cmd</kbd> instead of <kbd class="k">Ctrl</kbd> on macOS. Rebind them in Settings → Shortcuts &amp; automation.</p>
+        </div>
+        <div class="reveal d1">
+          <div class="code-card">
+            <div class="tb"><i></i><i></i><i></i><span>on-break.sh</span></div>
+<pre><code><span class="c"># Runs on break-start, break-end and break-skip</span>
+<span class="k">case</span> <span class="s">"$YONDER_EVENT"</span> <span class="k">in</span>
+  break-start) playerctl pause ;;
+  break-end)   playerctl play  ;;
+<span class="k">esac</span></code></pre>
+            <div class="env">
+              <div><code>YONDER_EVENT</code><span>break-start · break-end · break-skip</span></div>
+              <div><code>YONDER_BREAK_KIND</code><span>the kind of break</span></div>
+              <div><code>YONDER_BREAK_SECS</code><span>its length in seconds</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ OPEN SOURCE ============ -->
+    <section class="section" id="open-source" style="padding-top:20px">
+      <div class="container">
+        <div class="oss reveal">
+          <span class="eyebrow">Open source</span>
+          <h2>Open source, made for <em>every</em> desktop</h2>
+          <p>Yonder is MIT licensed and built in the open with Tauri and Rust. Read the code, file an issue, send a pull request — it runs the same on Windows, macOS and Linux.</p>
+          <div class="hero-cta">
+            <a class="btn btn-primary" href="https://github.com/RMoura98/yonder">
+              <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+              Star on GitHub
+            </a>
+            <a class="btn btn-ghost" href="https://github.com/sponsors/RMoura98">
+              <svg class="heart" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.3C.9 8.3 3 4.5 6.6 4.5c2 0 3.4 1 4.4 2.5 1-1.5 2.4-2.5 4.4-2.5 3.6 0 5.7 3.8 4.2 7.2C19.5 16.4 12 21 12 21z"/></svg>
+              Support Yonder
+            </a>
+            <a class="btn btn-ghost" href="docs.html#contributing">Contribute</a>
+          </div>
+          <p class="oss-tip">Yonder is free forever. If it helps you, a small tip keeps it going.</p>
+          <div class="oss-points">
+            <div><strong>Free forever, MIT licensed</strong><span>Use it at home, at work, anywhere.</span></div>
+            <div><strong>No account, no telemetry</strong><span>Nothing phones home. Your data stays on your machine.</span></div>
+            <div><strong>Small &amp; readable</strong><span>A Rust core and a plain web UI — easy to dive into.</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CHANGELOG ============ -->
+    <section class="section" id="changelog" style="padding-top:40px">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow">Changelog</span>
+          <h2>What's <em>new</em></h2>
+        </div>
+        <div class="changelog">
+          <article class="release reveal">
+            <div class="ver">v1.0.0<small>First release</small></div>
+            <div>
+              <h3>Hello, Yonder</h3>
+              <ul>
+                <li>20-20-20 breaks with a heads-up card, cursor countdown and four modes</li>
+                <li>Smart pause for meetings, fullscreen apps (Windows), focus apps and typing</li>
+                <li>Posture, blink and up to 5 custom reminders</li>
+                <li>Break screens: blurred desktop, split screen, animated, gradient and image</li>
+                <li>Office hours, planned breaks, global shortcuts and shell hooks</li>
+                <li>Local stats with JSON export</li>
+              </ul>
+              <a class="more" href="https://github.com/RMoura98/yonder/releases">All releases on GitHub →</a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FAQ ============ -->
+    <section class="section" id="faq" style="padding-top:20px">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow">FAQ</span>
+          <h2>Questions, <em>answered</em></h2>
+        </div>
+        <div class="faq">
+          <details class="reveal"><summary>Is Yonder really free?</summary><div class="answer"><p>Yes. Yonder is open source under the MIT license. There's no paid tier, no trial and no feature held back.</p></div></details>
+          <details class="reveal"><summary>Which platforms does it run on?</summary><div class="answer"><p>Windows 10 and newer, macOS 10.15 and newer, and most modern Linux desktops. Installers are attached to every <a href="https://github.com/RMoura98/yonder/releases/latest">GitHub release</a>, or you can build it yourself. A few features differ by platform — the <a href="docs.html#smart-pause">docs</a> list them.</p></div></details>
+          <details class="reveal"><summary>Does Yonder collect any data?</summary><div class="answer"><p>No. There are no analytics, no crash reporters and no accounts. Settings and stats are stored locally, and nothing is sent over the network. The blurred-desktop and split-screen styles take a snapshot of your screen for the break screen; it never leaves your computer.</p></div></details>
+          <details class="reveal"><summary>How does smart pause know I'm in a meeting?</summary><div class="answer"><p>It uses simple local system signals. On Windows it checks whether your microphone or camera is in use; on Linux, whether something is actively recording from the mic via PulseAudio/PipeWire; on macOS, whether Zoom's meeting helper is running. Fullscreen detection is Windows-only for now, and focus apps — matched by process name — work everywhere. Smart pause never records audio or video.</p></div></details>
+          <details class="reveal"><summary>Why is it so small?</summary><div class="answer"><p>Yonder is built with Tauri: a Rust core plus your operating system's built-in webview, rather than a bundled copy of a whole browser. That keeps the download around 10&nbsp;MB.</p></div></details>
+          <details class="reveal"><summary>How can I support Yonder?</summary><div class="answer"><p>If it helps you, you can chip in through <a href="https://github.com/sponsors/RMoura98">GitHub Sponsors</a>. Starring the repo, reporting bugs, improving the docs and telling a friend help just as much.</p></div></details>
+          <details class="reveal"><summary>How do I build it from source?</summary><div class="answer"><p>Install Rust (via rustup) and Node.js 20 or newer, plus the platform webview dependencies listed in the Tauri docs. Then:</p><pre><code>git clone https://github.com/RMoura98/yonder
+cd yonder/app
+npm install
+npm run tauri dev     # run in development
+npm run tauri build   # produce an installer</code></pre></div></details>
+          <details class="reveal"><summary>What is the 20-20-20 rule?</summary><div class="answer"><p>A habit often recommended by eye-care professionals: every 20 minutes, look at something about 20 feet (6 metres) away for at least 20 seconds. Yonder's Balanced mode follows it out of the box.</p><p>Yonder is a wellbeing tool, not medical advice — if you have persistent eye discomfort, talk to an optometrist.</p></div></details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a class="brand" href="./"><img src="assets/logo.svg" alt="" width="30" height="30"><span class="wordmark">yonder</span></a>
+          <p class="tag">Look up. Look far. Get back to it. Free, open-source break reminders for Windows, macOS and Linux.</p>
+        </div>
+        <div>
+          <h4>Product</h4>
+          <ul>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#customize">Customization</a></li>
+            <li><a href="https://github.com/RMoura98/yonder/releases/latest">Download</a></li>
+            <li><a href="#changelog">Changelog</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="docs.html">Documentation</a></li>
+            <li><a href="docs.html#getting-started">Getting started</a></li>
+            <li><a href="docs.html#building">Build from source</a></li>
+            <li><a href="#faq">FAQ</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Community</h4>
+          <ul>
+            <li><a href="https://github.com/RMoura98/yonder">GitHub</a></li>
+            <li><a href="docs.html#contributing">Contributing</a></li>
+            <li><a href="https://github.com/RMoura98/yonder/issues">Issues</a></li>
+            <li><a href="https://github.com/sponsors/RMoura98">♥ Sponsor</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>Made with care <span class="heart">♥</span> · <a href="https://github.com/RMoura98/yonder/blob/main/LICENSE">MIT License</a></span>
+        <span>© <span data-year>2026</span> Yonder contributors</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/main.js" defer></script>
+</body>
+</html>
