@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Yonder">
+  <defs>
+    <linearGradient id="yd-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0E3B43"/>
+      <stop offset=".6" stop-color="#1F7A7A"/>
+      <stop offset=".6" stop-color="#0B2E35"/>
+      <stop offset="1" stop-color="#0E3B43"/>
+    </linearGradient>
+    <linearGradient id="yd-sun" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFE3B0"/>
+      <stop offset="1" stop-color="#F4C26B"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="116" fill="url(#yd-sky)"/>
+  <!-- low sun resting on the horizon -->
+  <path d="M146 290 A110 110 0 0 1 366 290 Z" fill="url(#yd-sun)"/>
+  <!-- horizon -->
+  <rect x="84" y="304" width="344" height="24" rx="12" fill="#EEF4F2"/>
+  <!-- reflections receding into the distance -->
+  <rect x="170" y="358" width="172" height="20" rx="10" fill="#9FD8CB" opacity=".75"/>
+  <rect x="220" y="404" width="72" height="18" rx="9" fill="#9FD8CB" opacity=".45"/>
+</svg>
