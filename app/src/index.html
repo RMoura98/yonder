@@ -32,6 +32,7 @@
     </nav>
     <div class="side-foot">
       <div class="status" id="sideStatus">—</div>
+      <a class="side-update" id="sideUpdate" data-go="about" hidden><i data-icon="download" data-size="15"></i><span>Update available</span></a>
       <a class="donate" href="https://github.com/sponsors/RMoura98"><i data-icon="favorite_fill" data-size="15"></i>Support Yonder</a>
     </div>
   </aside>
@@ -291,7 +292,7 @@
         <img src="assets/logo.svg" alt="" />
         <div>
           <div class="wordmark">yonder<i></i></div>
-          <p class="muted">Version 1.0.0 · Look up. Look far. Get back to it.</p>
+          <p class="muted">Version <span id="appVersion">—</span> · Look up. Look far. Get back to it.</p>
           <p>Free and open source under the MIT license. No account, no tracking: your settings and stats never leave this computer.</p>
           <div class="btn-row">
             <a class="btn primary" href="https://github.com/sponsors/RMoura98"><i data-icon="favorite_fill" data-size="16"></i>Donate</a>
@@ -299,6 +300,20 @@
             <a class="btn" href="https://github.com/RMoura98/yonder/issues/new">Report an issue</a>
           </div>
         </div>
+      </div>
+      <h3>Updates</h3>
+      <div class="update-banner" id="updateBanner" hidden>
+        <span class="tile" data-tile="lagoon" data-ic="download"></span>
+        <div class="grow">
+          <b>Yonder <span id="updVersion"></span> is available</b>
+          <p class="muted small" id="updHint">Download the new installer from the release page.</p>
+        </div>
+        <button class="btn ghost" id="updSkip">Skip this version</button>
+        <button class="btn primary" id="updGet">Download</button>
+      </div>
+      <div class="list">
+        <div class="row"><label>Check for updates automatically<small>Every few hours Yonder asks GitHub whether a newer version exists. Nothing else is sent.</small></label><input type="checkbox" class="switch" data-bind="check_updates" /></div>
+        <div class="row"><label id="updStatus">You're on the latest version.</label><button class="btn" id="updCheck">Check now</button></div>
       </div>
       <div class="list"><button class="row nav danger-row" data-act="quit"><label>Quit Yonder</label></button></div>
     </section>

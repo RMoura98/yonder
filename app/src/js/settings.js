@@ -650,6 +650,44 @@ function renderState(s) {
   side.className = "status " + (s.phase === "paused" || s.phase === "offhours" ? "paused" : s.phase === "break" ? "break" : "");
 }
 
+// ---------------------------------------------------------------- updates
+function renderUpdate(u) {
+  $("#updateBanner").hidden = !u;
+  $("#sideUpdate").hidden = !u;
+  if (!u) return;
+  $("#updVersion").textContent = "v" + u.version;
+  $("#updHint").innerHTML =
+    platform === "macos"
+      ? `Installed with Homebrew? Run <code>brew upgrade --cask yonder</code>. Otherwise download the new .dmg.`
+      : "Download the new installer from the release page.";
+  $("#updGet").onclick = () => invoke("open_url", { url: u.url });
+  $("#updSkip").onclick = async () => {
+    await invoke("skip_update", { version: u.version });
+    $("#updStatus").textContent = `Skipped v${u.version}. You'll hear about the next one.`;
+  };
+  $("#updStatus").textContent = `Version ${u.version} is available.`;
+}
+
+async function initUpdates() {
+  $("#appVersion").textContent = await invoke("app_version");
+  renderUpdate(await invoke("get_update"));
+  listen("update-status", renderUpdate);
+  $("#updCheck").onclick = async () => {
+    const btn = $("#updCheck");
+    btn.disabled = true;
+    $("#updStatus").textContent = "Checking…";
+    try {
+      const u = await invoke("check_updates_now");
+      renderUpdate(u);
+      if (!u) $("#updStatus").textContent = `You're on the latest version (checked ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}).`;
+    } catch (e) {
+      $("#updStatus").textContent = String(e);
+    } finally {
+      btn.disabled = false;
+    }
+  };
+}
+
 // --------------------------------------------------------- window controls
 function initWindowControls() {
   if (platform === "macos") {
@@ -680,6 +718,7 @@ async function init() {
   initSchedule();
   initShortcuts();
   initStats();
+  initUpdates();
   refreshVisibility();
   refreshSummaries();
   go("today");

@@ -216,6 +216,10 @@ pub struct Settings {
     /// system | light | dark
     pub theme: String,
     pub onboarded: bool,
+    /// Ask GitHub for a newer release every few hours.
+    pub check_updates: bool,
+    /// A release the user chose to skip (e.g. "1.1.0").
+    pub skipped_update: String,
 }
 
 impl Default for Settings {
@@ -259,6 +263,8 @@ impl Default for Settings {
             launch_at_login: true,
             theme: "system".into(),
             onboarded: false,
+            check_updates: true,
+            skipped_update: String::new(),
         }
     }
 }

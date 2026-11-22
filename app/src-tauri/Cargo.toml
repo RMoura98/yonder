@@ -24,6 +24,7 @@ serde_json = "1"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 base64 = "0.22"
 sysinfo = { version = "0.37", default-features = false, features = ["system"] }
+ureq = { version = "2", default-features = false, features = ["tls"] }
 
 [target.'cfg(not(target_os = "linux"))'.dependencies]
 xcap = "0.7"

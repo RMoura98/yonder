@@ -28,7 +28,8 @@ desktop into a calm break screen, and stays out of the way while you're in a cal
 - **Skip difficulty.** Casual, Balanced or Hardcore.
 - **Office hours & planned breaks.** Only remind during work hours; schedule lunch or a walk.
 - **Shortcuts & automation.** Global hotkeys and shell hooks on break start/end (`YONDER_EVENT`, `YONDER_BREAK_KIND`, `YONDER_BREAK_SECS`).
-- **Private by design.** No account, no telemetry. Settings and stats stay on your machine.
+- **Private by design.** No account, no telemetry. Settings and stats stay on your machine; the only network request is an optional update check against GitHub Releases (toggle in Settings → About).
+- **Update notifications.** A tray entry and a banner in Settings when a new version is out, with Homebrew instructions on macOS. Skip a version or turn checks off anytime.
 - **Lightweight.** Rust core + the system webview (Tauri 2). A few MB to download, near-zero CPU between breaks; windows only exist while they're on screen.
 
 <table>

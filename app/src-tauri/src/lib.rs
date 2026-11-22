@@ -2,8 +2,10 @@ mod engine;
 mod platform;
 mod settings;
 mod stats;
+mod updates;
 
 use engine::{Core, Effect, Snapshot};
+use updates::UpdateInfo;
 use settings::{Reminder, Settings};
 use stats::Stats;
 
@@ -25,10 +27,13 @@ struct Paths {
 }
 
 struct TrayItems {
+    menu: Menu<Wry>,
     status: MenuItem<Wry>,
     skip: MenuItem<Wry>,
     pause: Submenu<Wry>,
     resume: MenuItem<Wry>,
+    /// "Update available…" entry, inserted at the top only when there is one.
+    update: Option<(MenuItem<Wry>, PredefinedMenuItem<Wry>)>,
 }
 
 struct AppState {
@@ -39,6 +44,8 @@ struct AppState {
     tray: Mutex<Option<TrayItems>>,
     /// (light taskbar, paused) the tray glyph was last drawn for
     tray_look: Mutex<Option<(bool, bool)>>,
+    /// Newer release found by the update checker (and not skipped).
+    update: Mutex<Option<UpdateInfo>>,
 }
 
 fn state(app: &AppHandle) -> tauri::State<'_, AppState> {
@@ -588,13 +595,106 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
                 "pause_60" => run_action(app, "pause", Some(60)),
                 "pause_120" => run_action(app, "pause", Some(120)),
                 "pause_forever" => run_action(app, "pause", None),
+                "update" => {
+                    let url = state(app).update.lock().unwrap().as_ref().map(|u| u.url.clone());
+                    match url {
+                        Some(u) => platform::open_url(&u),
+                        None => open_settings(app),
+                    }
+                }
                 other => run_action(app, other, None),
             }
         })
         .build(app)?;
 
-    *state(app).tray.lock().unwrap() = Some(TrayItems { status, skip, pause, resume });
+    *state(app).tray.lock().unwrap() = Some(TrayItems { menu, status, skip, pause, resume, update: None });
     Ok(())
+}
+
+// ==================================================================== updates
+
+/// Shows (or clears) the "Update available" entry at the top of the tray menu.
+fn set_tray_update(app: &AppHandle, info: Option<&UpdateInfo>) {
+    let st = state(app);
+    let mut guard = st.tray.lock().unwrap();
+    let Some(t) = guard.as_mut() else { return };
+    if let Some((item, sep)) = t.update.take() {
+        let _ = t.menu.remove(&item);
+        let _ = t.menu.remove(&sep);
+    }
+    if let Some(u) = info {
+        let label = format!("Update available: v{}…", u.version);
+        if let (Ok(item), Ok(sep)) = (
+            MenuItem::with_id(app, "update", label, true, None::<&str>),
+            PredefinedMenuItem::separator(app),
+        ) {
+            let _ = t.menu.insert(&item, 0);
+            let _ = t.menu.insert(&sep, 1);
+            t.update = Some((item, sep));
+        }
+    }
+}
+
+/// Asks GitHub for a newer release. `manual` checks ignore a skipped version.
+fn check_for_updates(app: &AppHandle, manual: bool) -> Result<Option<UpdateInfo>, String> {
+    let current = app.package_info().version.to_string();
+    let found = updates::fetch_latest(&current)?;
+    let skipped = state(app).core.lock().unwrap().settings.skipped_update.clone();
+    let visible = found.filter(|u| manual || u.version != skipped);
+    let changed = {
+        let st = state(app);
+        let mut slot = st.update.lock().unwrap();
+        let changed = *slot != visible;
+        *slot = visible.clone();
+        changed
+    };
+    if changed {
+        set_tray_update(app, visible.as_ref());
+        let _ = app.emit("update-status", &visible);
+    }
+    Ok(visible)
+}
+
+fn spawn_update_checker(app: AppHandle) {
+    std::thread::spawn(move || {
+        // Give startup a moment, then check every 6 hours (when enabled).
+        std::thread::sleep(Duration::from_secs(20));
+        loop {
+            let enabled = state(&app).core.lock().unwrap().settings.check_updates;
+            if enabled {
+                let _ = check_for_updates(&app, false);
+            }
+            std::thread::sleep(Duration::from_secs(6 * 60 * 60));
+        }
+    });
+}
+
+#[tauri::command]
+async fn check_updates_now(app: AppHandle) -> Result<Option<UpdateInfo>, String> {
+    check_for_updates(&app, true)
+}
+
+#[tauri::command]
+async fn get_update(app: AppHandle) -> Option<UpdateInfo> {
+    state(&app).update.lock().unwrap().clone()
+}
+
+#[tauri::command]
+async fn skip_update(app: AppHandle, version: String) {
+    {
+        let st = state(&app);
+        let mut core = st.core.lock().unwrap();
+        core.settings.skipped_update = version;
+        core.settings.save(&st.paths.settings);
+    }
+    *state(&app).update.lock().unwrap() = None;
+    set_tray_update(&app, None);
+    let _ = app.emit("update-status", Option::<UpdateInfo>::None);
+}
+
+#[tauri::command]
+fn app_version(app: AppHandle) -> String {
+    app.package_info().version.to_string()
 }
 
 // ================================================================= tick loop
@@ -685,6 +785,7 @@ pub fn run() {
                 reminder_queue: Mutex::new(Vec::new()),
                 tray: Mutex::new(None),
                 tray_look: Mutex::new(None),
+                update: Mutex::new(None),
             });
 
             let handle = app.handle().clone();
@@ -697,6 +798,7 @@ pub fn run() {
             if first_run || !background {
                 open_settings(&handle);
             }
+            spawn_update_checker(handle.clone());
             spawn_ticker(handle);
             Ok(())
         })
@@ -713,7 +815,11 @@ pub fn run() {
             take_reminders,
             fit_window,
             open_url,
-            platform_name
+            platform_name,
+            check_updates_now,
+            get_update,
+            skip_update,
+            app_version
         ])
         .build(tauri::generate_context!())
         .expect("error while building Yonder")

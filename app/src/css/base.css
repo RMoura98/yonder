@@ -82,6 +82,7 @@ button { cursor: pointer; }
   transition: transform .08s, background .15s, opacity .15s;
   text-decoration: none;
 }
+a.btn { color: var(--ink); }
 .btn:hover { background: var(--panel-2); }
 .btn:active { transform: scale(.97); }
 .btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
