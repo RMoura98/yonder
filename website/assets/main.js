@@ -241,3 +241,18 @@
   /* ---------- Footer year ---------- */
   document.querySelectorAll("[data-year]").forEach(function (el) { el.textContent = new Date().getFullYear(); });
 })();
+
+// Real recordings: respect reduced motion, and only play while on screen.
+(function () {
+  var vids = document.querySelectorAll(".reel video");
+  if (!vids.length) return;
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    vids.forEach(function (v) { v.removeAttribute("autoplay"); v.pause(); v.controls = true; });
+    return;
+  }
+  if (!("IntersectionObserver" in window)) return;
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { e.isIntersecting ? e.target.play().catch(function () {}) : e.target.pause(); });
+  }, { threshold: 0.2 });
+  vids.forEach(function (v) { io.observe(v); });
+})();
