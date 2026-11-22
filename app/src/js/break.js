@@ -19,6 +19,7 @@ const SUBTITLES = {
   long: "Stand up, stretch, refill your water. Your work will wait.",
   custom: "Take the time you need.",
   planned: "A break you planned for yourself. Enjoy it.",
+  focus: "Stand up, stretch, and rest your eyes. Your focus will be back soon.",
 };
 
 const prettyAccel = (a) => {
@@ -118,7 +119,7 @@ function render(s) {
 
   if (lastKind !== b.kind + b.message) {
     lastKind = b.kind + b.message;
-    const kindLabel = { long: "Long break", planned: b.title, custom: "Break time", short: "Short break" }[b.kind] || "Break";
+    const kindLabel = { long: "Long break", planned: b.title, focus: b.title, custom: "Break time", short: "Short break" }[b.kind] || "Break";
     $("kind").innerHTML = (b.icon ? icon(b.icon, 15) : "") + `<span></span>`;
     $("kind").lastChild.textContent = b.kind === "planned" ? tr(kindLabel) : t(kindLabel);
     $("title").textContent = tr(b.message);

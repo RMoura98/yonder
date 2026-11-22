@@ -322,3 +322,5 @@ button.on > .pv { outline-color: var(--accent); }
   .tiles { grid-template-columns: repeat(2, 1fr); }
   .scroll, .topbar { padding-left: 20px; padding-right: 20px; }
 }
+.focus-line { margin: 4px 0 0; font-weight: 600; font-size: 13px; font-variant-numeric: tabular-nums; color: var(--accent, var(--ink)); }
+.focus-line[hidden] { display: none; }

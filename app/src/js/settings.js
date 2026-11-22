@@ -106,6 +106,42 @@ function iconPicker(current, onPick) {
 }
 document.addEventListener("click", () => $$(".icon-pop").forEach((p) => p.remove()));
 
+// ------------------------------------------------------------------ focus
+/** Fills the focus length pickers; must run before bindAll() selects their values. */
+function initFocus() {
+  for (const sel of $$("select[data-mins], select[data-periods]")) {
+    const periods = !!sel.dataset.periods;
+    const list = (sel.dataset.mins || sel.dataset.periods).split(",").map(Number);
+    sel.innerHTML = "";
+    for (const n of list) {
+      const label = n === 0 ? t("Off") : periods ? t("{n} focus periods", { n }) : n === 1 ? t("1 minute") : t("{n} minutes", { n });
+      sel.add(new Option(label, String(n)));
+    }
+  }
+  const toggle = () => action(focusRunning ? "stop_focus" : "start_focus");
+  $("#homeFocus").onclick = toggle;
+  $("#focusToggle").onclick = toggle;
+}
+
+let focusRunning = false;
+function renderFocus(f) {
+  focusRunning = !!f;
+  const label = t(f ? "Stop focus session" : "Start focus session");
+  $("#homeFocus").textContent = label;
+  $("#focusToggle").textContent = label;
+  $("#focusToggle").classList.toggle("primary", !f);
+  const line = $("#homeFocusLine");
+  line.hidden = !f;
+  let text = t("No focus session running");
+  if (f) {
+    const vars = { n: f.cycle, total: f.total, t: fmtClock(f.secs_left) };
+    const key = f.phase === "break" ? (f.long ? "Long focus break · {t} left" : "Focus break {n}/{total} · {t} left") : "Focus {n}/{total} · {t} left";
+    text = t(key, vars);
+    line.textContent = text;
+  }
+  $("#focusStatus").textContent = text;
+}
+
 // ------------------------------------------------------------------ binding
 function bindAll() {
   for (const input of $$("[data-bind]")) {
@@ -809,6 +845,7 @@ function renderState(s) {
     $("#homeSub").textContent = t(s.next_is_long ? "until long break" : "until next break");
     ring.style.strokeDashoffset = String(326.7 * Math.min(1, s.work_secs / s.interval_secs));
   }
+  renderFocus(s.focus);
   $("#homePhase").textContent = t(PHASES[s.phase] || "Working");
   $("#homeLabel").textContent = s.label;
   $("#homeSkip").disabled = s.skip_difficulty === "hardcore";
@@ -1009,6 +1046,7 @@ function renderAll() {
   paintTiles();
   hydrateIcons();
   initNav();
+  initFocus();
   bindAll();
   initBreaks();
   initScreen();

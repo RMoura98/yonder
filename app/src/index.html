@@ -19,6 +19,7 @@
       <a data-page="breaks" data-tile="lagoon" data-ic="wb_twilight">Screen Breaks</a>
       <a data-page="smart" data-tile="blue" data-ic="pause">Smart Pause</a>
       <a data-page="wellness" data-tile="coral" data-ic="favorite">Wellness Reminders</a>
+      <a data-page="focus" data-tile="violet" data-ic="timer">Focus session</a>
       <h4>Behavior &amp; Feedback</h4>
       <a data-page="screen" data-tile="violet" data-ic="palette">Break Screen</a>
       <a data-page="alerts" data-tile="amber" data-ic="notifications_active">Heads-up</a>
@@ -58,10 +59,12 @@
         <div class="hero-side">
           <div class="phase" id="homePhase">Working</div>
           <p class="muted" id="homeLabel"></p>
+          <p class="focus-line" id="homeFocusLine" hidden></p>
           <div class="btn-row">
             <button class="btn primary" data-act="take_break">Take a break now</button>
             <button class="btn" data-act="skip" id="homeSkip">Skip next</button>
             <button class="btn" id="homePause">Pause 30 min</button>
+            <button class="btn" id="homeFocus">Start focus session</button>
           </div>
           <div class="quick">
             <span class="muted">Longer break</span>
@@ -80,6 +83,23 @@
         <div class="stat"><div class="l">Longest stretch</div><div class="v" id="tStretch">—</div></div>
       </div>
       <div class="tip"><b>Look over yonder.</b> Every 20 minutes, look at something about 20 feet (6 m) away for 20 seconds. It lets the focusing muscles in your eyes relax.</div>
+    </section>
+
+    <!-- ============================================================== FOCUS -->
+    <section class="page" id="page-focus" data-title="Focus session">
+      <p class="foot top">Work in focused stretches with a break after each one. Your eye breaks keep running alongside, and when one would land close to a focus break, the two are merged into a single interruption.</p>
+      <div class="list">
+        <div class="row"><label id="focusStatus">No focus session running</label><button class="btn primary" id="focusToggle">Start focus session</button></div>
+      </div>
+      <h3>Lengths</h3>
+      <div class="list">
+        <div class="row"><label>Focus period</label><span class="stepper"><select data-bind="focus.work_mins" data-type="number" data-mins="15,20,25,30,45,50,60,90"></select></span></div>
+        <div class="row"><label>Break</label><span class="stepper"><select data-bind="focus.break_mins" data-type="number" data-mins="3,5,10,15"></select></span></div>
+        <div class="row"><label>Long break</label><span class="stepper"><select data-bind="focus.long_break_mins" data-type="number" data-mins="10,15,20,30"></select></span></div>
+        <div class="row"><label>Focus periods per session<small>The last one ends with the long break.</small></label><span class="stepper"><select data-bind="focus.long_every" data-type="number" data-periods="2,3,4,5,6,8"></select></span></div>
+        <div class="row"><label>Merge eye breaks within<small>An eye break this close to a focus break is folded into it.</small></label><span class="stepper"><select data-bind="focus.merge_window_mins" data-type="number" data-mins="0,1,2,3,5,7,10"></select></span></div>
+      </div>
+      <p class="foot">A focus session counts active screen time only, so it waits while you are away, paused or outside office hours. When it ends, or when you stop it, your normal eye-break schedule carries on.</p>
     </section>
 
     <!-- ============================================================ GENERAL -->
@@ -274,6 +294,7 @@
         <div class="row"><label>Take a break now</label><input class="keys" readonly data-keys="shortcuts.take_break" /></div>
         <div class="row"><label>Pause / resume</label><input class="keys" readonly data-keys="shortcuts.toggle_pause" /></div>
         <div class="row"><label>Skip next break</label><input class="keys" readonly data-keys="shortcuts.skip_break" /></div>
+        <div class="row"><label>Start / stop focus session</label><input class="keys" readonly data-keys="shortcuts.toggle_focus" /></div>
       </div>
       <p class="foot">Click a shortcut and press a new combination. Backspace clears it. During a break, press Esc twice to skip.</p>
     </section>
