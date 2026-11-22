@@ -1,0 +1,93 @@
+name: Flatpak
+
+# - On every release, bump packaging/flatpak (deb url + sha256, AppStream release entry)
+#   and commit it to main, like aur.yml does for the AUR package.
+# - On changes to packaging/flatpak, validate the metadata and test-build the Flatpak.
+on:
+  release:
+    types: [published]
+  pull_request:
+    paths: ["packaging/flatpak/**", ".github/workflows/flatpak.yml"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to package (e.g. v1.0.5); leave empty to only validate and build"
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    if: ${{ github.event_name == 'release' || inputs.tag != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Update manifest and metainfo
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG="${{ github.event.release.tag_name || inputs.tag }}"
+          VER="${TAG#v}"
+          DIR=packaging/flatpak
+
+          mkdir -p dist
+          gh release download "$TAG" --pattern "Yonder_${VER}_amd64.deb" --dir dist
+          SHA=$(sha256sum "dist/Yonder_${VER}_amd64.deb" | cut -d' ' -f1)
+
+          sed -i \
+            -e "s#/download/v[^/]*/Yonder_[^/]*_amd64.deb#/download/${TAG}/Yonder_${VER}_amd64.deb#" \
+            -e "s/^\(        sha256: \).*/\1${SHA}/" \
+            "$DIR/io.github.rmoura98.yonder.yml"
+
+          if ! grep -q "<release version=\"${VER}\"" "$DIR/io.github.rmoura98.yonder.metainfo.xml"; then
+            sed -i "s#^  <releases>#  <releases>\n    <release version=\"${VER}\" date=\"$(date -u +%F)\"/>#" \
+              "$DIR/io.github.rmoura98.yonder.metainfo.xml"
+          fi
+
+      - name: Commit to the repo
+        run: |
+          if git diff --quiet -- packaging/flatpak; then
+            echo "Flatpak files already up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add packaging/flatpak
+          git commit -m "chore(flatpak): update to ${{ github.event.release.tag_name || inputs.tag }}"
+          git push origin HEAD:main || echo "::warning::Could not push to main (branch protection?); skipping."
+
+  validate:
+    if: ${{ github.event_name != 'release' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y appstream desktop-file-utils flatpak flatpak-builder
+
+      - name: Validate AppStream and desktop file
+        working-directory: packaging/flatpak
+        run: |
+          appstreamcli validate --no-net io.github.rmoura98.yonder.metainfo.xml
+          desktop-file-validate io.github.rmoura98.yonder.desktop
+
+      - name: Test-build the Flatpak
+        working-directory: packaging/flatpak
+        run: |
+          git clone --depth 1 https://github.com/flathub/shared-modules.git
+          flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+          flatpak-builder --user --force-clean --install-deps-from=flathub \
+            --repo=repo build io.github.rmoura98.yonder.yml
+          # The installed files must be where Flatpak and software centers look.
+          for f in bin/yonder share/applications/io.github.rmoura98.yonder.desktop \
+                   share/metainfo/io.github.rmoura98.yonder.metainfo.xml \
+                   share/icons/hicolor/128x128/apps/io.github.rmoura98.yonder.png; do
+            test -e "build/files/$f" || { echo "missing $f"; exit 1; }
+          done

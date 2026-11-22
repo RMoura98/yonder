@@ -1,0 +1,57 @@
+# Flatpak manifest for Yonder. It repackages the official release .deb
+# (the same binary as the AppImage / apt / AUR packages) rather than building
+# Tauri from source. `url` and `sha256` are bumped automatically on each
+# release by .github/workflows/flatpak.yml.
+# Note: the app's internal Tauri identifier stays app.yonder.desktop (its config dir name).
+id: io.github.rmoura98.yonder
+runtime: org.gnome.Platform
+runtime-version: '49'
+sdk: org.gnome.Sdk
+command: yonder
+
+finish-args:
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  # Break sounds
+  - --socket=pulseaudio
+  # Tray icon (StatusNotifierItem) and break notifications
+  - --talk-name=org.kde.StatusNotifierWatcher
+  - --talk-name=org.freedesktop.Notifications
+  # Idle detection: GNOME (Mutter) and KDE Plasma (KWin) over D-Bus
+  - --talk-name=org.gnome.Mutter.IdleMonitor
+  - --talk-name=org.freedesktop.ScreenSaver
+
+modules:
+  # Tauri loads libappindicator at runtime for the tray icon; the GNOME
+  # runtime does not ship it. Needs flathub/shared-modules next to this file
+  # (git submodule; see README.md).
+  - shared-modules/libappindicator/libappindicator-gtk3-12.10.json
+
+  - name: yonder
+    buildsystem: simple
+    build-commands:
+      # A .deb is an ar archive holding control.tar.* and data.tar.*
+      - ar x yonder.deb
+      - tar -xf data.tar.*
+      - install -Dm755 usr/bin/yonder /app/bin/yonder
+      - install -Dm644 usr/share/icons/hicolor/128x128/apps/yonder.png /app/share/icons/hicolor/128x128/apps/io.github.rmoura98.yonder.png
+      - install -Dm644 "usr/share/icons/hicolor/256x256@2/apps/yonder.png" /app/share/icons/hicolor/256x256/apps/io.github.rmoura98.yonder.png
+      - install -Dm644 io.github.rmoura98.yonder.desktop /app/share/applications/io.github.rmoura98.yonder.desktop
+      - install -Dm644 io.github.rmoura98.yonder.metainfo.xml /app/share/metainfo/io.github.rmoura98.yonder.metainfo.xml
+    sources:
+      - type: file
+        url: https://github.com/RMoura98/yonder/releases/download/v1.0.4/Yonder_1.0.4_amd64.deb
+        sha256: e9b9d776cc5d1f6ecada8d8ae4f26affccc9e94b35ed68bce74dd97dfeaffec7
+        dest-filename: yonder.deb
+        only-arches: [x86_64]
+        x-checker-data:
+          type: json
+          url: https://api.github.com/repos/RMoura98/yonder/releases/latest
+          version-query: .tag_name | sub("^v"; "")
+          url-query: '.assets[] | select(.name=="Yonder_" + $version + "_amd64.deb") | .browser_download_url'
+      - type: file
+        path: io.github.rmoura98.yonder.desktop
+      - type: file
+        path: io.github.rmoura98.yonder.metainfo.xml

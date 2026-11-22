@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.rmoura98.yonder</id>
+  <name>Yonder</name>
+  <summary>A tiny, open-source break reminder</summary>
+  <developer id="io.github.rmoura98">
+    <name>Yonder contributors</name>
+  </developer>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <launchable type="desktop-id">io.github.rmoura98.yonder.desktop</launchable>
+  <description>
+    <p>Yonder reminds you to rest your eyes, fix your posture and take regular breaks, without breaking your flow. Free and open source, with no account and no telemetry.</p>
+    <ul>
+      <li>Gentle 20-20-20 breaks that ask you to look into the distance</li>
+      <li>Optional posture and blink reminders</li>
+      <li>Smart pause during meetings and when you are away from the keyboard</li>
+      <li>Office hours, statistics and global shortcuts</li>
+    </ul>
+  </description>
+  <categories>
+    <category>Utility</category>
+  </categories>
+  <keywords>
+    <keyword>break</keyword>
+    <keyword>reminder</keyword>
+    <keyword>eyes</keyword>
+    <keyword>posture</keyword>
+  </keywords>
+  <url type="homepage">https://rmoura98.github.io/yonder/</url>
+  <url type="bugtracker">https://github.com/RMoura98/yonder/issues</url>
+  <url type="vcs-browser">https://github.com/RMoura98/yonder</url>
+  <url type="contribute">https://github.com/RMoura98/yonder/blob/main/CONTRIBUTING.md</url>
+  <url type="donation">https://github.com/sponsors/RMoura98</url>
+  <content_rating type="oars-1.1"/>
+  <screenshots>
+    <screenshot type="default">
+      <caption>Full-screen break over a blurred desktop</caption>
+      <image type="source" width="1280" height="800">https://raw.githubusercontent.com/RMoura98/yonder/main/media/hero-poster.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>A posture reminder appears over your work</caption>
+      <image type="source" width="1280" height="800">https://raw.githubusercontent.com/RMoura98/yonder/main/media/reminders-poster.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Gentle break card over your work</caption>
+      <image type="source" width="1280" height="800">https://raw.githubusercontent.com/RMoura98/yonder/main/media/gentle-poster.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Break band across the screen with your work still visible</caption>
+      <image type="source" width="1280" height="800">https://raw.githubusercontent.com/RMoura98/yonder/main/media/split-poster.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Screen Breaks settings</caption>
+      <image type="source" width="1280" height="800">https://raw.githubusercontent.com/RMoura98/yonder/main/media/settings-poster.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>First-run setup</caption>
+      <image type="source" width="1280" height="800">https://raw.githubusercontent.com/RMoura98/yonder/main/media/setup-poster.png</image>
+    </screenshot>
+  </screenshots>
+  <releases>
+    <release version="1.0.4" date="2026-11-22"/>
+    <release version="1.0.3" date="2026-11-22"/>
+    <release version="1.0.2" date="2026-11-22"/>
+    <release version="1.0.1" date="2026-11-22"/>
+    <release version="1.0.0" date="2026-11-22"/>
+  </releases>
+</component>

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Yonder
+Comment=A tiny break reminder for healthier screen habits
+Exec=yonder
+Icon=io.github.rmoura98.yonder
+Terminal=false
+Categories=Utility;
+Keywords=break;reminder;eyes;posture;20-20-20;health;
+StartupWMClass=yonder
