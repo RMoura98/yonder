@@ -106,6 +106,13 @@ it's a great choice. Yonder is for everyone else: **every desktop, older Macs, f
 Comparison based on lookaway.com as of November 2026; corrections welcome. Yonder is an independent project, not affiliated
 with or endorsed by LookAway or Mystical Bits; product names belong to their owners.
 
+## A note on health
+
+Yonder helps you build a habit: regular look-away breaks, blinking and posture checks are widely recommended for
+eye comfort and can ease the tired, dry-eyed feeling of long screen days. It doesn't diagnose anything, treat eye
+conditions or improve your eyesight, and it's no substitute for an eye exam. If your eyes hurt or your vision changes,
+see an optometrist or ophthalmologist.
+
 ## Platform notes
 
 | Feature | Windows | macOS | Linux |
