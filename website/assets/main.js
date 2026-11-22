@@ -110,6 +110,8 @@
       strips.ones.style.transform = "translateY(" + (-(secs % 10)) + "em)";
       prog.style.transform = "scaleX(" + (secs / BREAK) + ")";
     };
+    var hands = demo.querySelectorAll(".hand");
+    var setHands = function (f) { for (var i = 0; i < hands.length; i++) hands[i].style.transform = "rotate(" + (f * 360) + "deg)"; };
     var setPhase = function (p) { demo.setAttribute("data-phase", p); };
 
     if (reduceMotion) {
@@ -117,13 +119,13 @@
     } else {
       // timeline: [delay before step, action]
       var steps = [
-        [0, function () { setPhase("desktop"); setOdo(BREAK); huCount.textContent = "00:05"; }],
+        [0, function () { setPhase("desktop"); setOdo(BREAK); huCount.textContent = "00:05"; setHands(0); }],
         [1800, function () { setPhase("toast"); }],
-        [1000, function () { huCount.textContent = "00:04"; }],
-        [1000, function () { huCount.textContent = "00:03"; }],
-        [1000, function () { setPhase("cursor"); curCount.textContent = "3"; }],
-        [900, function () { curCount.textContent = "2"; }],
-        [900, function () { curCount.textContent = "1"; }],
+        [1000, function () { huCount.textContent = "00:04"; setHands(0.2); }],
+        [1000, function () { huCount.textContent = "00:03"; setHands(0.4); }],
+        [1000, function () { setPhase("cursor"); curCount.textContent = "3"; setHands(0.6); }],
+        [900, function () { curCount.textContent = "2"; setHands(0.8); }],
+        [900, function () { curCount.textContent = "1"; setHands(1); }],
         [900, function () { setPhase("break"); }]
       ];
       for (var s = BREAK - 1; s >= BREAK - 7; s--) {
