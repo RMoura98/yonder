@@ -24,7 +24,7 @@ desktop into a calm break screen, and stays out of the way while you're in a cal
 - **Break screens you'll like.** Blurred desktop, split-screen (your desktop parts to reveal a texture), animated Aurora / Nebula / Ripple, gradients or your own image, or **Gentle**: the screen just dims and clicks pass through, so a call or a game keeps going. Rolling countdown and your own messages.
 - **Your own sounds.** Fifteen built-in synthesized sounds, or add any MP3, WAV, OGG or M4A file and use it for breaks or for each reminder.
 - **Heads-up, never a surprise.** A frosted heads-up card before each break (start now, +1m, +5m, +15m), and a countdown that follows your cursor for the last five seconds.
-- **Waits for the right moment.** Won't start while you type; pauses for meetings, fullscreen apps and the focus apps you choose, but never holds a break for more than an hour (you pick the limit); time away from the computer counts as a break.
+- **Waits for the right moment.** Won't start while you type; pauses for meetings, fullscreen apps, Do Not Disturb / Focus and the focus apps you choose, but never holds a break for more than an hour (you pick the limit); time away from the computer counts as a break.
 - **Pauses your music.** Optionally pauses music and video when a break starts and resumes only what it paused (system media controls on Windows, Music/Spotify on macOS, playerctl on Linux).
 - **Set up in three steps.** The first time you open Yonder: language, rhythm and break style. Skip it if you like.
 - **Posture & blink reminders.** Small liquid-glass widgets that appear, animate and disappear. Up to five custom reminders with their own icon, interval and sound.
@@ -134,6 +134,7 @@ see an optometrist or ophthalmologist.
 | Blurred desktop & split-screen | ✓ | ✓ (needs Screen Recording permission) | — |
 | Meeting detection | mic/camera in use | Zoom meeting helper | mic recording (PulseAudio/PipeWire) |
 | Fullscreen detection | ✓ | ✓ | — |
+| Do Not Disturb / Focus | ✓ | best effort (needs Full Disk Access) | GNOME, KDE |
 | Focus apps (by process name) | ✓ | ✓ | ✓ |
 | Idle detection (away counts as a break) | ✓ | ✓ | X11 (`xprintidle`), GNOME and KDE Plasma on Wayland; not yet Sway/Hyprland |
 | Countdown next to tray icon | — (tooltip) | ✓ | panel-dependent |

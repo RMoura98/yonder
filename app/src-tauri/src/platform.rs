@@ -171,6 +171,162 @@ mod idle_tests {
     }
 }
 
+// ------------------------------------------------------- Do Not Disturb / Focus
+// Approach for Windows' WNF Focus Assist state is the same idea Workrave (GPL, ideas
+// only, no code taken) uses; the implementation here is original.
+
+/// WNF buffer from `WNF_SHEL_QUIETHOURS_ACTIVE_PROFILE_CHANGED`: a little-endian
+/// integer, non-zero when a Focus / Do not disturb profile is active.
+#[cfg_attr(not(windows), allow(dead_code))]
+fn parse_wnf_profile(buf: &[u8]) -> bool {
+    buf.iter().take(4).any(|b| *b != 0)
+}
+
+/// `gsettings get org.gnome.desktop.notifications show-banners` -> DND when "false".
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+fn parse_gsettings_banners(out: &str) -> bool {
+    out.trim() == "false"
+}
+
+/// Output of `busctl --user get-property ... Inhibited` ("b true") or
+/// `gdbus call ... Get ... Inhibited` ("(<true>,)").
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+fn parse_inhibited(out: &str) -> bool {
+    let o = out.trim();
+    o == "b true" || (o.contains("true") && !o.contains("false"))
+}
+
+/// True when macOS `Assertions.json` shows an active Focus assertion.
+/// Format: `{"data":[{"storeAssertionRecords":[ ... ]}]}`; any record means Focus is on.
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+fn parse_macos_assertions(json: &str) -> bool {
+    let Ok(v) = serde_json::from_str::<serde_json::Value>(json) else {
+        return false;
+    };
+    v.get("data")
+        .and_then(|d| d.as_array())
+        .map(|arr| {
+            arr.iter().any(|e| {
+                e.get("storeAssertionRecords")
+                    .and_then(|r| r.as_array())
+                    .map(|r| !r.is_empty())
+                    .unwrap_or(false)
+            })
+        })
+        .unwrap_or(false)
+}
+
+#[cfg(windows)]
+fn dnd_raw() -> bool {
+    // Focus Assist / Do not disturb: the shell publishes the active quiet-hours
+    // profile through an undocumented WNF state.
+    #[link(name = "ntdll")]
+    extern "system" {
+        fn NtQueryWnfStateData(
+            state_name: *const u32,
+            type_id: *const core::ffi::c_void,
+            explicit_scope: *const core::ffi::c_void,
+            change_stamp: *mut u32,
+            buffer: *mut core::ffi::c_void,
+            buffer_size: *mut u32,
+        ) -> i32;
+    }
+    use windows_sys::Win32::UI::Shell::SHQueryUserNotificationState;
+    let mut st = 0i32;
+    let hr = unsafe { SHQueryUserNotificationState(&mut st as *mut _ as *mut _) };
+    // Windows' automatic rules (playing a game, an app in full screen, presenting)
+    // also switch Focus Assist on. Those situations belong to the separate
+    // "Fullscreen apps" rule, so while the shell reports BUSY (2), D3D full screen (3)
+    // or presentation mode (4), only an explicit quiet-time state counts as DND.
+    if hr == 0 && matches!(st, 2 | 3 | 4) {
+        return false;
+    }
+    if hr == 0 && st == 5 {
+        return true;
+    }
+    // WNF_SHEL_QUIETHOURS_ACTIVE_PROFILE_CHANGED = 0x0D83063EA3BF1C75
+    let name: [u32; 2] = [0xA3BF_1C75, 0x0D83_063E];
+    let mut stamp = 0u32;
+    let mut buf = [0u8; 8];
+    let mut size = buf.len() as u32;
+    let status = unsafe {
+        NtQueryWnfStateData(
+            name.as_ptr(),
+            std::ptr::null(),
+            std::ptr::null(),
+            &mut stamp,
+            buf.as_mut_ptr() as *mut _,
+            &mut size,
+        )
+    };
+    status == 0 && parse_wnf_profile(&buf[..(size as usize).min(buf.len())])
+}
+
+#[cfg(target_os = "macos")]
+fn dnd_raw() -> bool {
+    // No public API for Focus. Recent macOS keeps assertions in this file, but it is
+    // only readable with Full Disk Access; without it we report false.
+    let Some(home) = std::env::var_os("HOME") else {
+        return false;
+    };
+    let path = std::path::Path::new(&home).join("Library/DoNotDisturb/DB/Assertions.json");
+    std::fs::read_to_string(path)
+        .map(|s| parse_macos_assertions(&s))
+        .unwrap_or(false)
+}
+
+#[cfg(target_os = "linux")]
+fn dnd_raw() -> bool {
+    let run = |prog: &str, args: &[&str]| -> Option<String> {
+        let out = Command::new(prog).args(args).output().ok()?;
+        out.status
+            .success()
+            .then(|| String::from_utf8_lossy(&out.stdout).into_owned())
+    };
+    // GNOME: "Do Not Disturb" turns banners off.
+    if let Some(o) = run("gsettings", &["get", "org.gnome.desktop.notifications", "show-banners"]) {
+        if parse_gsettings_banners(&o) {
+            return true;
+        }
+    }
+    // KDE and other servers implementing the freedesktop Inhibited property.
+    let o = run(
+        "busctl",
+        &[
+            "--user", "get-property", "org.freedesktop.Notifications",
+            "/org/freedesktop/Notifications", "org.freedesktop.Notifications", "Inhibited",
+        ],
+    )
+    .or_else(|| {
+        run(
+            "gdbus",
+            &[
+                "call", "--session", "--dest", "org.freedesktop.Notifications",
+                "--object-path", "/org/freedesktop/Notifications", "--method",
+                "org.freedesktop.DBus.Properties.Get", "org.freedesktop.Notifications", "Inhibited",
+            ],
+        )
+    });
+    o.map(|s| parse_inhibited(&s)).unwrap_or(false)
+}
+
+/// True while the system's Do Not Disturb / Focus mode is on. Cached for a few
+/// seconds because it may spawn helper processes; fails silently to false.
+pub fn dnd_active() -> bool {
+    use std::sync::Mutex;
+    use std::time::{Duration, Instant};
+    static CACHE: Mutex<Option<(Instant, bool)>> = Mutex::new(None);
+    let mut c = CACHE.lock().unwrap_or_else(|e| e.into_inner());
+    if let Some((t, v)) = *c {
+        if t.elapsed() < Duration::from_secs(5) {
+            return v;
+        }
+    }
+    let v = dnd_raw();
+    *c = Some((Instant::now(), v));
+    v
+}
+
 // ------------------------------------------------------- fullscreen detection
 
 /// Apps whose fullscreen mode means "watching something" rather than "working".
@@ -448,6 +604,30 @@ pub fn tray_glyph(size: u32, rgb: [u8; 3], alpha: f32) -> Vec<u8> {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn dnd_parsers() {
+        use super::*;
+        assert!(parse_wnf_profile(&[1, 0, 0, 0]));
+        assert!(!parse_wnf_profile(&[0, 0, 0, 0]));
+        assert!(!parse_wnf_profile(&[]));
+        assert!(parse_gsettings_banners("false\n"));
+        assert!(!parse_gsettings_banners("true\n"));
+        assert!(parse_inhibited("b true\n"));
+        assert!(!parse_inhibited("b false\n"));
+        assert!(parse_inhibited("(<true>,)"));
+        assert!(!parse_inhibited("(<false>,)"));
+        assert!(!parse_inhibited(""));
+        assert!(parse_macos_assertions(r#"{"data":[{"storeAssertionRecords":[{"x":1}]}]}"#));
+        assert!(!parse_macos_assertions(r#"{"data":[{"storeAssertionRecords":[]}]}"#));
+        assert!(!parse_macos_assertions("garbage"));
+    }
+
+    #[test]
+    #[ignore]
+    fn print_dnd_state() {
+        println!("dnd_active = {}", super::dnd_active());
+    }
+
     #[test]
     fn tray_glyph_renders_horizon() {
         let size = 16;

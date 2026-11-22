@@ -370,5 +370,10 @@
   "Settings imported": "Settings imported",
   "That isn't a Yonder settings file.": "That isn't a Yonder settings file.",
   "That backup is too large.": "That backup is too large.",
-  "This backup was made by a newer Yonder. Update Yonder and try again.": "This backup was made by a newer Yonder. Update Yonder and try again."
+  "This backup was made by a newer Yonder. Update Yonder and try again.": "This backup was made by a newer Yonder. Update Yonder and try again.",
+  "Do Not Disturb is on": "Do Not Disturb is on",
+  "Do Not Disturb / Focus": "Do Not Disturb / Focus",
+  "When your system's Do Not Disturb or Focus mode is on.": "When your system's Do Not Disturb or Focus mode is on.",
+  "Reads macOS Focus when possible; may need Full Disk Access for Yonder.": "Reads macOS Focus when possible; may need Full Disk Access for Yonder.",
+  "Works with GNOME Do Not Disturb and desktops that inhibit notifications, such as KDE.": "Works with GNOME Do Not Disturb and desktops that inhibit notifications, such as KDE."
 }

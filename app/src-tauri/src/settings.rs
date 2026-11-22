@@ -85,6 +85,8 @@ pub struct SmartPause {
     pub enabled: bool,
     pub meetings: bool,
     pub fullscreen: bool,
+    /// Hold breaks while the system's Do Not Disturb / Focus mode is on.
+    pub dnd: bool,
     pub apps: Vec<String>,
     pub cooldown_secs: u32,
     /// Longest a due break may be held by smart pause, in minutes. 0 = no limit.
@@ -97,6 +99,7 @@ impl Default for SmartPause {
             enabled: true,
             meetings: true,
             fullscreen: true,
+            dnd: true,
             apps: vec![],
             cooldown_secs: 60,
             max_hold_mins: 60,

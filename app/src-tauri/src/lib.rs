@@ -926,6 +926,9 @@ fn smart_reason(s: &Settings, scanner: &mut platform::ProcessScanner, frame: u64
     if reason.is_none() && s.smart.fullscreen && platform::fullscreen_app_active(scanner) {
         reason = Some(i18n::tr(lang, "a fullscreen app is running", &[]));
     }
+    if reason.is_none() && s.smart.dnd && platform::dnd_active() {
+        reason = Some(i18n::tr(lang, "Do Not Disturb is on", &[]));
+    }
     let need_scan = !s.smart.apps.is_empty() || (s.smart.meetings && cfg!(target_os = "macos"));
     if reason.is_none() && need_scan {
         let names = scanner.names();

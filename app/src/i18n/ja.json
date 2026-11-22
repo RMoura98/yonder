@@ -370,5 +370,10 @@
   "Settings imported": "設定を読み込みました",
   "That isn't a Yonder settings file.": "Yonder の設定ファイルではありません。",
   "That backup is too large.": "このバックアップは大きすぎます。",
-  "This backup was made by a newer Yonder. Update Yonder and try again.": "このバックアップは新しいバージョンの Yonder で作成されました。Yonder を更新してからもう一度お試しください。"
+  "This backup was made by a newer Yonder. Update Yonder and try again.": "このバックアップは新しいバージョンの Yonder で作成されました。Yonder を更新してからもう一度お試しください。",
+  "Do Not Disturb is on": "おやすみモードがオンです",
+  "Do Not Disturb / Focus": "おやすみモード / 集中モード",
+  "When your system's Do Not Disturb or Focus mode is on.": "システムのおやすみモードまたは集中モードがオンのとき。",
+  "Reads macOS Focus when possible; may need Full Disk Access for Yonder.": "可能な場合は macOS の集中モードを読み取ります。Yonder にフルディスクアクセスが必要な場合があります。",
+  "Works with GNOME Do Not Disturb and desktops that inhibit notifications, such as KDE.": "GNOME のおやすみモードや、KDE など通知を抑制するデスクトップで動作します。"
 }
