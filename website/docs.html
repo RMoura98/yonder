@@ -66,6 +66,7 @@
           <li><a href="#break-styles">Break screen styles</a></li>
           <li><a href="#shortcuts">Keyboard shortcuts</a></li>
           <li><a href="#stats">Stats</a></li>
+          <li><a href="#restarts">Restarts &amp; backups</a></li>
         </ul>
         <h4>Develop</h4>
         <ul>
@@ -252,6 +253,14 @@ fi</code></pre>
         <h2>Stats</h2>
         <p>The Stats view shows breaks taken, skipped and snoozed per day and week, plus your current streak of days with most breaks taken. It's meant as a gentle mirror, not a scoreboard.</p>
         <p>Stats are stored only on your machine. Open <em>Settings → Stats</em> and use <strong>Export JSON</strong> to save a copy, or <strong>Reset</strong> to start fresh.</p>
+      </section>
+
+      <section class="doc-section" id="restarts">
+        <h2>Restarts &amp; backups</h2>
+        <h3>Restarting Yonder</h3>
+        <p>Yonder saves a small snapshot of your countdown (time worked, snoozes, the short-break count, a pause and the reminder timers) about once a minute and when you quit. If you restart it within 10 minutes, for an update or a crash, the countdown carries on from where it was; the time it was closed counts as time away, so if that was as long as your <em>reset after being idle</em> setting it counts as a natural break and the countdown starts again. An older snapshot is ignored, and a break that was in progress is never resumed. The snapshot is <code>state.json</code> in the app data folder, next to <code>stats.json</code>.</p>
+        <h3>Back up and restore settings</h3>
+        <p>Open <em>Settings → About → Backup</em>. <strong>Export settings…</strong> downloads a <code>.yonder.json</code> file with all your settings, your custom sounds and your break background image. <strong>Import settings…</strong> reads such a file, checks it, and after a second click replaces your current settings. Stats are not included. Importing on a new computer restores everything, but note that a backup made by a newer Yonder can't be read by an older one.</p>
       </section>
 
       <section class="doc-section" id="building">

@@ -356,5 +356,19 @@
   "Get started": "Get started",
   "Pause music and video during breaks": "Pause music and video during breaks",
   "Resumes afterwards, only what Yonder paused.": "Resumes afterwards, only what Yonder paused.",
-  "Needs playerctl. Resumes afterwards, only what Yonder paused.": "Needs playerctl. Resumes afterwards, only what Yonder paused."
+  "Needs playerctl. Resumes afterwards, only what Yonder paused.": "Needs playerctl. Resumes afterwards, only what Yonder paused.",
+  "Backup": "Backup",
+  "Export settings": "Export settings",
+  "Saves your settings, custom sounds and break background to one file. Stats are not included.": "Saves your settings, custom sounds and break background to one file. Stats are not included.",
+  "Export settings…": "Export settings…",
+  "Import settings": "Import settings",
+  "Replaces your current settings with those from a file made by Export.": "Replaces your current settings with those from a file made by Export.",
+  "Import settings…": "Import settings…",
+  "Click again to replace your settings": "Click again to replace your settings",
+  "Backup file looks good. Click Import again within 10 seconds to replace your current settings.": "Backup file looks good. Click Import again within 10 seconds to replace your current settings.",
+  "Settings exported": "Settings exported",
+  "Settings imported": "Settings imported",
+  "That isn't a Yonder settings file.": "That isn't a Yonder settings file.",
+  "That backup is too large.": "That backup is too large.",
+  "This backup was made by a newer Yonder. Update Yonder and try again.": "This backup was made by a newer Yonder. Update Yonder and try again."
 }

@@ -356,5 +356,19 @@
   "Get started": "はじめる",
   "Pause music and video during breaks": "休憩中は音楽と動画を一時停止",
   "Resumes afterwards, only what Yonder paused.": "休憩後に再開します（Yonder が停止したものだけ）。",
-  "Needs playerctl. Resumes afterwards, only what Yonder paused.": "playerctl が必要です。休憩後に再開します（Yonder が停止したものだけ）。"
+  "Needs playerctl. Resumes afterwards, only what Yonder paused.": "playerctl が必要です。休憩後に再開します（Yonder が停止したものだけ）。",
+  "Backup": "バックアップ",
+  "Export settings": "設定を書き出す",
+  "Saves your settings, custom sounds and break background to one file. Stats are not included.": "設定、カスタムサウンド、休憩の背景を1つのファイルに保存します。統計は含まれません。",
+  "Export settings…": "設定を書き出す…",
+  "Import settings": "設定を読み込む",
+  "Replaces your current settings with those from a file made by Export.": "現在の設定を、書き出したファイルの内容で置き換えます。",
+  "Import settings…": "設定を読み込む…",
+  "Click again to replace your settings": "もう一度クリックして設定を置き換える",
+  "Backup file looks good. Click Import again within 10 seconds to replace your current settings.": "ファイルは有効です。10秒以内にもう一度「読み込む」をクリックすると現在の設定が置き換わります。",
+  "Settings exported": "設定を書き出しました",
+  "Settings imported": "設定を読み込みました",
+  "That isn't a Yonder settings file.": "Yonder の設定ファイルではありません。",
+  "That backup is too large.": "このバックアップは大きすぎます。",
+  "This backup was made by a newer Yonder. Update Yonder and try again.": "このバックアップは新しいバージョンの Yonder で作成されました。Yonder を更新してからもう一度お試しください。"
 }

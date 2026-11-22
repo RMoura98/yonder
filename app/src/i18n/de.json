@@ -356,5 +356,19 @@
   "Get started": "Los geht's",
   "Pause music and video during breaks": "Musik und Video während der Pausen anhalten",
   "Resumes afterwards, only what Yonder paused.": "Wird danach fortgesetzt, nur was Yonder angehalten hat.",
-  "Needs playerctl. Resumes afterwards, only what Yonder paused.": "Benötigt playerctl. Wird danach fortgesetzt, nur was Yonder angehalten hat."
+  "Needs playerctl. Resumes afterwards, only what Yonder paused.": "Benötigt playerctl. Wird danach fortgesetzt, nur was Yonder angehalten hat.",
+  "Backup": "Sicherung",
+  "Export settings": "Einstellungen exportieren",
+  "Saves your settings, custom sounds and break background to one file. Stats are not included.": "Speichert Einstellungen, eigene Töne und den Pausenhintergrund in einer Datei. Statistiken sind nicht enthalten.",
+  "Export settings…": "Einstellungen exportieren …",
+  "Import settings": "Einstellungen importieren",
+  "Replaces your current settings with those from a file made by Export.": "Ersetzt die aktuellen Einstellungen durch die einer mit „Exportieren“ erstellten Datei.",
+  "Import settings…": "Einstellungen importieren …",
+  "Click again to replace your settings": "Erneut klicken, um die Einstellungen zu ersetzen",
+  "Backup file looks good. Click Import again within 10 seconds to replace your current settings.": "Die Datei ist gültig. Klicke innerhalb von 10 Sekunden erneut auf „Importieren“, um die aktuellen Einstellungen zu ersetzen.",
+  "Settings exported": "Einstellungen exportiert",
+  "Settings imported": "Einstellungen importiert",
+  "That isn't a Yonder settings file.": "Das ist keine Yonder-Einstellungsdatei.",
+  "That backup is too large.": "Diese Sicherung ist zu groß.",
+  "This backup was made by a newer Yonder. Update Yonder and try again.": "Diese Sicherung stammt von einer neueren Yonder-Version. Aktualisiere Yonder und versuche es erneut."
 }

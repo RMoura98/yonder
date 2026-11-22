@@ -356,5 +356,19 @@
   "Get started": "C'est parti",
   "Pause music and video during breaks": "Mettre en pause la musique et la vidéo pendant les pauses",
   "Resumes afterwards, only what Yonder paused.": "Reprend ensuite, uniquement ce que Yonder a mis en pause.",
-  "Needs playerctl. Resumes afterwards, only what Yonder paused.": "Nécessite playerctl. Reprend ensuite, uniquement ce que Yonder a mis en pause."
+  "Needs playerctl. Resumes afterwards, only what Yonder paused.": "Nécessite playerctl. Reprend ensuite, uniquement ce que Yonder a mis en pause.",
+  "Backup": "Sauvegarde",
+  "Export settings": "Exporter les réglages",
+  "Saves your settings, custom sounds and break background to one file. Stats are not included.": "Enregistre vos réglages, sons personnalisés et l'arrière-plan des pauses dans un seul fichier. Les statistiques ne sont pas incluses.",
+  "Export settings…": "Exporter les réglages…",
+  "Import settings": "Importer les réglages",
+  "Replaces your current settings with those from a file made by Export.": "Remplace vos réglages actuels par ceux d'un fichier créé avec Exporter.",
+  "Import settings…": "Importer les réglages…",
+  "Click again to replace your settings": "Cliquez à nouveau pour remplacer vos réglages",
+  "Backup file looks good. Click Import again within 10 seconds to replace your current settings.": "Le fichier est valide. Cliquez à nouveau sur Importer dans les 10 secondes pour remplacer vos réglages actuels.",
+  "Settings exported": "Réglages exportés",
+  "Settings imported": "Réglages importés",
+  "That isn't a Yonder settings file.": "Ce n'est pas un fichier de réglages Yonder.",
+  "That backup is too large.": "Cette sauvegarde est trop volumineuse.",
+  "This backup was made by a newer Yonder. Update Yonder and try again.": "Cette sauvegarde a été créée par une version plus récente de Yonder. Mettez Yonder à jour et réessayez."
 }

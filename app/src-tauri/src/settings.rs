@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 use std::path::PathBuf;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -298,7 +299,7 @@ impl Settings {
     }
 
     /// Older builds stored emoji as icons; icons are now Material Symbol names.
-    fn migrate(&mut self) {
+    pub fn migrate(&mut self) {
         let fix = |icon: &mut String, fallback: &str| {
             if icon.is_empty() || !icon.chars().all(|c| c.is_ascii_lowercase() || c == '_') {
                 *icon = fallback.to_string();
@@ -330,5 +331,160 @@ impl Settings {
         let mut v = vec![&self.wellness.posture, &self.wellness.blink];
         v.extend(self.wellness.custom.iter().take(5));
         v
+    }
+}
+
+// ------------------------------------------------------------ backup / restore
+
+/// Format version of an exported `.yonder.json` file.
+pub const BACKUP_VERSION: u32 = 1;
+/// Largest backup file we are willing to parse (it embeds audio and an image).
+pub const BACKUP_MAX_BYTES: usize = 80_000_000;
+
+pub fn valid_sound_id(id: &str) -> bool {
+    !id.is_empty() && id.len() <= 40 && id.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[serde(default)]
+pub struct BackupSound {
+    pub id: String,
+    pub name: String,
+    pub data_url: String,
+}
+
+/// Everything in a settings backup: the settings plus the user's own files.
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[serde(default)]
+pub struct Backup {
+    /// Format version; 0 means "not a Yonder backup".
+    pub yonder_backup: u32,
+    pub app_version: String,
+    pub settings: Settings,
+    /// The custom break background, as a data URL.
+    pub background: Option<String>,
+    pub sounds: Vec<BackupSound>,
+}
+
+/// Parses and sanitises a backup. Errors are English keys translated by the UI.
+pub fn parse_backup(text: &str) -> Result<Backup, String> {
+    const NOT_BACKUP: &str = "That isn't a Yonder settings file.";
+    if text.len() > BACKUP_MAX_BYTES {
+        return Err("That backup is too large.".into());
+    }
+    let value: serde_json::Value = serde_json::from_str(text).map_err(|_| NOT_BACKUP.to_string())?;
+    let version = value.get("yonder_backup").and_then(|v| v.as_u64()).unwrap_or(0);
+    if version == 0 || !value.get("settings").map(|s| s.is_object()).unwrap_or(false) {
+        return Err(NOT_BACKUP.into());
+    }
+    if version > BACKUP_VERSION as u64 {
+        return Err("This backup was made by a newer Yonder. Update Yonder and try again.".into());
+    }
+    let mut b: Backup = serde_json::from_value(value).map_err(|_| NOT_BACKUP.to_string())?;
+    b.sanitize();
+    Ok(b)
+}
+
+impl Backup {
+    /// Drops what can't be used and keeps every reference consistent.
+    fn sanitize(&mut self) {
+        let s = &mut self.settings;
+        s.migrate();
+        s.wellness.custom.truncate(5);
+        // keep only sounds that came with a valid id and real audio
+        let mut seen = HashSet::new();
+        self.sounds.retain(|c| {
+            valid_sound_id(&c.id)
+                && (c.data_url.starts_with("data:audio/") || c.data_url.starts_with("data:video/"))
+                && seen.insert(c.id.clone())
+        });
+        let ids: HashSet<&str> = self.sounds.iter().map(|c| c.id.as_str()).collect();
+        s.custom_sounds = self
+            .sounds
+            .iter()
+            .map(|c| CustomSound { id: c.id.clone(), name: c.name.trim().chars().take(60).collect() })
+            .collect();
+        let known = |key: &str| key.strip_prefix("file:").map(|id| ids.contains(id)).unwrap_or(true);
+        if !known(&s.sound) {
+            s.sound = "chime".into();
+        }
+        let w = &mut s.wellness;
+        for r in std::iter::once(&mut w.posture).chain(std::iter::once(&mut w.blink)).chain(w.custom.iter_mut()) {
+            if !known(&r.sound) {
+                r.sound = "none".into();
+            }
+        }
+        if !self.background.as_deref().map(|b| b.starts_with("data:image/")).unwrap_or(false) {
+            self.background = None;
+        }
+        s.has_image = self.background.is_some();
+        if !s.has_image && s.background == "image" {
+            s.background = "blur".into();
+        }
+        // they already went through setup, and a skipped update means nothing on another machine
+        s.onboarded = true;
+        s.skipped_update = String::new();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn backup_json(settings_extra: &str, top_extra: &str) -> String {
+        format!(r#"{{"yonder_backup":1,"settings":{{"work_mins":33{settings_extra}}}{top_extra}}}"#)
+    }
+
+    #[test]
+    fn valid_backup_fills_missing_fields_with_defaults() {
+        let b = parse_backup(&backup_json("", "")).unwrap();
+        assert_eq!(b.settings.work_mins, 33);
+        assert_eq!(b.settings.break_secs, Settings::default().break_secs);
+        assert!(b.settings.onboarded);
+    }
+
+    #[test]
+    fn rejects_non_backups_and_newer_versions() {
+        assert!(parse_backup("not json").is_err());
+        assert!(parse_backup("{}").is_err());
+        assert!(parse_backup(r#"{"work_mins":10}"#).is_err());
+        assert!(parse_backup(r#"{"yonder_backup":1}"#).is_err());
+        assert!(parse_backup(r#"{"yonder_backup":1,"settings":5}"#).is_err());
+        assert!(parse_backup(r#"{"yonder_backup":99,"settings":{}}"#).is_err());
+        assert!(parse_backup(r#"{"yonder_backup":1,"settings":{"work_mins":"x"}}"#).is_err());
+    }
+
+    #[test]
+    fn migrates_old_icons_and_caps_custom_reminders() {
+        let many = (0..8).map(|i| format!(r#"{{"id":"c{i}","icon":"💧"}}"#)).collect::<Vec<_>>().join(",");
+        let b = parse_backup(&backup_json(&format!(r#","wellness":{{"custom":[{many}]}}"#), "")).unwrap();
+        assert_eq!(b.settings.wellness.custom.len(), 5);
+        assert_eq!(b.settings.wellness.custom[0].icon, "notifications");
+    }
+
+    #[test]
+    fn sounds_are_validated_and_dangling_references_fall_back() {
+        let json = r#"{"yonder_backup":1,
+            "settings":{"sound":"file:s1","wellness":{"posture":{"sound":"file:gone"}},
+                        "custom_sounds":[{"id":"ghost","name":"x"}]},
+            "sounds":[{"id":"s1","name":"Bell","data_url":"data:audio/mpeg;base64,AAAA"},
+                      {"id":"../evil","name":"x","data_url":"data:audio/mpeg;base64,AAAA"},
+                      {"id":"s2","name":"x","data_url":"data:text/html;base64,AAAA"}]}"#;
+        let b = parse_backup(json).unwrap();
+        assert_eq!(b.sounds.len(), 1);
+        assert_eq!(b.settings.custom_sounds.len(), 1);
+        assert_eq!(b.settings.sound, "file:s1");
+        assert_eq!(b.settings.wellness.posture.sound, "none");
+    }
+
+    #[test]
+    fn image_background_needs_an_embedded_image() {
+        let b = parse_backup(&backup_json(r#","background":"image","has_image":true"#, "")).unwrap();
+        assert!(!b.settings.has_image);
+        assert_eq!(b.settings.background, "blur");
+        let top = r#","background":"data:image/png;base64,AAAA""#;
+        let b = parse_backup(&backup_json(r#","background":"image""#, top)).unwrap();
+        assert!(b.settings.has_image);
+        assert_eq!(b.settings.background, "image");
     }
 }

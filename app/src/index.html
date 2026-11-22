@@ -324,6 +324,12 @@
         <div class="row"><label>Check for updates automatically<small>Every few hours Yonder asks GitHub whether a newer version exists. Nothing else is sent.</small></label><input type="checkbox" class="switch" data-bind="check_updates" /></div>
         <div class="row"><label id="updStatus">You're on the latest version.</label><button class="btn" id="updCheck">Check now</button></div>
       </div>
+      <h3>Backup</h3>
+      <div class="list">
+        <div class="row"><label>Export settings<small>Saves your settings, custom sounds and break background to one file. Stats are not included.</small></label><button class="btn" id="exportSettings"><i data-icon="download" data-size="18"></i>Export settings…</button></div>
+        <div class="row"><label id="importHint">Import settings<small>Replaces your current settings with those from a file made by Export.</small></label><button class="btn" id="importSettings">Import settings…</button></div>
+        <input type="file" id="importFile" accept=".json,application/json" hidden />
+      </div>
       <div class="list"><button class="row nav danger-row" data-act="quit"><label>Quit Yonder</label></button></div>
     </section>
 

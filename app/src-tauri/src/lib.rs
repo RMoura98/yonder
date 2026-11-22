@@ -484,9 +484,15 @@ async fn get_settings(app: AppHandle) -> Settings {
 
 #[tauri::command]
 async fn save_settings(app: AppHandle, settings: Settings) -> Result<(), String> {
+    apply_settings(&app, settings);
+    Ok(())
+}
+
+/// Stores new settings and refreshes everything that depends on them.
+fn apply_settings(app: &AppHandle, settings: Settings) {
     let launch = settings.launch_at_login;
     {
-        let st = state(&app);
+        let st = state(app);
         let mut core = st.core.lock().unwrap();
         // keep at most five custom reminders
         let mut s = settings;
@@ -494,14 +500,13 @@ async fn save_settings(app: AppHandle, settings: Settings) -> Result<(), String>
         s.save(&st.paths.settings);
         core.settings = s;
     }
-    register_shortcuts(&app);
-    relabel_tray(&app);
+    register_shortcuts(app);
+    relabel_tray(app);
     let al = app.autolaunch();
     if launch != al.is_enabled().unwrap_or(false) {
         let _ = if launch { al.enable() } else { al.disable() };
     }
-    broadcast(&app);
-    Ok(())
+    broadcast(app);
 }
 
 #[tauri::command]
@@ -549,11 +554,78 @@ async fn get_background(app: AppHandle) -> Option<String> {
     std::fs::read_to_string(&state(&app).paths.background).ok()
 }
 
+// ---------------------------------------------------------- backup / restore
+
+/// Settings plus the user's own sounds and background, as one JSON document.
+#[tauri::command]
+async fn export_settings(app: AppHandle) -> Result<String, String> {
+    let st = state(&app);
+    let settings = st.core.lock().unwrap().settings.clone();
+    let background = if settings.has_image { std::fs::read_to_string(&st.paths.background).ok() } else { None };
+    let sounds = settings
+        .custom_sounds
+        .iter()
+        .filter_map(|c| {
+            let data_url = std::fs::read_to_string(st.paths.sounds.join(format!("{}.txt", c.id))).ok()?;
+            Some(settings::BackupSound { id: c.id.clone(), name: c.name.clone(), data_url })
+        })
+        .collect();
+    let backup = settings::Backup {
+        yonder_backup: settings::BACKUP_VERSION,
+        app_version: env!("CARGO_PKG_VERSION").into(),
+        settings,
+        background,
+        sounds,
+    };
+    serde_json::to_string_pretty(&backup).map_err(|e| e.to_string())
+}
+
+/// Validates a backup file and says what it contains, without applying anything.
+#[tauri::command]
+async fn check_backup(text: String) -> Result<serde_json::Value, String> {
+    let b = settings::parse_backup(&text)?;
+    Ok(serde_json::json!({
+        "app_version": b.app_version,
+        "sounds": b.sounds.len(),
+        "image": b.background.is_some(),
+    }))
+}
+
+/// Replaces the current settings, custom sounds and background with a backup's.
+#[tauri::command]
+async fn import_settings(app: AppHandle, text: String) -> Result<Settings, String> {
+    let b = settings::parse_backup(&text)?;
+    let st = state(&app);
+    if let Some(dir) = st.paths.background.parent() {
+        let _ = std::fs::create_dir_all(dir);
+    }
+    match &b.background {
+        Some(data) => std::fs::write(&st.paths.background, data).map_err(|e| e.to_string())?,
+        None => {
+            let _ = std::fs::remove_file(&st.paths.background);
+        }
+    }
+    // The backup's sound library replaces ours.
+    if let Ok(dir) = std::fs::read_dir(&st.paths.sounds) {
+        for f in dir.flatten() {
+            if f.path().extension().map(|e| e == "txt").unwrap_or(false) {
+                let _ = std::fs::remove_file(f.path());
+            }
+        }
+    }
+    if !b.sounds.is_empty() {
+        std::fs::create_dir_all(&st.paths.sounds).map_err(|e| e.to_string())?;
+    }
+    for c in &b.sounds {
+        std::fs::write(st.paths.sounds.join(format!("{}.txt", c.id)), &c.data_url).map_err(|e| e.to_string())?;
+    }
+    apply_settings(&app, b.settings);
+    Ok(state(&app).core.lock().unwrap().settings.clone())
+}
+
 // ------------------------------------------------------------ custom sounds
 
-fn valid_sound_id(id: &str) -> bool {
-    !id.is_empty() && id.len() <= 40 && id.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
-}
+use settings::valid_sound_id;
 
 /// Stores an audio file (as a data URL) and adds it to the user's sound library.
 #[tauri::command]
@@ -875,6 +947,12 @@ fn smart_reason(s: &Settings, scanner: &mut platform::ProcessScanner, frame: u64
     reason
 }
 
+fn save_state(app: &AppHandle) {
+    let st = state(app);
+    let saved = st.core.lock().unwrap().saved_state();
+    saved.save(&st.paths.state);
+}
+
 fn spawn_ticker(app: AppHandle) {
     std::thread::spawn(move || {
         let mut scanner = platform::ProcessScanner::new();
@@ -892,6 +970,9 @@ fn spawn_ticker(app: AppHandle) {
                 smart_reason(&settings, &mut scanner, frame, &mut cache)
             };
             with_core(&app, |c| c.tick(idle, reason));
+            if frame % 60 == 0 {
+                save_state(&app);
+            }
         }
     });
 }
@@ -913,6 +994,7 @@ pub fn run() {
             let paths = Paths {
                 settings: config.join("settings.json"),
                 stats: data.join("stats.json"),
+                state: data.join("state.json"),
                 background: data.join("background.txt"),
                 sounds: data.join("sounds"),
             };
@@ -920,6 +1002,10 @@ pub fn run() {
             let stats = Stats::load(&paths.stats);
             let first_run = !settings.onboarded;
             let launch = settings.launch_at_login;
+            let mut core = Core::new(settings, stats);
+            if let Some(saved) = engine::SavedState::load(&paths.state) {
+                core.restore(&saved, engine::now_epoch());
+            }
             app.manage(AppState {
                 core: Mutex::new(core),
                 paths,
@@ -947,17 +1033,14 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             get_settings,
             save_settings,
-fn save_state(app: &AppHandle) {
-    let st = state(app);
-    let saved = st.core.lock().unwrap().saved_state();
-    saved.save(&st.paths.state);
-}
-
             get_state,
             get_stats,
             reset_stats,
             action,
             get_screenshot,
+            export_settings,
+            check_backup,
+            import_settings,
             save_background,
             get_background,
             add_custom_sound,
@@ -970,9 +1053,6 @@ fn save_state(app: &AppHandle) {
             check_updates_now,
             get_update,
             skip_update,
-            if frame % 60 == 0 {
-                save_state(&app);
-            }
             app_version
         ])
         .build(tauri::generate_context!())
@@ -989,8 +1069,3 @@ fn save_state(app: &AppHandle) {
             }
         });
 }
-                state: data.join("state.json"),
-            let mut core = Core::new(settings, stats);
-            if let Some(saved) = engine::SavedState::load(&paths.state) {
-                core.restore(&saved, engine::now_epoch());
-            }

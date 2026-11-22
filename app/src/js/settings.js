@@ -728,6 +728,62 @@ function initStats() {
   };
 }
 
+// ----------------------------------------------------------------- backup
+let pendingImport = null;
+let importTimer;
+function resetImportButton() {
+  pendingImport = null;
+  clearTimeout(importTimer);
+  const b = $("#importSettings");
+  if (b) b.textContent = t("Import settings…");
+}
+
+function initBackup() {
+  resetImportButton();
+  $("#exportSettings").onclick = async () => {
+    try {
+      const text = await invoke("export_settings");
+      const blob = new Blob([text], { type: "application/json" });
+      const name = `yonder-settings-${dayKey(new Date())}.yonder.json`;
+      Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: name }).click();
+      toast(t("Settings exported"));
+    } catch (e) {
+      toast(tr(String(e)));
+    }
+  };
+  const importBtn = $("#importSettings");
+  importBtn.onclick = async () => {
+    if (!pendingImport) return $("#importFile").click();
+    // second click within 10 s confirms (no modal dialog)
+    const text = pendingImport;
+    resetImportButton();
+    try {
+      S = await invoke("import_settings", { text });
+      applyTheme(S.theme);
+      await relocalize(); // rebuild every page from the imported settings
+      toast(t("Settings imported"));
+    } catch (e) {
+      toast(tr(String(e)));
+    }
+  };
+  $("#importFile").onchange = async (e) => {
+    const f = e.target.files[0];
+    e.target.value = "";
+    if (!f) return;
+    try {
+      const text = await f.text();
+      await invoke("check_backup", { text });
+      pendingImport = text;
+      importBtn.textContent = t("Click again to replace your settings");
+      toast(t("Backup file looks good. Click Import again within 10 seconds to replace your current settings."));
+      clearTimeout(importTimer);
+      importTimer = setTimeout(resetImportButton, 10000);
+    } catch (err) {
+      toast(tr(String(err)));
+    }
+  };
+}
+
 // ------------------------------------------------------------------ today
 async function refreshToday() {
   const stats = await invoke("get_stats");
@@ -959,6 +1015,7 @@ function renderAll() {
   initSchedule();
   initShortcuts();
   initStats();
+  initBackup();
   initUpdates();
   initSetup();
   refreshVisibility();
