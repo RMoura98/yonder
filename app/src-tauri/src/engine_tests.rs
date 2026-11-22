@@ -453,6 +453,95 @@ fn smart_pause_with_zero_cooldown_releases_immediately() {
     assert_eq!(starts(&tick_n(&mut c, 1, 0)), 1);
 }
 
+fn hold_settings(max_hold_mins: u32) -> Settings {
+    let mut s = test_settings();
+    s.smart.cooldown_secs = 0;
+    s.smart.max_hold_mins = max_hold_mins;
+    s
+}
+
+fn tick_smart(c: &mut Core, n: usize) -> Vec<Effect> {
+    let mut all = Vec::new();
+    for _ in 0..n {
+        all.extend(c.tick(0, Some("call".into())));
+    }
+    all
+}
+
+#[test]
+fn smart_hold_below_limit_stays_held() {
+    let mut c = core(hold_settings(1));
+    tick_n(&mut c, 59, 0);
+    // due at tick 60; held 59 of 60 seconds
+    let fx = tick_smart(&mut c, 59);
+    assert_eq!(starts(&fx), 0);
+    assert_eq!(c.snapshot().phase, "smart");
+    assert!(!c.snapshot().overdue);
+    assert_eq!(c.snapshot().held_secs, 59);
+}
+
+#[test]
+fn smart_hold_at_limit_shows_heads_up_then_starts_break() {
+    let mut c = core(hold_settings(1));
+    tick_n(&mut c, 59, 0);
+    let fx = tick_smart(&mut c, 59);
+    assert_eq!(starts(&fx), 0);
+    // ceiling reached: heads-up appears, break not yet started
+    let fx = tick_smart(&mut c, 1);
+    assert_eq!(shows(&fx), 1);
+    assert_eq!(starts(&fx), 0);
+    assert!(c.snapshot().overdue);
+    // the normal lead countdown runs, with the reason still active
+    let fx = tick_smart(&mut c, 9);
+    assert_eq!(starts(&fx), 0);
+    let fx = tick_smart(&mut c, 1);
+    assert_eq!(starts(&fx), 1);
+    // everything resets once the break starts
+    assert!(!c.snapshot().overdue);
+    assert_eq!(c.snapshot().held_secs, 0);
+}
+
+#[test]
+fn smart_hold_limit_zero_never_releases() {
+    let mut c = core(hold_settings(0));
+    tick_n(&mut c, 59, 0);
+    assert_eq!(starts(&tick_smart(&mut c, 8000)), 0);
+    assert!(!c.snapshot().overdue);
+}
+
+#[test]
+fn smart_hold_counter_resets_after_reason_clears() {
+    let mut c = core(hold_settings(1));
+    tick_n(&mut c, 59, 0);
+    tick_smart(&mut c, 30);
+    assert_eq!(c.snapshot().held_secs, 30);
+    // reason clears (zero cooldown) and the break goes ahead
+    let fx = tick_n(&mut c, 1, 0);
+    assert_eq!(starts(&fx), 1);
+    assert_eq!(c.snapshot().held_secs, 0);
+}
+
+#[test]
+fn smart_hold_counter_resets_when_reason_clears_without_a_break() {
+    let mut s = hold_settings(1);
+    s.wait_while_typing = true;
+    let mut c = core(s);
+    tick_n(&mut c, 59, 0);
+    tick_smart(&mut c, 30);
+    assert_eq!(c.snapshot().held_secs, 30);
+    c.tick(0, None); // reason gone; the break starts or waits, but the hold is over
+    assert_eq!(c.snapshot().held_secs, 0);
+}
+
+#[test]
+fn smart_hold_counter_resets_on_snooze() {
+    let mut c = core(hold_settings(1));
+    tick_n(&mut c, 59, 0);
+    tick_smart(&mut c, 30);
+    c.snooze(5);
+    assert_eq!(c.snapshot().held_secs, 0);
+}
+
 #[test]
 fn manual_pause_stops_counting_until_resumed() {
     let mut c = core(test_settings());

@@ -326,5 +326,12 @@
   "Paper": "Papel",
   "Denim": "Vaquero",
   "Waiting for a pause in your typing…": "Esperando una pausa en tu escritura…",
-  "Break when you pause typing": "Pausa cuando dejes de escribir"
+  "Break when you pause typing": "Pausa cuando dejes de escribir",
+  "Hold breaks for at most": "Retener descansos como máximo",
+  "If something keeps smart pause on, the break goes ahead after this long.": "Si algo mantiene activa la pausa inteligente, el descanso seguirá adelante pasado este tiempo.",
+  "30 minutes": "30 minutos",
+  "1 hour": "1 hora",
+  "2 hours": "2 horas",
+  "Never": "Nunca",
+  "You've been busy for a while. A short break?": "Llevas un buen rato ocupado. ¿Un descanso corto?"
 }

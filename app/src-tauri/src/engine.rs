@@ -67,6 +67,10 @@ pub struct Snapshot {
     pub skip_difficulty: String,
     /// The break is due but waiting for a pause in typing (up to MAX_TYPING_WAIT seconds).
     pub holding: bool,
+    /// Seconds the current due break has been held back by smart pause.
+    pub held_secs: u64,
+    /// The smart-pause ceiling was hit, so this break is going ahead regardless.
+    pub overdue: bool,
 }
 
 #[derive(Default)]
@@ -82,6 +86,8 @@ pub struct Engine {
     pub away: bool,
     pub offhours: bool,
     typing_wait: u32,
+    held_secs: u64,
+    hold_overdue: bool,
     natural_counted: bool,
     planned_fired: HashSet<String>,
     reminder_elapsed: HashMap<String, u64>,
@@ -197,6 +203,8 @@ impl Core {
             skip_in,
             can_end,
             skip_difficulty: self.settings.skip_difficulty.clone(),
+            held_secs: self.e.held_secs,
+            overdue: self.e.hold_overdue,
             holding: phase == "working" && next_in <= 0 && self.e.typing_wait > 0,
         }
     }
@@ -238,7 +246,12 @@ impl Core {
                 self.e.smart_hold_until = now + self.settings.smart.cooldown_secs as i64;
             }
             None if now < self.e.smart_hold_until && self.e.smart_reason.is_some() => {}
-            None => self.e.smart_reason = None,
+            None => {
+                self.e.smart_reason = None;
+                if !self.e.hold_overdue {
+                    self.e.held_secs = 0;
+                }
+            }
         }
 
         // Breaks always run down, whatever else happens.
@@ -292,6 +305,7 @@ impl Core {
             }
             self.e.work_secs = 0;
             self.e.snooze_secs = 0;
+            self.reset_hold();
             self.e.away = true;
             self.hide_prebreak(&mut fx);
             return fx;
@@ -318,9 +332,24 @@ impl Core {
         self.tick_reminders(true, &mut fx);
 
         let interval = self.interval_secs();
-        if self.e.smart_reason.is_some() {
-            self.hide_prebreak(&mut fx);
-            return fx;
+        if self.e.smart_reason.is_some() && !self.e.hold_overdue {
+            // Only a break that is actually due counts as "held".
+            let max = self.settings.smart.max_hold_mins as u64 * 60;
+            if self.e.work_secs >= interval {
+                self.e.held_secs += 1;
+            }
+            if max > 0 && self.e.held_secs >= max {
+                // Stuck reason: stop honouring it for this break. Rewind so the normal
+                // heads-up runs its full lead countdown, then the break starts.
+                self.e.hold_overdue = true;
+                let lead = self.settings.prebreak_secs as u64;
+                if self.settings.prebreak_enabled && lead > 0 && interval > lead {
+                    self.e.work_secs = interval - lead;
+                }
+            } else {
+                self.hide_prebreak(&mut fx);
+                return fx;
+            }
         }
 
         let lead = self.settings.prebreak_secs as u64;
@@ -403,6 +432,11 @@ impl Core {
         }
     }
 
+    fn reset_hold(&mut self) {
+        self.e.held_secs = 0;
+        self.e.hold_overdue = false;
+    }
+
     fn hide_prebreak(&mut self, fx: &mut Vec<Effect>) {
         if self.e.prebreak_shown {
             self.e.prebreak_shown = false;
@@ -452,6 +486,7 @@ impl Core {
             elapsed_secs: 0,
         });
         self.e.typing_wait = 0;
+        self.reset_hold();
         fx.push(Effect::StartBreak);
         if self.settings.lock_on_break {
             fx.push(Effect::Lock);
@@ -479,6 +514,7 @@ impl Core {
         }
         self.e.prebreak_shown = false;
         self.e.typing_wait = 0;
+        self.reset_hold();
         {
             let day = self.stats.today();
             if taken {
@@ -543,6 +579,7 @@ impl Core {
         }
         self.e.work_secs = 0;
         self.e.snooze_secs = 0;
+        self.reset_hold();
         self.e.short_count += 1;
         self.stats.today().breaks_skipped += 1;
         self.hide_prebreak(&mut fx);
@@ -559,6 +596,7 @@ impl Core {
         let base = self.settings.work_mins.max(1) as u64 * 60;
         let target = self.e.work_secs + mins as u64 * 60;
         self.e.snooze_secs = target.saturating_sub(base);
+        self.reset_hold();
         self.hide_prebreak(&mut fx);
         // Don't nag again right away for short snoozes.
         if (mins as u64 * 60) <= self.settings.prebreak_secs as u64 + 5 {

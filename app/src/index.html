@@ -182,6 +182,8 @@
           <div class="row"><span class="tile" data-tile="violet" data-ic="desktop_windows"></span><label>Fullscreen apps<small id="fsNote">Games, presentations and fullscreen video.</small></label><input type="checkbox" class="switch" data-bind="smart.fullscreen" /></div>
           <div class="row"><label>Wait after the activity ends</label><span class="stepper"><select data-bind="smart.cooldown_secs" data-type="number">
             <option value="0">No delay</option><option value="60">1 minute</option><option value="120">2 minutes</option><option value="300">5 minutes</option></select></span></div>
+          <div class="row"><label>Hold breaks for at most<small>If something keeps smart pause on, the break goes ahead after this long.</small></label><span class="stepper"><select data-bind="smart.max_hold_mins" data-type="number">
+            <option value="30">30 minutes</option><option value="60">1 hour</option><option value="120">2 hours</option><option value="0">Never</option></select></span></div>
         </div>
         <h3>Focus apps</h3>
         <div class="list" id="appList"></div>

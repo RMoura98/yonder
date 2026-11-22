@@ -326,5 +326,12 @@
   "Paper": "Papel",
   "Denim": "Ganga",
   "Waiting for a pause in your typing…": "À espera de uma pausa na escrita…",
-  "Break when you pause typing": "Pausa quando parares de escrever"
+  "Break when you pause typing": "Pausa quando parares de escrever",
+  "Hold breaks for at most": "Adiar pausas no máximo",
+  "If something keeps smart pause on, the break goes ahead after this long.": "Se algo mantiver a pausa inteligente ativa, a pausa avança passado este tempo.",
+  "30 minutes": "30 minutos",
+  "1 hour": "1 hora",
+  "2 hours": "2 horas",
+  "Never": "Nunca",
+  "You've been busy for a while. A short break?": "Tens estado ocupado há muito tempo. Uma pausa curta?"
 }

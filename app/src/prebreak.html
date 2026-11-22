@@ -129,6 +129,8 @@
         $("msg").textContent = t(s.next_is_long ? "Long break in a few seconds." : "Starting in a few seconds.");
         if (card.classList.contains("mini")) mini(false);
       }
+      // Smart pause held the break too long: explain why it's showing up now.
+      if (s.overdue && !finalShown) $("msg").textContent = t("You've been busy for a while. A short break?");
       // Due, but you're typing: say so instead of sitting at 00:00.
       if (s.holding && !holdingShown) {
         holdingShown = true;

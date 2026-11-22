@@ -326,5 +326,12 @@
   "Paper": "Paper",
   "Denim": "Denim",
   "Waiting for a pause in your typing…": "Waiting for a pause in your typing…",
-  "Break when you pause typing": "Break when you pause typing"
+  "Break when you pause typing": "Break when you pause typing",
+  "Hold breaks for at most": "Hold breaks for at most",
+  "If something keeps smart pause on, the break goes ahead after this long.": "If something keeps smart pause on, the break goes ahead after this long.",
+  "30 minutes": "30 minutes",
+  "1 hour": "1 hour",
+  "2 hours": "2 hours",
+  "Never": "Never",
+  "You've been busy for a while. A short break?": "You've been busy for a while. A short break?"
 }

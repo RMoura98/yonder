@@ -86,6 +86,8 @@ pub struct SmartPause {
     pub fullscreen: bool,
     pub apps: Vec<String>,
     pub cooldown_secs: u32,
+    /// Longest a due break may be held by smart pause, in minutes. 0 = no limit.
+    pub max_hold_mins: u32,
 }
 
 impl Default for SmartPause {
@@ -96,6 +98,7 @@ impl Default for SmartPause {
             fullscreen: true,
             apps: vec![],
             cooldown_secs: 60,
+            max_hold_mins: 60,
         }
     }
 }
