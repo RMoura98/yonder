@@ -146,7 +146,7 @@ fn show_prebreak(app: &AppHandle) {
     }
     if let Some(w) = floating_window(app, "prebreak", "prebreak.html", 400.0, 140.0) {
         place_top(app, &w, false);
-        let _ = w.show();
+        // shown by the page (fit_window) once it has laid out, so no empty frame flashes
     }
 }
 
@@ -167,7 +167,7 @@ fn show_cursor_pill(app: &AppHandle) {
         }
     };
     follow(app, &w);
-    let _ = w.show();
+    // shown by the page (fit_window) once it has laid out
     let app = app.clone();
     std::thread::spawn(move || {
         // ~60 fps while visible; the window closes when the break starts.
