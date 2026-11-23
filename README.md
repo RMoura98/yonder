@@ -56,6 +56,9 @@ desktop into a calm break screen, and stays out of the way while you're in a cal
     <td width="50%"><img src="media/focus.gif" alt="Starting a focus session from the Today page, then the Focus session settings." /><br/><sub><b>Focus sessions</b>: Pomodoro that merges with your eye breaks.</sub></td>
   </tr>
   <tr>
+    <td colspan="2"><img src="media/exercises.gif" alt="A long break with guided exercises: a blinking eye, a dot to follow from side to side, then near and far focus." /><br/><sub><b>Guided exercises</b> (optional) during long breaks: blink, follow the dot, near and far, stretches.</sub></td>
+  </tr>
+  <tr>
     <td colspan="2"><img src="media/settings.gif" alt="Settings window: Today, Screen Breaks with skip-difficulty cards, the Long breaks page and break-screen backgrounds." /><br/><sub><b>Settings</b> in light or dark, laid out like your system's own.</sub></td>
   </tr>
 </table>
