@@ -222,6 +222,10 @@ pub struct Settings {
     pub allow_end_early: bool,
     pub lock_on_break: bool,
     pub pause_media: bool,
+    /// Guided eye and stretch exercises on the break screen (long, planned, focus and custom breaks).
+    pub exercises: bool,
+    /// Also offer a short eye routine during the short breaks.
+    pub exercises_short: bool,
 
     pub prebreak_enabled: bool,
     pub prebreak_secs: u32,
@@ -284,6 +288,8 @@ impl Default for Settings {
             allow_end_early: true,
             lock_on_break: false,
             pause_media: false,
+            exercises: false,
+            exercises_short: false,
             prebreak_enabled: true,
             prebreak_secs: 60,
             prebreak_visible_secs: 10,
@@ -475,6 +481,12 @@ mod tests {
         assert_eq!(b.settings.work_mins, 33);
         assert_eq!(b.settings.break_secs, Settings::default().break_secs);
         assert!(b.settings.onboarded);
+    }
+
+    #[test]
+    fn exercises_are_off_for_settings_files_that_predate_them() {
+        let b = parse_backup(&backup_json("", "")).unwrap();
+        assert!(!b.settings.exercises && !b.settings.exercises_short);
     }
 
     #[test]

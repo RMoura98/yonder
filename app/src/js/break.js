@@ -2,6 +2,7 @@ import { invoke, listen, action, applyTheme } from "./api.js";
 import { playSound } from "./sounds.js";
 import { animate, GRADIENTS, TEXTURES } from "./backgrounds.js";
 import { icon, hydrateIcons } from "./icons.js";
+import { createExercises, wanted as exercisesWanted } from "./exercises.js";
 import { initI18n, applyI18n, t, tr, locale } from "./i18n.js";
 
 const $ = (id) => document.getElementById(id);
@@ -110,7 +111,7 @@ async function setupBackdrop() {
 }
 
 // ----------------------------------------------------------------- render
-let lastKind;
+let lastKind, exercises = null;
 function render(s) {
   const b = s.break;
   if (!b || ended || !ready) return;
@@ -124,7 +125,13 @@ function render(s) {
     $("kind").lastChild.textContent = b.kind === "planned" ? tr(kindLabel) : t(kindLabel);
     $("title").textContent = tr(b.message);
     $("sub").textContent = t(SUBTITLES[b.kind] || SUBTITLES.short);
+    exercises = exercisesWanted(settings, b.kind)
+      ? createExercises($("ex"), { onCue: () => { if (primary && settings.sound_enabled) playSound("soft", settings.volume * 0.5); } })
+      : null;
+    $("ex").hidden = !exercises;
+    document.body.classList.toggle("has-ex", !!exercises);
   }
+  exercises?.update(b.elapsed_secs, b.total_secs);
 
   const skip = $("skip"), end = $("end"), hint = $("hint");
   end.hidden = !s.can_end;

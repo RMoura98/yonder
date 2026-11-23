@@ -1,0 +1,112 @@
+/* Guided exercises on the break screen (see js/exercises.js). */
+.ex { display: flex; flex-direction: column; align-items: center; gap: 12px; margin: 18px 0 4px; }
+.ex-stage {
+  --dot: radial-gradient(circle at 34% 30%, #FFF0CF 0%, #F4C26B 52%, #E8875A 120%);
+  position: relative; width: 400px; height: 150px; overflow: hidden; border-radius: 28px; color: rgba(255, 255, 255, .7);
+  background: linear-gradient(160deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, .06));
+  border: 1px solid rgba(255, 255, 255, .22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), 0 14px 40px rgba(0, 0, 0, .16);
+  backdrop-filter: blur(16px) saturate(1.3);
+  text-shadow: none;
+}
+.ex-stage > *, .ex-stage .dot, .ex-stage .ring, .eight-y { position: absolute; }
+.ex-copy { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.ex-count { font-size: 11.5px; font-weight: 650; letter-spacing: .14em; text-transform: uppercase; opacity: .62; }
+.ex-name { margin: 0; font-size: 22px; font-weight: 650; letter-spacing: -.01em; }
+.ex-text { margin: 0; font-size: 15px; line-height: 1.4; opacity: .86; max-width: 470px; min-height: 2.8em; text-wrap: balance; }
+.ex-dots { display: flex; gap: 6px; margin-top: 4px; }
+.ex-dots i { width: 18px; height: 4px; border-radius: 4px; background: rgba(255, 255, 255, .22); transition: background .5s; }
+.ex-dots i.done { background: rgba(255, 255, 255, .6); }
+.ex-dots i.on { background: #fff; }
+.ex.swap .ex-stage, .ex.swap .ex-copy { animation: exIn .9s var(--ease) both; }
+@keyframes exIn { from { opacity: 0; transform: translateY(8px); filter: blur(5px); } to { opacity: 1; transform: none; filter: none; } }
+
+body.has-ex .sub { display: none; }
+body.has-ex .title { font-size: clamp(22px, 2.6vw, 32px); opacity: .92; }
+body.has-ex .progress { margin: 10px 0 6px; }
+body.has-ex .time { font-size: clamp(26px, 2.6vw, 32px); opacity: .8; }
+body.has-ex #content { gap: 6px; }
+@media (max-height: 800px) { .ex-stage { zoom: .8; } .ex-text { min-height: 0; } }
+@media (max-height: 640px) { .ex-stage { zoom: .62; } .ex-name { font-size: 19px; } }
+
+.static-only { display: none; }
+.ex-stage .dot { width: 26px; height: 26px; left: 187px; top: 62px; border-radius: 50%; background: var(--dot); box-shadow: 0 0 22px 6px rgba(244, 194, 107, .45); }
+.ex-stage .track { background: rgba(255, 255, 255, .22); border-radius: 2px; }
+.ex-stage .track.h { left: 40px; right: 40px; top: 74px; height: 2px; }
+.ex-stage .track.v { top: 24px; bottom: 24px; left: 199px; width: 2px; }
+.ex-stage .cap { width: 8px; height: 8px; border-radius: 50%; background: rgba(255, 255, 255, .4); }
+.ex-stage .cap.l { left: 36px; top: 71px; } .ex-stage .cap.r { right: 36px; top: 71px; }
+.ex-stage .cap.t { top: 20px; left: 196px; } .ex-stage .cap.b { bottom: 20px; left: 196px; }
+.ex-stage .hint, .ex-stage .guide, .ex-stage .palms, .ex-stage .fig { inset: 0; width: 100%; height: 100%; }
+.move-x, .move-y, .eight-x, .eight-y { inset: 0; }
+.eight-x > .eight-y { inset: 0; }
+.move-x { animation: exX 6.5s ease-in-out infinite alternate; }
+.move-y { animation: exY 5s ease-in-out infinite alternate; }
+.eight-x { animation: exX8 6s ease-in-out infinite alternate; }
+.eight-y { animation: exY8 3s -1.5s ease-in-out infinite alternate; }
+@keyframes exX { from { transform: translateX(-152px); } to { transform: translateX(152px); } }
+@keyframes exY { from { transform: translateY(-46px); } to { transform: translateY(46px); } }
+@keyframes exX8 { from { transform: translateX(-130px); } to { transform: translateX(130px); } }
+@keyframes exY8 { from { transform: translateY(-42px); } to { transform: translateY(42px); } }
+
+/* blink */
+.eyes { inset: 0; display: flex; align-items: center; justify-content: center; gap: 28px; }
+.eye { width: 168px; height: auto; overflow: visible; }
+.eye .lid { transform: translateY(-90px); animation: exLid 5.5s ease-in-out infinite; }
+@keyframes exLid {
+  0%, 52% { transform: translateY(-90px); }
+  64%, 74% { transform: translateY(0); }
+  88%, 100% { transform: translateY(-90px); }
+}
+
+/* near and far */
+.nf { inset: 0; }
+.nf .dot { top: 47px; transform: scale(2.3); transition: transform 2.4s ease-in-out, opacity 2.4s ease-in-out; }
+.nf .ring { left: 150px; top: 10px; width: 100px; height: 100px; border-radius: 50%; border: 2px solid rgba(159, 216, 203, .5);
+  animation: exRing 4s ease-in-out infinite; transition: opacity 2.4s; }
+@keyframes exRing { 0%, 100% { transform: scale(.7); opacity: .2; } 50% { transform: scale(1.05); opacity: .7; } }
+.horizon { left: 50px; right: 50px; top: 96px; height: 1px; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .5), transparent); opacity: 0; transition: opacity 2.4s; }
+.far .nf .dot { transform: scale(.42); opacity: .8; }
+.far .nf .ring { opacity: 0; animation: none; }
+.far .horizon { opacity: 1; }
+.nf-label { left: 0; right: 0; bottom: 14px; text-align: center; font-size: 11.5px; font-weight: 650; letter-spacing: .16em; text-transform: uppercase; opacity: .7; }
+
+/* neck and shoulders */
+.fig { stroke: rgba(255, 255, 255, .88); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; fill: rgba(255, 255, 255, .1); }
+.fig .torso { fill: rgba(255, 255, 255, .08); }
+.fig .head { transform-origin: 200px 100px; }
+.fig .head.tilt { animation: exTilt 10s ease-in-out infinite; }
+@keyframes exTilt {
+  0%, 6% { transform: rotate(0); } 22%, 34% { transform: rotate(-22deg); } 50%, 56% { transform: rotate(0); }
+  72%, 84% { transform: rotate(22deg); } 100% { transform: rotate(0); }
+}
+.fig .ghosts { stroke-dasharray: 2 7; fill: none; opacity: .5; }
+.roll .arc { fill: none; stroke: rgba(159, 216, 203, .5); stroke-width: 2; stroke-dasharray: 2 6; }
+.roll .ball { fill: #F4C26B; stroke: none; }
+.roll .rx { animation: exRx 2s ease-in-out infinite alternate; }
+.roll .ry { animation: exRy 2s -1s ease-in-out infinite alternate; }
+.roll.r .rx { animation-direction: alternate-reverse; }
+@keyframes exRx { from { transform: translateX(-9px); } to { transform: translateX(9px); } }
+@keyframes exRy { from { transform: translateY(-9px); } to { transform: translateY(9px); } }
+
+/* palming */
+.shade { inset: 0; background: rgba(3, 12, 14, .72); opacity: 0; animation: exShade 4s 2.2s ease-in-out forwards; }
+.palms { z-index: 1; animation: exBreathe 6s 4s ease-in-out infinite alternate; }
+.palm ellipse { fill: #F4C26B; opacity: .92; }
+.palm path { stroke: #B9742F; stroke-width: 3; stroke-linecap: round; opacity: .55; }
+.palm.pl { animation: exPalmL 2.8s .3s var(--ease) both; }
+.palm.pr { animation: exPalmR 2.8s .3s var(--ease) both; }
+@keyframes exPalmL { from { transform: translateX(-120px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes exPalmR { from { transform: translateX(120px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes exShade { to { opacity: 1; } }
+@keyframes exBreathe { from { transform: scale(1); } to { transform: scale(1.035); } }
+
+/* no movement: still illustrations with the instruction */
+@media (prefers-reduced-motion: reduce) {
+  .ex, .ex * { animation: none !important; transition: none !important; }
+  .static-only { display: block; }
+  .ex-stage .hint { color: rgba(255, 255, 255, .6); }
+  .shade { opacity: .55; }
+  .ex-stage .cap.t, .ex-stage .cap.b { display: none; }
+  .nf .ring { opacity: .45; transform: scale(.9); }
+}
