@@ -29,11 +29,13 @@ const settings = {
   focus: { work_mins: 25, break_mins: 5, long_break_mins: 15, long_every: 4, merge_window_mins: 3 },
   shortcuts: { take_break: "CmdOrCtrl+Alt+B", toggle_pause: "CmdOrCtrl+Alt+P", skip_break: "CmdOrCtrl+Alt+S", toggle_focus: "" },
   hooks: { on_break_start: "", on_break_end: "" },
+  exercises: false, exercises_short: false,
   launch_at_login: true, theme: "system", onboarded: true, language: "en", check_updates: true, tray_countdown: true, skipped_update: "",
 };
 if (scene === "hero") Object.assign(settings, { prebreak_secs: 10, prebreak_visible_secs: 3 });
 if (scene === "split") Object.assign(settings, { break_style: "split", texture: "mat_teal" });
 if (scene === "gentle") Object.assign(settings, { break_style: "gentle" });
+if (scene === "exercises") Object.assign(settings, { exercises: true, long_enabled: true });
 if (scene === "setup") Object.assign(settings, { onboarded: false, theme: "light" });
 if (scene === "settings" || scene === "popover") settings.theme = "dark";
 if (scene === "settingsLight") settings.theme = "light";
@@ -61,10 +63,10 @@ const snapWorking = (next) => ({
   work_secs: Math.max(0, 1200 - next), interval_secs: 1200, next_break_in: next, next_is_long: false, prebreak_secs: settings.prebreak_secs,
   paused_until: null, reason: null, break: null, can_skip: true, skip_in: 0, can_end: false, skip_difficulty: settings.skip_difficulty,
 });
-const snapBreak = (el) => ({
+const snapBreak = (el, kind = "short", total = 20) => ({
   ...snapWorking(0), phase: "break", label: "On a break",
-  break: { kind: "short", title: "Time for a break", icon: "", message: MESSAGE, total_secs: 20, elapsed_secs: el },
-  can_skip: el >= 5, skip_in: Math.max(0, 5 - el), can_end: el >= 14,
+  break: { kind, title: "Time for a break", icon: "", message: MESSAGE, total_secs: total, elapsed_secs: el },
+  can_skip: el >= 5, skip_in: Math.max(0, 5 - el), can_end: el >= total - 6,
 });
 
 let state = snapWorking(872);
@@ -197,13 +199,13 @@ function stageAction(name) {
 }
 
 // --------------------------------------------------------------- scenes
-async function runBreak(stepMs) {
-  setState(snapBreak(0));
+async function runBreak(stepMs, kind = "short", total = 20, from = 1) {
+  setState(snapBreak(from - 1, kind, total));
   const f = openFrame("break", "/app/break.html?primary=1", { left: "0", top: "0", width: W + "px", height: H + "px" });
   await sleep(900);
-  for (let el = 1; el <= 20; el++) {
+  for (let el = from; el <= total; el++) {
     await sleep(stepMs);
-    setState(snapBreak(el));
+    setState(snapBreak(el, kind, total));
   }
   setState(snapWorking(1200));
   TEASER.emit("break-ending", 1500);
@@ -292,6 +294,13 @@ const SCENES = {
     await work;
     await moveCursor(700, 520, 600);
     await sleep(400);
+  },
+
+  // A long break with guided exercises on: blink, follow the dot, near and far (3 steps of a 60 s break).
+  async exercises() {
+    await sleep(500);
+    await runBreak(230, "long", 60);
+    await sleep(500);
   },
 
   async setup() {
