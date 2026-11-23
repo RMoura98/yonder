@@ -1,6 +1,6 @@
 cask "yonder" do
-  version "1.0.6"
-  sha256 "2129eede9ae871d270d6f1ada72dd482fc8ab4271e845b9fa139c9cdf9c13142"
+  version "1.0.7"
+  sha256 "41eed7c4706d4d421ce78ade354c9e03127467d2622b652be0fc281dc5eff3ba"
 
   url "https://github.com/RMoura98/yonder/releases/download/v#{version}/Yonder_#{version}_universal.dmg"
   name "Yonder"
