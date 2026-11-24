@@ -14,6 +14,12 @@ createServer(async (req, res) => {
     const url = new URL(req.url, "http://x");
     let path = decodeURIComponent(url.pathname);
     let file;
+    if (path === "/version") {
+      // the app's real version, so the sidebar in the teasers shows it
+      const pkg = JSON.parse(await readFile(join(APP, "..", "package.json"), "utf8"));
+      res.writeHead(200, { "content-type": "text/plain", "cache-control": "no-store" });
+      return res.end(pkg.version);
+    }
     if (path.startsWith("/app/")) file = join(APP, normalize(path.slice(5)));
     else file = join(HERE, normalize(path === "/" ? "stage.html" : path.slice(1)));
     let body = await readFile(file);

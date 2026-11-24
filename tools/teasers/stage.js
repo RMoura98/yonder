@@ -3,6 +3,17 @@ const W = 1600, H = 1000;
 const scene = new URLSearchParams(location.search).get("scene") || "hero";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const days7 = [true, true, true, true, true, false, false];
+// the app's real version (served by serve.mjs) for the settings sidebar
+const APP_VERSION = (() => {
+  try {
+    const x = new XMLHttpRequest();
+    x.open("GET", "/version", false);
+    x.send();
+    return x.status === 200 ? x.responseText.trim() : "1.0.0";
+  } catch {
+    return "1.0.0";
+  }
+})();
 
 const settings = {
   mode: "balanced", work_mins: 20, break_secs: 20, long_enabled: false, long_mins: 5, long_every: 3,
@@ -111,7 +122,7 @@ const TEASER = (window.TEASER = {
       case "get_background": return null;
       case "take_reminders": return queue.splice(0);
       case "platform_name": return "windows";
-      case "app_version": return "1.0.0";
+      case "app_version": return APP_VERSION;
       case "get_update": return null;
       case "action": return stageAction(args.name);
       case "fit_window": return fit(win, args);
