@@ -757,3 +757,111 @@ fn smart_pause_holds_wellness_reminders_until_it_ends() {
     assert_eq!(shown_reminders(&tick_n(&mut c, 1, 0)), 1);
     assert_eq!(shown_reminders(&tick_n(&mut c, 5, 0)), 0);
 }
+// ---- what happens when a break is due behind a fullscreen app
+
+fn fs_core(action: &str) -> Core {
+    let mut s = hold_settings(60);
+    s.smart.fullscreen_action = action.into();
+    core(s)
+}
+
+fn tick_fs(c: &mut Core, n: usize) -> Vec<Effect> {
+    let mut all = Vec::new();
+    for _ in 0..n {
+        c.e.smart_fullscreen = true;
+        all.extend(c.tick(0, Some("a fullscreen app is running".into())));
+    }
+    all
+}
+
+fn notices(fx: &[Effect]) -> usize {
+    count(fx, |e| matches!(e, Effect::NotifyDue { .. }))
+}
+
+#[test]
+fn fullscreen_wait_holds_the_break() {
+    let mut c = fs_core("wait");
+    tick_n(&mut c, 59, 0);
+    let fx = tick_fs(&mut c, 30);
+    assert_eq!(starts(&fx), 0);
+    assert_eq!(notices(&fx), 0);
+    assert_eq!(c.snapshot().phase, "smart");
+}
+
+#[test]
+fn fullscreen_unknown_action_behaves_like_wait() {
+    let mut c = fs_core("nonsense");
+    tick_n(&mut c, 59, 0);
+    let fx = tick_fs(&mut c, 30);
+    assert_eq!(starts(&fx), 0);
+    assert_eq!(notices(&fx), 0);
+}
+
+#[test]
+fn fullscreen_show_starts_the_break_anyway() {
+    let mut c = fs_core("show");
+    tick_n(&mut c, 59, 0);
+    let fx = tick_fs(&mut c, 1);
+    assert_eq!(starts(&fx), 1);
+}
+
+#[test]
+fn fullscreen_notify_sends_one_notice_and_no_break() {
+    let mut c = fs_core("notify");
+    tick_n(&mut c, 59, 0);
+    let fx = tick_fs(&mut c, 1);
+    assert_eq!(notices(&fx), 1);
+    assert_eq!(starts(&fx), 0);
+    assert!(c.e.brk.is_none());
+    // the countdown restarted: nothing more for a whole interval
+    let fx = tick_fs(&mut c, 58);
+    assert_eq!(notices(&fx), 0);
+    assert_eq!(starts(&fx), 0);
+    // counted as a skipped break, and the cycle moved on
+    assert_eq!(c.stats.today().breaks_skipped, 1);
+    assert_eq!(c.stats.today().breaks_taken, 0);
+    assert_eq!(c.e.short_count, 1);
+    // the next one is due a minute later
+    let fx = tick_fs(&mut c, 2);
+    assert_eq!(notices(&fx), 1);
+}
+
+#[test]
+fn fullscreen_skip_drops_the_break_silently() {
+    let mut c = fs_core("skip");
+    tick_n(&mut c, 59, 0);
+    let fx = tick_fs(&mut c, 1);
+    assert_eq!(notices(&fx), 0);
+    assert_eq!(starts(&fx), 0);
+    assert!(c.e.brk.is_none());
+    assert_eq!(c.stats.today().breaks_skipped, 1);
+    assert_eq!(c.e.work_secs, 0);
+}
+
+#[test]
+fn fullscreen_choice_ignored_for_other_reasons() {
+    for action in ["notify", "skip", "show"] {
+        let mut c = fs_core(action);
+        tick_n(&mut c, 59, 0);
+        // a call (not flagged as fullscreen) still holds the break
+        let fx = tick_smart(&mut c, 30);
+        assert_eq!(starts(&fx), 0, "{action}");
+        assert_eq!(notices(&fx), 0, "{action}");
+        assert_eq!(c.snapshot().phase, "smart");
+    }
+}
+
+#[test]
+fn fullscreen_notify_waits_until_due() {
+    let mut c = fs_core("notify");
+    tick_n(&mut c, 30, 0);
+    let fx = tick_fs(&mut c, 20);
+    assert_eq!(notices(&fx), 0);
+    assert_eq!(c.stats.today().breaks_skipped, 0);
+}
+
+#[test]
+fn settings_without_fullscreen_action_default_to_wait() {
+    let s: Settings = serde_json::from_str(r#"{"smart":{"fullscreen":true}}"#).unwrap();
+    assert_eq!(s.smart.fullscreen_action, "wait");
+}

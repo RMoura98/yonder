@@ -27,6 +27,8 @@ pub enum Effect {
     Hook { cmd: String, event: &'static str, kind: String, secs: u64 },
     Lock,
     SaveStats,
+    /// A break came due behind a fullscreen app: tell the user quietly, show no window.
+    NotifyDue { kind: String, secs: u64 },
 }
 
 #[derive(Serialize, Clone, Debug)]
@@ -107,6 +109,9 @@ pub struct Engine {
     pub brk: Option<BreakInfo>,
     pub smart_reason: Option<String>,
     pub smart_hold_until: i64,
+    /// The current smart-pause reason is a fullscreen app (and nothing else), so the
+    /// "when a break is due during fullscreen" choice applies. Set by the ticker.
+    pub smart_fullscreen: bool,
     pub away: bool,
     pub offhours: bool,
     pub focus: Option<FocusSession>,
@@ -447,7 +452,7 @@ impl Core {
         }
 
         // Planned breaks (lunch, a walk...) fire at their time of day.
-        if self.e.smart_reason.is_none() {
+        if self.e.smart_reason.is_none() || self.fullscreen_action() == Some("show") {
             if let Some(p) = self.due_planned() {
                 self.start_break_with(
                     "planned",
@@ -502,7 +507,18 @@ impl Core {
         // The next break is either the eye break or (during a focus session) a focus break.
         let (rem, focus_next) = self.next_break();
         let span = if focus_next { self.focus_work_secs() } else { self.interval_secs() };
-        if self.e.smart_reason.is_some() && !self.e.hold_overdue {
+        let fs_action = self.fullscreen_action();
+        if fs_action == Some("show") {
+            // Fullscreen app, but the user chose to be interrupted anyway: carry on as if
+            // smart pause were off for breaks (wellness reminders are still held).
+        } else if matches!(fs_action, Some("notify" | "skip")) {
+            if rem <= 0 {
+                self.pass_break(fs_action == Some("notify"), &mut fx);
+            } else {
+                self.hide_prebreak(&mut fx);
+            }
+            return fx;
+        } else if self.e.smart_reason.is_some() && !self.e.hold_overdue {
             // Only a break that is actually due counts as "held".
             let max = self.settings.smart.max_hold_mins as u64 * 60;
             if rem <= 0 {
@@ -607,6 +623,48 @@ impl Core {
                     fx.push(Effect::ShowReminders(vec![r]));
                 }
             }
+        }
+    }
+
+    /// The non-default fullscreen choice, when it applies right now.
+    fn fullscreen_action(&self) -> Option<&str> {
+        if !(self.e.smart_reason.is_some() && self.e.smart_fullscreen) {
+            return None;
+        }
+        match self.settings.smart.fullscreen_action.as_str() {
+            a @ ("notify" | "skip" | "show") => Some(a),
+            _ => None,
+        }
+    }
+
+    /// A due break that is not shown (fullscreen "notify" / "skip"). It counts as a
+    /// skipped break: the countdown restarts, the short/long cycle and a focus session
+    /// move on, and no break window, sound or hook runs. `notify` also sends a quiet
+    /// native notification.
+    fn pass_break(&mut self, notify: bool, fx: &mut Vec<Effect>) {
+        let (kind, secs) = if self.next_break().1 {
+            let long = self.e.focus.as_ref().map_or(false, |f| f.cycle >= self.focus_total());
+            let f = &self.settings.focus;
+            ("focus", (if long { f.long_break_mins } else { f.break_mins }).max(1) as u64 * 60)
+        } else if self.next_is_long() {
+            ("long", self.settings.long_mins.max(1) as u64 * 60)
+        } else {
+            ("short", self.settings.break_secs.max(5) as u64)
+        };
+        match kind {
+            "long" => self.e.short_count = 0,
+            "short" => self.e.short_count += 1,
+            _ => self.advance_focus(),
+        }
+        self.e.work_secs = 0;
+        self.e.snooze_secs = 0;
+        self.hide_prebreak(fx);
+        self.e.typing_wait = 0;
+        self.reset_hold();
+        self.stats.today().breaks_skipped += 1;
+        fx.push(Effect::SaveStats);
+        if notify {
+            fx.push(Effect::NotifyDue { kind: kind.into(), secs });
         }
     }
 

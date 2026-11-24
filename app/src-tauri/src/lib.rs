@@ -295,6 +295,19 @@ fn close_window(app: &AppHandle, label: &str) {
     }
 }
 
+fn break_notice_body(lang: &str, kind: &str, total_secs: u64) -> String {
+    if kind == "short" && total_secs < 60 {
+        i18n::tr(lang, "Time for a {n}-second break — look at something far away", &[("n", &total_secs.to_string())])
+    } else {
+        let n = ((total_secs + 30) / 60).max(1).to_string();
+        if kind == "long" {
+            i18n::tr(lang, "Time for a {n}-minute break — stand up, stretch, refill your water", &[("n", &n)])
+        } else {
+            i18n::tr(lang, "Time for a {n}-minute break — look at something far away", &[("n", &n)])
+        }
+    }
+}
+
 /// "Notification only" style: no window at all, just a native notification plus the
 /// break sound (played by a tiny hidden page, since sounds are Web Audio).
 fn notify_break(app: &AppHandle) {
@@ -304,16 +317,7 @@ fn notify_break(app: &AppHandle) {
         (i18n::resolve(&c.settings.language), c.e.brk.clone(), c.settings.sound_enabled)
     };
     if let Some(b) = brk {
-        let body = if b.kind == "short" && b.total_secs < 60 {
-            i18n::tr(lang, "Time for a {n}-second break — look at something far away", &[("n", &b.total_secs.to_string())])
-        } else {
-            let n = ((b.total_secs + 30) / 60).max(1).to_string();
-            if b.kind == "long" {
-                i18n::tr(lang, "Time for a {n}-minute break — stand up, stretch, refill your water", &[("n", &n)])
-            } else {
-                i18n::tr(lang, "Time for a {n}-minute break — look at something far away", &[("n", &n)])
-            }
-        };
+        let body = break_notice_body(lang, &b.kind, b.total_secs);
         let _ = app.notification().builder().title("Yonder").body(body).show();
     }
     if sound && app.get_webview_window("break-sound").is_none() {
@@ -454,6 +458,11 @@ fn apply(app: &AppHandle, fx: Vec<Effect>) {
                 end_break_windows(app, delay_ms)
             }
             Effect::ShowReminders(list) => show_reminders(app, list),
+            Effect::NotifyDue { kind, secs } => {
+                let lang = i18n::resolve(&state(app).core.lock().unwrap().settings.language);
+                let body = break_notice_body(lang, &kind, secs);
+                let _ = app.notification().builder().title("Yonder").body(body).show();
+            }
             Effect::Lock => platform::lock_screen(),
             Effect::Hook { cmd, event, kind, secs } => platform::run_hook(&cmd, event, &kind, secs),
             Effect::SaveStats => {
@@ -1090,7 +1099,8 @@ fn app_version(app: AppHandle) -> String {
 
 // ================================================================= tick loop
 
-fn smart_reason(s: &Settings, scanner: &mut platform::ProcessScanner, frame: u64, cache: &mut Option<String>) -> Option<String> {
+/// The reason smart pause is active, and whether it is purely a fullscreen app.
+fn smart_reason(s: &Settings, scanner: &mut platform::ProcessScanner, frame: u64, cache: &mut Option<(String, bool)>) -> Option<(String, bool)> {
     let lang = i18n::resolve(&s.language);
     if !s.smart.enabled {
         return None;
@@ -1102,8 +1112,14 @@ fn smart_reason(s: &Settings, scanner: &mut platform::ProcessScanner, frame: u64
     if s.smart.meetings && platform::mic_or_camera_in_use() {
         reason = Some(i18n::tr(lang, "you're in a call", &[]));
     }
+    let mut fullscreen = false;
     if reason.is_none() && s.smart.fullscreen && platform::fullscreen_app_active(scanner) {
         reason = Some(i18n::tr(lang, "a fullscreen app is running", &[]));
+        fullscreen = true;
+    }
+    // A fullscreen app together with any other reason (DND, sharing, a focus app) keeps holding.
+    if fullscreen && ((s.smart.dnd && platform::dnd_active()) || (s.smart.screen_share && platform::screen_shared_by_system())) {
+        fullscreen = false;
     }
     if reason.is_none() && s.smart.dnd && platform::dnd_active() {
         reason = Some(i18n::tr(lang, "Do Not Disturb is on", &[]));
@@ -1132,6 +1148,7 @@ fn smart_reason(s: &Settings, scanner: &mut platform::ProcessScanner, frame: u64
             reason = Some(i18n::tr(lang, "{app} is open", &[("app", app.trim())]));
         }
     }
+    let reason = reason.map(|r| (r, fullscreen));
     *cache = reason.clone();
     reason
 }
@@ -1158,7 +1175,10 @@ fn spawn_ticker(app: AppHandle) {
             } else {
                 smart_reason(&settings, &mut scanner, frame, &mut cache)
             };
-            with_core(&app, |c| c.tick(idle, reason));
+            with_core(&app, |c| {
+                c.e.smart_fullscreen = reason.as_ref().map_or(false, |r| r.1);
+                c.tick(idle, reason.map(|r| r.0))
+            });
             if frame % 60 == 0 {
                 save_state(&app);
             }

@@ -85,6 +85,10 @@ pub struct SmartPause {
     pub enabled: bool,
     pub meetings: bool,
     pub fullscreen: bool,
+    /// What happens when a break comes due while a fullscreen app is in front:
+    /// wait (hold it until the app ends) | notify (a quiet notification, no break
+    /// window) | show (the break goes ahead anyway) | skip (drop this break).
+    pub fullscreen_action: String,
     /// Hold breaks while the system's Do Not Disturb / Focus mode is on.
     pub dnd: bool,
     /// Hold breaks while sharing or recording the screen.
@@ -101,6 +105,7 @@ impl Default for SmartPause {
             enabled: true,
             meetings: true,
             fullscreen: true,
+            fullscreen_action: "wait".into(),
             dnd: true,
             screen_share: true,
             apps: vec![],

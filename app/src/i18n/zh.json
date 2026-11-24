@@ -435,5 +435,11 @@
   "Cover your eyes": "遮住眼睛",
   "Rub your palms together to warm them, then rest them lightly over your closed eyes.": "搓热双手，然后轻轻覆在闭着的眼睛上。",
   "Look near": "看近处",
-  "Look far": "看远处"
+  "Look far": "看远处",
+  "When a break is due in a fullscreen app": "全屏应用中到了休息时间时",
+  "Calls, Do Not Disturb and screen sharing always hold breaks.": "通话、勿扰模式和屏幕共享始终会推迟休息。",
+  "Wait until I leave fullscreen": "等我退出全屏后再休息",
+  "Show a quiet notification instead": "改为显示安静的通知",
+  "Show the break anyway": "仍然显示休息界面",
+  "Skip this break": "跳过这次休息"
 }

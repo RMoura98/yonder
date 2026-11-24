@@ -435,5 +435,11 @@
   "Cover your eyes": "Couvre tes yeux",
   "Rub your palms together to warm them, then rest them lightly over your closed eyes.": "Frotte tes paumes pour les réchauffer, puis pose-les doucement sur tes yeux fermés.",
   "Look near": "Regarde près",
-  "Look far": "Regarde loin"
+  "Look far": "Regarde loin",
+  "When a break is due in a fullscreen app": "Quand une pause est due dans une app en plein écran",
+  "Calls, Do Not Disturb and screen sharing always hold breaks.": "Les appels, Ne pas déranger et le partage d'écran retiennent toujours les pauses.",
+  "Wait until I leave fullscreen": "Attendre que je quitte le plein écran",
+  "Show a quiet notification instead": "Afficher plutôt une notification discrète",
+  "Show the break anyway": "Afficher la pause quand même",
+  "Skip this break": "Ignorer cette pause"
 }

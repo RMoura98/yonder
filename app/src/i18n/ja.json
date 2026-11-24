@@ -435,5 +435,11 @@
   "Cover your eyes": "目を覆う",
   "Rub your palms together to warm them, then rest them lightly over your closed eyes.": "手のひらをこすり合わせて温め、閉じた目の上にそっと当てます。",
   "Look near": "近くを見る",
-  "Look far": "遠くを見る"
+  "Look far": "遠くを見る",
+  "When a break is due in a fullscreen app": "全画面アプリ中に休憩の時間になったら",
+  "Calls, Do Not Disturb and screen sharing always hold breaks.": "通話、おやすみモード、画面共有中は常に休憩を保留します。",
+  "Wait until I leave fullscreen": "全画面を終えるまで待つ",
+  "Show a quiet notification instead": "代わりに控えめな通知を表示する",
+  "Show the break anyway": "それでも休憩を表示する",
+  "Skip this break": "この休憩をスキップする"
 }
