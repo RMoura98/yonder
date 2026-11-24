@@ -166,6 +166,39 @@ fn show_quietly(window: &WebviewWindow) {
     let _ = window.show();
 }
 
+/// Removes the native title bar from a break window for good (Windows).
+///
+/// Undecorated windows keep WS_CAPTION and only hide it by drawing over the frame;
+/// while a borderless game holds the foreground, Windows can paint that caption anyway
+/// (a grey strip with "Yonder break" across the top). A plain popup has no caption to
+/// paint, so make the window one and re-apply its monitor rectangle.
+#[allow(unused_variables)]
+fn strip_title_bar(window: &WebviewWindow, pos: PhysicalPosition<i32>, size: PhysicalSize<u32>) {
+    #[cfg(windows)]
+    {
+        use windows_sys::Win32::UI::WindowsAndMessaging::{
+            GetWindowLongW, SetWindowLongW, SetWindowPos, GWL_STYLE, HWND_TOPMOST, SWP_FRAMECHANGED,
+            SWP_NOACTIVATE, WS_CAPTION, WS_MAXIMIZEBOX, WS_MINIMIZEBOX, WS_POPUP, WS_SYSMENU, WS_THICKFRAME,
+        };
+        let Ok(hwnd) = window.hwnd() else { return };
+        let hwnd = hwnd.0 as _;
+        unsafe {
+            let style = GetWindowLongW(hwnd, GWL_STYLE) as u32;
+            let frame = WS_CAPTION | WS_THICKFRAME | WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX;
+            SetWindowLongW(hwnd, GWL_STYLE, ((style & !frame) | WS_POPUP) as i32);
+            SetWindowPos(
+                hwnd,
+                HWND_TOPMOST,
+                pos.x,
+                pos.y,
+                size.width as i32,
+                size.height as i32,
+                SWP_FRAMECHANGED | SWP_NOACTIVATE,
+            );
+        }
+    }
+}
+
 /// Places a floating window horizontally centered (or right-aligned) near the top.
 fn place_top(app: &AppHandle, win: &WebviewWindow, align_right: bool) {
     let Some(m) = cursor_monitor(app) else { return };
@@ -406,11 +439,13 @@ fn start_break_windows(app: &AppHandle) {
         // user's apps undisturbed), never focused, and the mouse passes straight through.
         if gentle {
             let _ = w.set_ignore_cursor_events(true);
+            strip_title_bar(&w, *m.position(), *m.size());
             show_quietly(&w);
             continue;
         }
         #[cfg(not(target_os = "macos"))]
         let _ = w.set_fullscreen(true);
+        strip_title_bar(&w, *m.position(), *m.size());
         let _ = w.show();
         if is_primary {
             let _ = w.set_focus();
