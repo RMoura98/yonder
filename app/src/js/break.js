@@ -76,7 +76,8 @@ async function init() {
     $("texture").style.cssText = (TEXTURES[settings.texture] || TEXTURES.linen).css;
     document.querySelectorAll(".half").forEach((h) => (h.style.backgroundImage = `url(${shot})`));
   } else if (shot) {
-    $("blur").style.backgroundImage = `url(${shot})`;
+    // the snapshot, over a stretched copy of itself that fills the off-screen margin (see break.css)
+    $("blur").style.backgroundImage = `url(${shot}), url(${shot})`;
     $("blur").hidden = false;
   } else {
     $("backdrop").hidden = false;

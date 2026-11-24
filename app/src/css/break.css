@@ -19,8 +19,16 @@ body.closing #backdrop { opacity: 0; transition-duration: .7s; }
 #image.on::after { content: ""; position: absolute; inset: 0; background: rgba(0, 0, 0, 0.35); }
 
 /* -------------------------------------------------------- blurred desktop */
+/* The blur fades out near the element's edges (it samples transparent pixels there),
+   and the break window is see-through, so the live screen would show at the borders:
+   a game's HUD, say. Make the layer larger than the screen and fill that margin with a
+   stretched copy of the same snapshot: the fade then happens off-screen. The top layer
+   still lines up with the desktop pixel for pixel, so the fade-in stays seamless. */
 #blur {
-  background-size: 100% 100%; background-repeat: no-repeat;
+  inset: -160px; padding: 160px;
+  background-repeat: no-repeat;
+  background-origin: content-box, border-box;
+  background-size: 100% 100%, 100% 100%;
   filter: blur(0) brightness(1) saturate(1);
   transform: scale(1);
   transition: filter 1.1s var(--ease), transform 1.1s var(--ease);
