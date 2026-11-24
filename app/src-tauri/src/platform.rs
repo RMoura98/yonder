@@ -1179,6 +1179,20 @@ mod tests {
     }
 }
 
+/// The system's double-click time in milliseconds.
+#[cfg(windows)]
+pub fn double_click_ms() -> u64 {
+    use windows_sys::Win32::UI::Input::KeyboardAndMouse::GetDoubleClickTime;
+    let ms = unsafe { GetDoubleClickTime() } as u64;
+    if ms == 0 { 500 } else { ms }
+}
+
+/// No tray double clicks here, so a single click needn't wait.
+#[cfg(not(windows))]
+pub fn double_click_ms() -> u64 {
+    0
+}
+
 /// Whether the Windows taskbar uses the light theme (so the glyph should be dark).
 #[cfg(windows)]
 pub fn taskbar_is_light() -> bool {

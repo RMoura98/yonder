@@ -548,6 +548,18 @@ fn broadcast(app: &AppHandle) {
     }
 }
 
+/// The status line for the tray menu: the first sentence of the label, without its
+/// full stop ("Break due — waiting while you're in a call (Discord)").
+fn menu_status(label: &str) -> String {
+    let first = match label.find(". ") {
+        Some(i) => &label[..i],
+        None => label.trim_end_matches('.'),
+    };
+    // CJK sentences end with "。"
+    let first = first.split('。').next().unwrap_or(first);
+    first.to_string()
+}
+
 /// What the tray icon currently shows: light taskbar, paused, and the countdown drawn into it (Windows).
 type TrayLook = (bool, bool, Option<(String, bool)>);
 
@@ -556,7 +568,8 @@ fn update_tray(app: &AppHandle, snap: &Snapshot) {
     let st = state(app);
     let guard = st.tray.lock().unwrap();
     let Some(t) = guard.as_ref() else { return };
-    let _ = t.status.set_text(&snap.label);
+    // the menu shows only the first sentence: the full hold explanation made it very wide
+    let _ = t.status.set_text(menu_status(&snap.label));
     let paused = snap.phase == "paused";
     let _ = t.resume.set_enabled(paused);
     let _ = t.pause.set_enabled(!paused);
@@ -586,7 +599,7 @@ fn update_tray(app: &AppHandle, snap: &Snapshot) {
             let _ = tray.set_icon_as_template(cfg!(target_os = "macos"));
         }
         drop(last);
-        let _ = tray.set_tooltip(Some(format!("Yonder — {}", snap.label)));
+        let _ = tray.set_tooltip(Some(format!("Yonder — {}", menu_status(&snap.label))));
         // Text next to the tray icon (macOS menu bar, some Linux panels; ignored on Windows).
         // Icon-only when the user turned the countdown off (the tooltip still has it).
         let show = st.core.lock().unwrap().settings.tray_countdown;
@@ -1051,9 +1064,14 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
         .on_tray_icon_event(|tray, ev| {
             // A double click (Windows) opens the settings window. Windows reports it as
             // click, double click, click, so the clicks around it must not toggle the popover.
+            // The first click of a double click must not open the popover: it would finish
+            // loading after Settings opened and take the focus back. So on Windows a single
+            // click waits a moment, and any click or double click after it cancels it.
             static LAST_DOUBLE: Mutex<Option<Instant>> = Mutex::new(None);
+            static CLICK_SEQ: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
             if let TrayIconEvent::DoubleClick { button: MouseButton::Left, .. } = ev {
                 *LAST_DOUBLE.lock().unwrap() = Some(Instant::now());
+                CLICK_SEQ.fetch_add(1, Ordering::SeqCst);
                 let app = tray.app_handle().clone();
                 std::thread::spawn(move || {
                     close_window(&app, "popover");
@@ -1068,10 +1086,16 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
                 if LAST_DOUBLE.lock().unwrap().map_or(false, |t| t.elapsed() < Duration::from_millis(400)) {
                     return;
                 }
+                let seq = CLICK_SEQ.fetch_add(1, Ordering::SeqCst) + 1;
                 let p = rect.position.to_physical::<f64>(1.0);
                 let s = rect.size.to_physical::<f64>(1.0);
                 let app = tray.app_handle().clone();
-                std::thread::spawn(move || toggle_popover(&app, Some((p.x, p.y, s.width, s.height))));
+                std::thread::spawn(move || {
+                    std::thread::sleep(Duration::from_millis(platform::double_click_ms().min(350)));
+                    if CLICK_SEQ.load(Ordering::SeqCst) == seq {
+                        toggle_popover(&app, Some((p.x, p.y, s.width, s.height)));
+                    }
+                });
             }
         })
         .on_menu_event(|app, ev| {
@@ -1539,4 +1563,19 @@ pub fn run() {
                 }
             }
         });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::menu_status;
+
+    #[test]
+    fn tray_menu_shows_the_first_sentence() {
+        assert_eq!(
+            menu_status("Break due — waiting while you're in a call (Discord). It starts 1 minute after that. At the latest in 59 minutes."),
+            "Break due — waiting while you're in a call (Discord)"
+        );
+        assert_eq!(menu_status("Next break in 12:34"), "Next break in 12:34");
+        assert_eq!(menu_status("休息时间已到 — 正在等待：你正在通话。结束后 1 分钟 开始。"), "休息时间已到 — 正在等待：你正在通话");
+    }
 }
