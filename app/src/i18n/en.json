@@ -441,5 +441,7 @@
   "Wait until I leave fullscreen": "Wait until I leave fullscreen",
   "Show a quiet notification instead": "Show a quiet notification instead",
   "Show the break anyway": "Show the break anyway",
-  "Skip this break": "Skip this break"
+  "Skip this break": "Skip this break",
+  "Show countdown in the icon": "Show countdown in the icon",
+  "Draws the minutes until your next break onto the tray icon: seconds in the last minute, hours beyond 99 minutes. Breaks and pauses show the normal icon.": "Draws the minutes until your next break onto the tray icon: seconds in the last minute, hours beyond 99 minutes. Breaks and pauses show the normal icon."
 }

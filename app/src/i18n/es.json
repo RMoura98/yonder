@@ -441,5 +441,7 @@
   "Wait until I leave fullscreen": "Esperar hasta que salga de la pantalla completa",
   "Show a quiet notification instead": "Mostrar mejor una notificación discreta",
   "Show the break anyway": "Mostrar el descanso de todos modos",
-  "Skip this break": "Omitir este descanso"
+  "Skip this break": "Omitir este descanso",
+  "Show countdown in the icon": "Mostrar la cuenta atrás en el icono",
+  "Draws the minutes until your next break onto the tray icon: seconds in the last minute, hours beyond 99 minutes. Breaks and pauses show the normal icon.": "Dibuja los minutos hasta tu próximo descanso en el icono de la bandeja: segundos en el último minuto, horas a partir de 99 minutos. Durante los descansos y las pausas se muestra el icono normal."
 }

@@ -441,5 +441,7 @@
   "Wait until I leave fullscreen": "Warten, bis ich das Vollbild verlasse",
   "Show a quiet notification instead": "Stattdessen eine dezente Benachrichtigung zeigen",
   "Show the break anyway": "Pause trotzdem anzeigen",
-  "Skip this break": "Diese Pause überspringen"
+  "Skip this break": "Diese Pause überspringen",
+  "Show countdown in the icon": "Countdown im Symbol anzeigen",
+  "Draws the minutes until your next break onto the tray icon: seconds in the last minute, hours beyond 99 minutes. Breaks and pauses show the normal icon.": "Zeichnet die Minuten bis zur nächsten Pause in das Tray-Symbol: Sekunden in der letzten Minute, Stunden ab über 99 Minuten. Während Pausen und wenn Yonder pausiert, wird das normale Symbol angezeigt."
 }

@@ -441,5 +441,7 @@
   "Wait until I leave fullscreen": "等我退出全屏后再休息",
   "Show a quiet notification instead": "改为显示安静的通知",
   "Show the break anyway": "仍然显示休息界面",
-  "Skip this break": "跳过这次休息"
+  "Skip this break": "跳过这次休息",
+  "Show countdown in the icon": "在图标中显示倒计时",
+  "Draws the minutes until your next break onto the tray icon: seconds in the last minute, hours beyond 99 minutes. Breaks and pauses show the normal icon.": "将距下次休息的分钟数绘制在托盘图标上：最后一分钟显示秒数，超过 99 分钟显示小时数。休息和暂停期间显示普通图标。"
 }

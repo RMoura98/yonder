@@ -1073,8 +1073,11 @@ async function init() {
     const note = document.getElementById("pauseMediaNote");
     if (note) note.textContent = t("Needs playerctl. Resumes afterwards, only what Yonder paused.");
   }
-  // Windows can't draw text beside a tray icon (the tooltip still has the countdown), so hide the toggle there.
-  if (platform === "windows") $("#trayHead").hidden = $("#trayList").hidden = true;
+  // Windows can't draw text beside a tray icon, so it gets the countdown drawn into the icon instead.
+  if (platform === "windows") {
+    $("#trayTitleRow").hidden = true;
+    $("#trayIconRow").hidden = false;
+  }
   go("today");
   renderState(await invoke("get_state"));
   refreshToday();

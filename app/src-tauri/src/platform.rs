@@ -903,8 +903,135 @@ pub fn tray_glyph(size: u32, rgb: [u8; 3], alpha: f32) -> Vec<u8> {
     out
 }
 
+/// The countdown as shown in the tray icon: minutes ("12"), hours from 100 minutes ("2h"),
+/// and plain seconds in the last minute (flagged `true`, drawn with an underline).
+pub fn countdown_label(secs: i64) -> (String, bool) {
+    let s = secs.max(0);
+    if s < 60 {
+        (s.to_string(), true)
+    } else if s <= 99 * 60 {
+        (((s + 59) / 60).to_string(), false)
+    } else {
+        (format!("{}h", ((s + 3599) / 3600).min(99)), false)
+    }
+}
+
+/// 3x5 bitmap glyphs (rows top to bottom, bit 2 = left column) for the digits and "h".
+fn digit_rows(c: char) -> [u8; 5] {
+    match c {
+        '0' => [0b111, 0b101, 0b101, 0b101, 0b111],
+        '1' => [0b010, 0b110, 0b010, 0b010, 0b111],
+        '2' => [0b111, 0b001, 0b111, 0b100, 0b111],
+        '3' => [0b111, 0b001, 0b111, 0b001, 0b111],
+        '4' => [0b101, 0b101, 0b111, 0b001, 0b001],
+        '5' => [0b111, 0b100, 0b111, 0b001, 0b111],
+        '6' => [0b111, 0b100, 0b111, 0b101, 0b111],
+        '7' => [0b111, 0b001, 0b010, 0b010, 0b010],
+        '8' => [0b111, 0b101, 0b111, 0b101, 0b111],
+        '9' => [0b111, 0b101, 0b111, 0b001, 0b111],
+        'h' => [0b100, 0b100, 0b110, 0b101, 0b101],
+        _ => [0; 5],
+    }
+}
+
+/// Renders `text` (1-3 chars from `countdown_label`) as big blocky glyphs filling a `size` px
+/// square icon (RGBA, solid `rgb`). `seconds` adds a bar beneath, marking a seconds value.
+pub fn countdown_glyph(size: u32, text: &str, seconds: bool, rgb: [u8; 3]) -> Vec<u8> {
+    let chars: Vec<char> = text.chars().take(3).collect();
+    let n = chars.len().max(1) as u32;
+    // Grid in cells: 3 wide per glyph, 1 gap between; 5 tall, plus a gap and a bar row for seconds.
+    let (cols, rows) = (4 * n - 1, if seconds { 7 } else { 5 });
+    let scale = (size / cols).min(size / rows).max(1);
+    let (w, h) = (cols * scale, rows * scale);
+    let (x0, y0) = (size.saturating_sub(w) / 2, size.saturating_sub(h) / 2);
+    let mut out = vec![0u8; (size * size * 4) as usize];
+    let mut put = |cx: u32, cy: u32| {
+        for dy in 0..scale {
+            for dx in 0..scale {
+                let (x, y) = (x0 + cx * scale + dx, y0 + cy * scale + dy);
+                if x < size && y < size {
+                    let i = ((y * size + x) * 4) as usize;
+                    out[i..i + 4].copy_from_slice(&[rgb[0], rgb[1], rgb[2], 255]);
+                }
+            }
+        }
+    };
+    for (k, c) in chars.iter().enumerate() {
+        for (r, bits) in digit_rows(*c).iter().enumerate() {
+            for col in 0..3u32 {
+                if (bits >> (2 - col)) & 1 == 1 {
+                    put(k as u32 * 4 + col, r as u32);
+                }
+            }
+        }
+    }
+    if seconds {
+        for cx in 0..cols {
+            put(cx, 6);
+        }
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn countdown_labels() {
+        use super::countdown_label as l;
+        assert_eq!(l(12 * 60), ("12".into(), false));
+        assert_eq!(l(12 * 60 - 1), ("12".into(), false));
+        assert_eq!(l(60), ("1".into(), false));
+        assert_eq!(l(59), ("59".into(), true));
+        assert_eq!(l(0), ("0".into(), true));
+        assert_eq!(l(-5), ("0".into(), true));
+        assert_eq!(l(99 * 60), ("99".into(), false));
+        assert_eq!(l(99 * 60 + 1), ("2h".into(), false));
+        assert_eq!(l(100 * 3600), ("99h".into(), false));
+    }
+
+    #[test]
+    fn countdown_glyph_draws_digits() {
+        let size = 32;
+        let a = |px: &[u8], x: u32, y: u32| px[((y * size + x) * 4 + 3) as usize];
+        for (text, secs) in [("8", false), ("12", false), ("45", true), ("2h", false), ("99", true)] {
+            let px = super::countdown_glyph(size, text, secs, [1, 2, 3]);
+            assert_eq!(px.len(), (size * size * 4) as usize);
+            assert!(px.chunks(4).any(|p| p[3] == 255 && p[..3] == [1, 2, 3]), "{text} draws");
+            // nothing touches the outer 1px border
+            for i in 0..size {
+                assert_eq!(a(&px, i, 0) | a(&px, 0, i) | a(&px, i, size - 1) | a(&px, size - 1, i), 0, "{text} margin");
+            }
+        }
+        let ink = |t: &str, s: bool| super::countdown_glyph(size, t, s, [0; 3]).chunks(4).filter(|p| p[3] > 0).count();
+        assert!(ink("8", false) > ink("1", false));
+        assert!(ink("45", true) > ink("45", false));
+        let _ = super::countdown_glyph(size, "", false, [0; 3]);
+    }
+
+    /// Writes sample icons when YONDER_ICON_DIR is set (manual eyeballing only).
+    #[test]
+    fn countdown_glyph_dump() {
+        let Ok(dir) = std::env::var("YONDER_ICON_DIR") else { return };
+        let mut sheet = vec![0u8; 32 * 6 * 32 * 2 * 4];
+        for (i, (t, s)) in [("12", false), ("5", false), ("45", true), ("99", false), ("2h", false), ("0", true)].iter().enumerate() {
+            for (row, rgb, bg) in [(0usize, [255u8, 255, 255], [32u8, 32, 32]), (1, [0, 0, 0], [243, 243, 243])] {
+                let px = super::countdown_glyph(32, t, *s, rgb);
+                for y in 0..32usize {
+                    for x in 0..32usize {
+                        let p = &px[(y * 32 + x) * 4..][..4];
+                        let o = ((row * 32 + y) * 192 + i * 32 + x) * 4;
+                        for c in 0..3 {
+                            sheet[o + c] = if p[3] > 0 { p[c] } else { bg[c] };
+                        }
+                        sheet[o + 3] = 255;
+                    }
+                }
+            }
+        }
+        let rgb: Vec<u8> = sheet.chunks(4).flat_map(|p| [p[0], p[1], p[2]]).collect();
+        image::save_buffer(format!("{dir}/countdown.jpg"), &rgb, 192, 64, image::ColorType::Rgb8).unwrap();
+    }
+
     #[test]
     fn dnd_parsers() {
         use super::*;

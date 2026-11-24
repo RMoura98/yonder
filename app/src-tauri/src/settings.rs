@@ -264,6 +264,8 @@ pub struct Settings {
     pub check_updates: bool,
     /// Show the time until the next break beside the tray icon (macOS menu bar, some Linux panels).
     pub tray_countdown: bool,
+    /// Draw the time until the next break into the tray icon (Windows, where text can't sit beside it).
+    pub tray_icon_countdown: bool,
     /// A release the user chose to skip (e.g. "1.1.0").
     pub skipped_update: String,
     /// "system" or a language code: en, pt, es, fr, de
@@ -326,6 +328,7 @@ impl Default for Settings {
             onboarded: false,
             check_updates: true,
             tray_countdown: true,
+            tray_icon_countdown: false,
             skipped_update: String::new(),
             custom_sounds: Vec::new(),
             language: "system".into(),

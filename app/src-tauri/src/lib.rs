@@ -55,7 +55,7 @@ struct AppState {
     reminder_queue: Mutex<Vec<Reminder>>,
     tray: Mutex<Option<TrayItems>>,
     /// (light taskbar, paused) the tray glyph was last drawn for
-    tray_look: Mutex<Option<(bool, bool)>>,
+    tray_look: Mutex<Option<TrayLook>>,
     /// Newer release found by the update checker (and not skipped).
     update: Mutex<Option<UpdateInfo>>,
     /// Where the tray icon is (physical x, y, w, h), or the cursor, for placing the popover.
@@ -491,6 +491,9 @@ fn broadcast(app: &AppHandle) {
     }
 }
 
+/// What the tray icon currently shows: light taskbar, paused, and the countdown drawn into it (Windows).
+type TrayLook = (bool, bool, Option<(String, bool)>);
+
 fn update_tray(app: &AppHandle, snap: &Snapshot) {
     let lang = ui_lang(app);
     let st = state(app);
@@ -507,12 +510,22 @@ fn update_tray(app: &AppHandle, snap: &Snapshot) {
         &[],
     ));
     if let Some(tray) = app.tray_by_id("main") {
-        // Re-tint only when the taskbar theme or the paused state changes.
-        let look = (platform::taskbar_is_light(), paused);
+        // Windows can't show text beside a tray icon, so the countdown is drawn into the icon itself
+        // (opt-in). Only while counting down; breaks and pauses keep the normal glyph.
+        let in_icon = cfg!(windows)
+            && matches!(snap.phase, "working" | "smart" | "away")
+            && st.core.lock().unwrap().settings.tray_icon_countdown;
+        let count = in_icon.then(|| platform::countdown_label(snap.next_break_in));
+        // Re-draw only when the taskbar theme, the paused state or the shown value changes.
+        let look: TrayLook = (platform::taskbar_is_light(), paused, count);
         let mut last = st.tray_look.lock().unwrap();
-        if *last != Some(look) {
+        if last.as_ref() != Some(&look) {
+            let icon = match &look.2 {
+                Some((text, secs)) => tray_countdown_icon(look.0, text, *secs),
+                None => tray_icon(look.0, look.1),
+            };
             *last = Some(look);
-            let _ = tray.set_icon(Some(tray_icon(look.0, look.1)));
+            let _ = tray.set_icon(Some(icon));
             let _ = tray.set_icon_as_template(cfg!(target_os = "macos"));
         }
         drop(last);
@@ -880,6 +893,13 @@ fn tray_icon(light_taskbar: bool, paused: bool) -> tauri::image::Image<'static> 
     let rgb = if cfg!(target_os = "macos") || light_taskbar { [0, 0, 0] } else { [255, 255, 255] };
     let alpha = if paused { 0.45 } else { 1.0 };
     tauri::image::Image::new_owned(platform::tray_glyph(SIZE, rgb, alpha), SIZE, SIZE)
+}
+
+/// The tray icon with the time until the next break drawn as digits (Windows).
+fn tray_countdown_icon(light_taskbar: bool, text: &str, seconds: bool) -> tauri::image::Image<'static> {
+    const SIZE: u32 = 32;
+    let rgb = if light_taskbar { [0, 0, 0] } else { [255, 255, 255] };
+    tauri::image::Image::new_owned(platform::countdown_glyph(SIZE, text, seconds, rgb), SIZE, SIZE)
 }
 
 /// The UI language for text the core draws itself (tray menu, status line).
