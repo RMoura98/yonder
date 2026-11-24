@@ -262,6 +262,8 @@ pub struct Settings {
     pub onboarded: bool,
     /// Ask GitHub for a newer release every few hours.
     pub check_updates: bool,
+    /// Write debug-level detail to the log file (also `--verbose`).
+    pub verbose_logging: bool,
     /// Show the time until the next break beside the tray icon (macOS menu bar, some Linux panels).
     pub tray_countdown: bool,
     /// Draw the time until the next break into the tray icon (Windows, where text can't sit beside it).
@@ -327,6 +329,7 @@ impl Default for Settings {
             theme: "system".into(),
             onboarded: false,
             check_updates: true,
+            verbose_logging: false,
             tray_countdown: true,
             tray_icon_countdown: false,
             skipped_update: String::new(),
@@ -338,10 +341,18 @@ impl Default for Settings {
 
 impl Settings {
     pub fn load(path: &PathBuf) -> Self {
-        let mut s: Settings = std::fs::read_to_string(path)
-            .ok()
-            .and_then(|s| serde_json::from_str(&s).ok())
-            .unwrap_or_default();
+        let mut s: Settings = match std::fs::read_to_string(path) {
+            Ok(text) => serde_json::from_str(&text).unwrap_or_else(|e| {
+                crate::logger::warn(&format!("settings.json is not valid ({e}); using defaults"));
+                Settings::default()
+            }),
+            Err(e) => {
+                if e.kind() != std::io::ErrorKind::NotFound {
+                    crate::logger::warn(&format!("couldn't read settings.json ({e}); using defaults"));
+                }
+                Settings::default()
+            }
+        };
         s.migrate();
         s
     }

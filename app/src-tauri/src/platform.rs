@@ -259,6 +259,9 @@ fn dnd_raw() -> bool {
             &mut size,
         )
     };
+    if status != 0 {
+        crate::logger::debug_once("dnd-wnf", &format!("Do Not Disturb: WNF query failed (status {status:#x}), treating as off"));
+    }
     status == 0 && parse_wnf_profile(&buf[..(size as usize).min(buf.len())])
 }
 
@@ -270,9 +273,13 @@ fn dnd_raw() -> bool {
         return false;
     };
     let path = std::path::Path::new(&home).join("Library/DoNotDisturb/DB/Assertions.json");
-    std::fs::read_to_string(path)
-        .map(|s| parse_macos_assertions(&s))
-        .unwrap_or(false)
+    match std::fs::read_to_string(path) {
+        Ok(s) => parse_macos_assertions(&s),
+        Err(e) => {
+            crate::logger::debug_once("dnd-macos", &format!("Do Not Disturb: can't read Assertions.json ({e}), treating as off"));
+            false
+        }
+    }
 }
 
 #[cfg(target_os = "linux")]
@@ -307,6 +314,9 @@ fn dnd_raw() -> bool {
             ],
         )
     });
+    if o.is_none() {
+        crate::logger::debug_once("dnd-linux", "Do Not Disturb: neither busctl nor gdbus answered, treating as off");
+    }
     o.map(|s| parse_inhibited(&s)).unwrap_or(false)
 }
 
@@ -1140,6 +1150,16 @@ pub fn open_url(url: &str) {
     let _ = Command::new("open").arg(url).spawn();
     #[cfg(target_os = "linux")]
     let _ = Command::new("xdg-open").arg(url).spawn();
+}
+
+/// Opens a folder in the file manager.
+pub fn open_folder(dir: &std::path::Path) {
+    #[cfg(windows)]
+    let _ = quiet(Command::new("explorer.exe").arg(dir)).spawn();
+    #[cfg(target_os = "macos")]
+    let _ = Command::new("open").arg(dir).spawn();
+    #[cfg(target_os = "linux")]
+    let _ = Command::new("xdg-open").arg(dir).spawn();
 }
 
 // -------------------------------------------------------------- lock screen

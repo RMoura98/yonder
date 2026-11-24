@@ -39,6 +39,18 @@ body:
       label: How did you install it?
       placeholder: Homebrew, .exe installer, .msi, .AppImage, .deb, built from source…
   - type: textarea
+    id: logs
+    attributes:
+      label: Log file
+      description: |
+        Yonder keeps a small log of what it does. Open it from Settings → About → Troubleshooting → Open logs folder, or find `yonder.log` here:
+        - Windows: `%LOCALAPPDATA%\app.yonder.desktop\logs`
+        - macOS: `~/Library/Logs/app.yonder.desktop`
+        - Linux: `~/.local/share/app.yonder.desktop/logs`
+
+        Drag the file into this box, or paste the last lines. For hard-to-find bugs, turn on "Detailed logging" in the same place (or start Yonder with `--verbose`), reproduce the problem, then attach the log. It holds app names and Yonder's own events, nothing you type or see.
+      placeholder: Drag yonder.log here, or paste the relevant lines
+  - type: textarea
     id: extra
     attributes:
       label: Anything else?

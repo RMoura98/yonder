@@ -974,6 +974,7 @@ async function initUpdates() {
   $("#aboutVersion").textContent = `${t("Version {v}", { v: version })} · ${t("Look up. Look far. Get back to it.")}`;
   renderUpdate(await invoke("get_update"));
   if (!updateListener) updateListener = listen("update-status", (u) => renderUpdate(u));
+  $("#openLogs").onclick = () => invoke("open_logs_folder");
   $("#updCheck").onclick = async () => {
     const btn = $("#updCheck");
     btn.disabled = true;

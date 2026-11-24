@@ -472,5 +472,11 @@
   "Reminders done": "已完成的提醒",
   "Exported on {date}. {n} days of history, newest first.": "导出于 {date}。共 {n} 天的历史记录，最新的在前。",
   "History exported": "历史记录已导出",
-  "Nothing to export yet": "暂无可导出的内容"
+  "Nothing to export yet": "暂无可导出的内容",
+  "Troubleshooting": "故障排查",
+  "Log files": "日志文件",
+  "Yonder keeps a small log of what it does, about 1 MB at most. It holds app names and Yonder's own events, nothing you type or see. Attach it when you report a bug.": "Yonder 会保存一份记录自身行为的小日志，最大约 1 MB。其中只有应用名称和 Yonder 自身的事件，不含你输入或看到的任何内容。报告问题时请一并附上。",
+  "Open logs folder": "打开日志文件夹",
+  "Detailed logging": "详细日志",
+  "Adds extra detail to the log. Turn it on when asked, or when you're chasing a bug.": "在日志中加入更多细节。被要求时，或在排查问题时开启。"
 }

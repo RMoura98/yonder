@@ -472,5 +472,11 @@
   "Reminders done": "Recordatorios completados",
   "Exported on {date}. {n} days of history, newest first.": "Exportado el {date}. {n} días de historial, del más reciente al más antiguo.",
   "History exported": "Historial exportado",
-  "Nothing to export yet": "Todavía no hay nada que exportar"
+  "Nothing to export yet": "Todavía no hay nada que exportar",
+  "Troubleshooting": "Solución de problemas",
+  "Log files": "Archivos de registro",
+  "Yonder keeps a small log of what it does, about 1 MB at most. It holds app names and Yonder's own events, nothing you type or see. Attach it when you report a bug.": "Yonder guarda un pequeño registro de lo que hace, de 1 MB como máximo. Contiene nombres de aplicaciones y eventos del propio Yonder, nada de lo que escribes o ves. Adjúntalo cuando informes de un error.",
+  "Open logs folder": "Abrir carpeta de registros",
+  "Detailed logging": "Registro detallado",
+  "Adds extra detail to the log. Turn it on when asked, or when you're chasing a bug.": "Añade más detalle al registro. Actívalo cuando te lo pidan o cuando estés buscando un error."
 }

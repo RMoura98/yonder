@@ -26,10 +26,13 @@ pub fn today_key() -> String {
 
 impl Stats {
     pub fn load(path: &PathBuf) -> Self {
-        std::fs::read_to_string(path)
-            .ok()
-            .and_then(|s| serde_json::from_str(&s).ok())
-            .unwrap_or_default()
+        match std::fs::read_to_string(path) {
+            Ok(text) => serde_json::from_str(&text).unwrap_or_else(|e| {
+                crate::logger::warn(&format!("stats.json is not valid ({e}); starting with empty stats"));
+                Stats::default()
+            }),
+            Err(_) => Stats::default(),
+        }
     }
 
     pub fn save(&self, path: &PathBuf) {

@@ -472,5 +472,11 @@
   "Reminders done": "Reminders done",
   "Exported on {date}. {n} days of history, newest first.": "Exported on {date}. {n} days of history, newest first.",
   "History exported": "History exported",
-  "Nothing to export yet": "Nothing to export yet"
+  "Nothing to export yet": "Nothing to export yet",
+  "Troubleshooting": "Troubleshooting",
+  "Log files": "Log files",
+  "Yonder keeps a small log of what it does, about 1 MB at most. It holds app names and Yonder's own events, nothing you type or see. Attach it when you report a bug.": "Yonder keeps a small log of what it does, about 1 MB at most. It holds app names and Yonder's own events, nothing you type or see. Attach it when you report a bug.",
+  "Open logs folder": "Open logs folder",
+  "Detailed logging": "Detailed logging",
+  "Adds extra detail to the log. Turn it on when asked, or when you're chasing a bug.": "Adds extra detail to the log. Turn it on when asked, or when you're chasing a bug."
 }

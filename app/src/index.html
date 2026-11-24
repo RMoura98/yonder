@@ -383,6 +383,11 @@
         <div class="row"><label id="importHint">Import settings<small>Replaces your current settings with those from a file made by Export.</small></label><button class="btn" id="importSettings">Import settings…</button></div>
         <input type="file" id="importFile" accept=".json,application/json" hidden />
       </div>
+      <h3>Troubleshooting</h3>
+      <div class="list">
+        <div class="row"><label>Log files<small>Yonder keeps a small log of what it does, about 1 MB at most. It holds app names and Yonder's own events, nothing you type or see. Attach it when you report a bug.</small></label><button class="btn" id="openLogs">Open logs folder</button></div>
+        <div class="row"><label>Detailed logging<small>Adds extra detail to the log. Turn it on when asked, or when you're chasing a bug.</small></label><input type="checkbox" class="switch" data-bind="verbose_logging" /></div>
+      </div>
       <div class="list"><button class="row nav danger-row" data-act="quit"><label>Quit Yonder</label></button></div>
     </section>
 
