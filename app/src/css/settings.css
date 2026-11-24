@@ -51,6 +51,8 @@ nav a.active { background: var(--panel); box-shadow: var(--shadow); }
   background: color-mix(in srgb, var(--sun) 22%, transparent); color: var(--ink); font-weight: 650; text-decoration: none; font-size: 12.5px; }
 .donate .ms { color: #D9634A; }
 .donate:hover { background: color-mix(in srgb, var(--sun) 32%, transparent); }
+.side-version { font-size: 11.5px; color: var(--ink-3); text-align: center; cursor: pointer; margin-top: -4px; }
+.side-version:hover { color: var(--ink-2); text-decoration: underline; }
 
 /* ----------------------------------------------------------------- content */
 .content { display: flex; flex-direction: column; min-width: 0; }

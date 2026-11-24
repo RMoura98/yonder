@@ -959,6 +959,7 @@ function renderUpdate(u) {
   $("#updateBanner").hidden = !u;
   $("#sideUpdate").hidden = !u;
   if (!u) return;
+  $("#sideUpdate span").textContent = t("Yonder {v} is available", { v: "v" + u.version });
   $("#updTitle").textContent = t("Yonder {v} is available", { v: "v" + u.version });
   // our own trusted markup (contains a <code> tag)
   $("#updHint").innerHTML =
@@ -977,6 +978,7 @@ let updateListener; // attached once; renderUpdate always works on the current m
 async function initUpdates() {
   const version = await invoke("app_version");
   $("#aboutVersion").textContent = `${t("Version {v}", { v: version })} · ${t("Look up. Look far. Get back to it.")}`;
+  $("#sideVersion").textContent = t("Version {v}", { v: version });
   renderUpdate(await invoke("get_update"));
   if (!updateListener) updateListener = listen("update-status", (u) => renderUpdate(u));
   $("#openLogs").onclick = () => invoke("open_logs_folder");
