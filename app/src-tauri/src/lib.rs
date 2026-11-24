@@ -922,8 +922,23 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
         // Left click opens the popover (right click keeps the menu); Linux hosts keep the menu.
         .show_menu_on_left_click(linux)
         .on_tray_icon_event(|tray, ev| {
+            // A double click (Windows) opens the settings window. Windows reports it as
+            // click, double click, click, so the clicks around it must not toggle the popover.
+            static LAST_DOUBLE: Mutex<Option<Instant>> = Mutex::new(None);
+            if let TrayIconEvent::DoubleClick { button: MouseButton::Left, .. } = ev {
+                *LAST_DOUBLE.lock().unwrap() = Some(Instant::now());
+                let app = tray.app_handle().clone();
+                std::thread::spawn(move || {
+                    close_window(&app, "popover");
+                    open_settings(&app);
+                });
+                return;
+            }
             if let TrayIconEvent::Click { button: MouseButton::Left, button_state: MouseButtonState::Up, rect, .. } = ev {
                 if cfg!(target_os = "linux") {
+                    return;
+                }
+                if LAST_DOUBLE.lock().unwrap().map_or(false, |t| t.elapsed() < Duration::from_millis(400)) {
                     return;
                 }
                 let p = rect.position.to_physical::<f64>(1.0);
