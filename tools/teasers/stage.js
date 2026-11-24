@@ -37,23 +37,39 @@ if (scene === "split") Object.assign(settings, { break_style: "split", texture: 
 if (scene === "gentle") Object.assign(settings, { break_style: "gentle" });
 if (scene === "exercises") Object.assign(settings, { exercises: true, long_enabled: true });
 if (scene === "setup") Object.assign(settings, { onboarded: false, theme: "light" });
-if (scene === "settings" || scene === "popover") settings.theme = "dark";
+if (scene === "settings" || scene === "popover" || scene === "stats") settings.theme = "dark";
 if (scene === "settingsLight") settings.theme = "light";
 if (scene === "focus") settings.theme = "light";
 
-// 14 days of plausible demo stats
+// A year of plausible demo stats (the last 14 days as before; older days feed the heatmap)
 const stats = { days: {} };
 (() => {
   let seed = 7;
   const rnd = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+  const keyOf = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   for (let i = 13; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     const weekend = d.getDay() === 0 || d.getDay() === 6;
     const screen = Math.round((weekend ? 1.2 : 5.5 + rnd() * 2.5) * 3600);
     const taken = Math.round(screen / 1500 * (0.7 + rnd() * 0.25));
-    stats.days[key] = { screen_secs: i === 0 ? 4 * 3600 + 1260 : screen, breaks_taken: i === 0 ? 11 : taken, breaks_skipped: Math.round(rnd() * 3), natural_breaks: Math.round(rnd() * 4), reminders_shown: 20, reminders_done: 12, longest_stretch_secs: 1500 + Math.round(rnd() * 900) };
+    stats.days[keyOf(d)] = { screen_secs: i === 0 ? 4 * 3600 + 1260 : screen, breaks_taken: i === 0 ? 11 : taken, breaks_skipped: Math.round(rnd() * 3), natural_breaks: Math.round(rnd() * 4), reminders_shown: 20, reminders_done: 12, longest_stretch_secs: 1500 + Math.round(rnd() * 900) };
+  }
+  // Older history: weekdays mostly good (getting better over the year), quiet weekends, a holiday gap.
+  let s2 = 11;
+  const r2 = () => ((s2 = (s2 * 9301 + 49297) % 233280) / 233280);
+  for (let i = 370; i >= 14; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    if (i > 140 && i < 152) continue; // a summer holiday
+    const weekend = d.getDay() === 0 || d.getDay() === 6;
+    if (weekend && r2() < 0.7) continue;
+    const screen = Math.round((weekend ? 1 + r2() : 5 + r2() * 3) * 3600);
+    const due = Math.floor(screen / 1200);
+    const rate = Math.min(1, 0.45 + (1 - i / 370) * 0.4 + r2() * 0.3);
+    const done = Math.round(due * rate);
+    const natural = Math.min(done, Math.round(r2() * 2));
+    stats.days[keyOf(d)] = { screen_secs: screen, breaks_taken: done - natural, breaks_skipped: Math.max(0, due - done - Math.round(r2() * 2)), natural_breaks: natural, reminders_shown: 18, reminders_done: 10, longest_stretch_secs: 1500 + Math.round(r2() * 1500) };
   }
 })();
 
@@ -376,6 +392,40 @@ const SCENES = {
     await sleep(1200);
   },
 
+  // Stats page: the weekly summary and streaks, then scroll down to the year heatmap and exports.
+  async stats() {
+    const f = settingsFrame;
+    await sleep(900);
+    await clickIn(f, '#nav a[data-page="stats"]', 700);
+    await sleep(1800);
+    const sc = f.contentDocument.querySelector("#page-stats")?.closest(".scroll") || f.contentDocument.querySelector(".content .scroll");
+    const target = f.contentDocument.querySelector("#heat");
+    if (sc && target) {
+      const to = target.getBoundingClientRect().top - sc.getBoundingClientRect().top + sc.scrollTop - 120;
+      const from = sc.scrollTop;
+      for (let t = 1; t <= 40; t++) {
+        sc.scrollTop = from + (to - from) * (1 - Math.pow(1 - t / 40, 3));
+        await sleep(30);
+      }
+      await sleep(600);
+      const cells = target.querySelectorAll("[title], [aria-label]");
+      const cell = cells[cells.length - 3];
+      const fr = f.getBoundingClientRect();
+      if (cell) {
+        const r = cell.getBoundingClientRect();
+        await moveCursor(fr.left + r.left + r.width / 2, fr.top + r.top + r.height / 2, 900);
+      }
+      await sleep(1400);
+      // point at the export buttons (no click: it would start a download)
+      const btn = f.contentDocument.querySelector("#exportCsv");
+      if (btn) {
+        const r = btn.getBoundingClientRect();
+        await moveCursor(fr.left + r.left + r.width / 2, fr.top + r.top + r.height / 2, 800);
+      }
+    }
+    await sleep(1500);
+  },
+
   async settingsLight() {
     const f = settingsFrame;
     cursorEl.classList.add("hidden");
@@ -387,7 +437,7 @@ const SCENES = {
 
 // Settings scenes: open the window before recording so frame 0 is fully rendered.
 let settingsFrame = null;
-if (scene === "settings" || scene === "settingsLight" || scene === "setup" || scene === "focus") {
+if (scene === "settings" || scene === "settingsLight" || scene === "setup" || scene === "focus" || scene === "stats") {
   if (scene !== "settingsLight") document.body.classList.add("dim");
   settingsFrame = openFrame("settings", "/app/index.html", { left: "310px", top: "130px", width: "980px", height: "690px" });
   settingsFrame.classList.add("settings");
