@@ -22,7 +22,7 @@
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
 
-  <a class="banner" href="https://github.com/RMoura98/yonder/releases/latest"><strong>Yonder 1.0.7 is out</strong> — guided eye exercises for long breaks, plus focus sessions and a tray popover — free and open source<span class="arrow" aria-hidden="true">→</span></a>
+  <a class="banner" href="https://github.com/RMoura98/yonder/releases/latest"><strong>Yonder 1.0.8 is out</strong> — streaks and a year heatmap in Stats, scripting with yonder:// links, and you decide what happens during games — free and open source<span class="arrow" aria-hidden="true">→</span></a>
 
   <!-- ============ NAV ============ -->
   <header class="nav">
@@ -73,7 +73,7 @@
         <p class="platform-links reveal d2" data-other-os>Available for <a href="https://github.com/RMoura98/yonder/releases/latest">Windows</a>, <a href="#install-snippet">macOS (Homebrew)</a> and <a href="https://github.com/RMoura98/yonder/releases/latest">Linux</a> — or build from source.</p>
 
         <div class="badges reveal d3" aria-label="Release info">
-          <span class="badge accent"><i class="dot"></i>v1.0.7</span>
+          <span class="badge accent"><i class="dot"></i>v1.0.8</span>
           <span class="badge">Windows 10+</span>
           <span class="badge">macOS 10.15+</span>
           <span class="badge">Linux</span>
@@ -262,6 +262,10 @@
             <figcaption><b>Guided exercises.</b> Optional routines for long breaks: blink, follow the dot, near and far, neck and shoulder stretches.</figcaption>
           </figure>
           <figure class="reel wide">
+            <video src="assets/media/stats.mp4" poster="assets/media/stats-poster.png" autoplay muted loop playsinline preload="metadata" aria-label="The Stats page: this week compared with last week, current and best streaks, then a year heatmap and the export buttons."></video>
+            <figcaption><b>Stats that motivate.</b> This week vs last, your streaks, a year at a glance, and CSV or Markdown export.</figcaption>
+          </figure>
+          <figure class="reel wide">
             <video src="assets/media/settings.mp4" poster="assets/media/settings-poster.png" autoplay muted loop playsinline preload="metadata" aria-label="A tour of the settings window."></video>
             <figcaption><b>Settings that feel native.</b> Every option in one calm window, light or dark.</figcaption>
           </figure>
@@ -320,7 +324,7 @@
           <h3>Automatically holds breaks during…</h3>
           <div class="holds-grid">
             <div class="hold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m23 7-7 5 7 5z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg><strong>Meetings &amp; calls</strong><span>Microphone or camera in use on Windows and macOS; active mic recording on Linux (PulseAudio/PipeWire).</span></div>
-            <div class="hold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg><strong>Fullscreen apps</strong><span>Games, presentations and fullscreen video. Windows and macOS for now.</span></div>
+            <div class="hold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg><strong>Fullscreen apps</strong><span>Games, presentations and fullscreen video, on Windows and macOS. You choose: wait, a quiet notification, show the break anyway, or skip it.</span></div>
             <div class="hold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg><strong>Focus apps you choose</strong><span>Matched by process name. Works on every platform.</span></div>
             <div class="hold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><strong>Do Not Disturb</strong><span>Windows Do not disturb, GNOME Do Not Disturb and KDE; macOS Focus when Yonder can read it.</span></div>
             <div class="hold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="12" cy="10" r="2"/></svg><strong>Sharing &amp; recording</strong><span>Screen recorders like OBS, mirrored displays, and PipeWire screen sharing on Linux.</span></div>
@@ -405,6 +409,8 @@
           <div class="extra reveal d1"><div class="icon sun"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><div><h4>Office hours &amp; planned breaks</h4><p>Set working hours per weekday, and plan around lunch or a daily walk.</p></div></div>
           <div class="extra reveal"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></div><div><h4>Pauses your music</h4><p>Optionally pause music and video when a break starts and resume them after: only what Yonder paused. Linux needs playerctl.</p></div></div>
           <div class="extra reveal d1"><div class="icon sun"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div><h4>Never stuck on hold</h4><p>If a call or a fullscreen app keeps smart pause on, the break still comes after an hour (or the limit you choose).</p></div></div>
+          <div class="extra reveal"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></div><div><h4>Streaks &amp; a year heatmap</h4><p>This week against last, your current and best streak, every day of the past year at a glance, and export to CSV or Markdown.</p></div></div>
+          <div class="extra reveal d1"><div class="icon sun"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M9 9h2v6M14 9h2v6"/></svg></div><div><h4>Countdown in the tray icon</h4><p>On Windows, see the minutes left right in the tray icon. Double-click it to open Settings.</p></div></div>
         </div>
       </div>
     </section>
@@ -415,7 +421,7 @@
         <div class="copy reveal">
           <span class="eyebrow">For power users</span>
           <h2>Automations</h2>
-          <p>Control Yonder from the keyboard, and hook it into the rest of your setup with a shell command that runs on every break.</p>
+          <p>Control Yonder from the keyboard or from your scripts with <code>yonder://</code> links and command-line options (<code>yonder --pause 30</code>, <code>yonder://break</code>), and hook it into the rest of your setup with a shell command that runs on every break. <a href="docs.html#scripting">See every command</a>.</p>
           <div class="kbd-list">
             <div class="kbd-row"><span>Take a break now</span><span class="keys"><kbd class="k">Ctrl</kbd><kbd class="k">Alt</kbd><kbd class="k">B</kbd></span></div>
             <div class="kbd-row"><span>Pause / resume</span><span class="keys"><kbd class="k">Ctrl</kbd><kbd class="k">Alt</kbd><kbd class="k">P</kbd></span></div>
@@ -467,7 +473,7 @@
               <tr><th scope="row">Split-screen break</th><td>Windows, macOS 10.15+</td><td>macOS 26 Tahoe and newer</td></tr>
               <tr><th scope="row">Own sounds, images, messages</th><td>Yes</td><td>Yes</td></tr>
               <tr><th scope="row">Custom reminders</th><td>Up to 5</td><td>Up to 5</td></tr>
-              <tr><th scope="row">Automation</th><td>Shell commands on every OS, global hotkeys</td><td>Shortcuts, AppleScript, Siri, Focus Filters</td></tr>
+              <tr><th scope="row">Automation</th><td><code>yonder://</code> links, command line, shell commands and global hotkeys, on every OS</td><td>Shortcuts, AppleScript, Siri, Focus Filters</td></tr>
               <tr><th scope="row">iPhone / iPad companion</th><td>No</td><td>Yes</td></tr>
               <tr><th scope="row">Signed &amp; notarized</th><td>Not yet</td><td>Yes</td></tr>
             </tbody>
@@ -513,6 +519,19 @@
           <h2>What's <em>new</em></h2>
         </div>
         <div class="changelog">
+          <article class="release reveal">
+            <div class="ver">v1.0.8<small>Stats</small></div>
+            <div>
+              <h3>Streaks, scripting and your call during games</h3>
+              <ul>
+                <li>Stats: this week vs last week, current and best streaks, a year heatmap, and CSV / Markdown export</li>
+                <li>Choose what happens when a break is due in a game or other fullscreen app: wait, a quiet notification, show it anyway, or skip</li>
+                <li>Script Yonder with <code>yonder://</code> links and command-line options: break, pause, resume, skip, focus and more</li>
+                <li>Windows: the minutes left can be drawn into the tray icon, and double-clicking it opens Settings</li>
+                <li>A small rotating log with an Open logs folder button, to make bug reports easier</li>
+              </ul>
+            </div>
+          </article>
           <article class="release reveal">
             <div class="ver">v1.0.7<small>Exercises</small></div>
             <div>

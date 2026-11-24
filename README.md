@@ -25,18 +25,20 @@ desktop into a calm break screen, and stays out of the way while you're in a cal
 - **Guided exercises (optional).** Long breaks can walk you through a calm routine sized to the break: slow blinks, a dot to follow, near and far focus, neck and shoulder stretches, palming. Off by default, respects reduced motion. Exercise ideas from Workrave and Safe Eyes.
 - **Your own sounds.** Fifteen built-in synthesized sounds, or add any MP3, WAV, OGG or M4A file and use it for breaks or for each reminder.
 - **Heads-up, never a surprise.** A frosted heads-up card before each break (start now, +1m, +5m, +15m), and a countdown that follows your cursor for the last five seconds.
-- **Waits for the right moment.** Won't start while you type; pauses for calls, screen sharing and recording, fullscreen apps, Do Not Disturb / Focus and the focus apps you choose, but never holds a break for more than an hour (you pick the limit); time away from the computer counts as a break.
-- **Tray popover.** Click the tray icon for a small card with a live countdown ring, today's screen time, breaks and score, and quick actions (take a break, pause, skip, settings). Right-click keeps the classic menu; on Linux, where many panels don't report tray clicks, the menu has a *Show status* entry instead.
-- **Icon-only tray.** Hide the countdown next to the tray icon in Settings → General (where your system shows one: macOS menu bar, some Linux panels).
+- **Waits for the right moment.** Won't start while you type; pauses for calls, screen sharing and recording, fullscreen apps, Do Not Disturb / Focus and the focus apps you choose, but never holds a break for more than an hour (you pick the limit); time away from the computer counts as a break. For games and other fullscreen apps you choose: wait, a quiet notification instead, show the break anyway, or skip it.
+- **Tray popover.** Click the tray icon for a small card with a live countdown ring, today's screen time, breaks and score, and quick actions (take a break, pause, skip, settings). Double-click opens Settings (Windows). Right-click keeps the classic menu; on Linux, where many panels don't report tray clicks, the menu has a *Show status* entry instead.
+- **Countdown in the tray.** On Windows, optionally draw the minutes left right into the tray icon; on macOS and some Linux panels the countdown sits next to the icon (or hide it for an icon-only tray).
 - **Pauses your music.** Optionally pauses music and video when a break starts and resumes only what it paused (system media controls on Windows, Music/Spotify on macOS, playerctl on Linux).
 - **Set up in three steps.** The first time you open Yonder: language, rhythm and break style. Skip it if you like.
 - **Posture & blink reminders.** Small liquid-glass widgets that appear, animate and disappear. Up to five custom reminders with their own icon, interval and sound.
 - **Focus sessions.** An optional Pomodoro mode (25 min focus, 5 min break, a long break after the fourth period, all adjustable) started from the tray or the Today page. It runs alongside your eye breaks and merges the two: an eye break that would land within a few minutes of a focus break is folded into it, so you are never interrupted twice in a row.
+- **Stats that motivate.** Today, this week vs last week, current and best streaks, a year heatmap of the days you took your breaks, and export to CSV, Markdown or JSON.
 - **Skip difficulty.** Casual, Balanced, Firm (hold Skip for 2 seconds) or Hardcore.
 - **Office hours & planned breaks.** Only remind during work hours; schedule lunch or a walk.
-- **Shortcuts & automation.** Global hotkeys and shell hooks on break start/end (`YONDER_EVENT`, `YONDER_BREAK_KIND`, `YONDER_BREAK_SECS`).
+- **Shortcuts & automation.** Global hotkeys, shell hooks on break start/end (`YONDER_EVENT`, `YONDER_BREAK_KIND`, `YONDER_BREAK_SECS`), and scripting with `yonder://` links or command-line options (`yonder --pause 30`, `yonder://break`, `--focus 25`…) from Shortcuts, AutoHotkey, cron or a Stream Deck.
 - **Languages.** English, Português, Español, Français, Deutsch, 简体中文 and 日本語, following your system language or picked in Settings → General. [Add yours](CONTRIBUTING.md#adding-a-translation).
 - **Remembers your countdown.** Restart Yonder (an update, a crash) within ten minutes and the countdown carries on; longer than that counts as a break.
+- **Logs when you need them.** A small rotating log (about 1 MB) with an *Open logs folder* button and an optional detailed mode, so bug reports come with evidence. It never records what you type or see.
 - **Back up your settings.** Export everything (settings, custom sounds, break background) to one file from Settings → About and import it on another computer.
 - **Private by design.** No account, no telemetry. Settings and stats stay on your machine; the only network request is an optional update check against GitHub Releases (toggle in Settings → About).
 - **Update notifications.** A tray entry and a banner in Settings when a new version is out, with Homebrew instructions on macOS. Skip a version or turn checks off anytime.
@@ -57,6 +59,9 @@ desktop into a calm break screen, and stays out of the way while you're in a cal
   </tr>
   <tr>
     <td colspan="2"><img src="media/exercises.gif" alt="A long break with guided exercises: a blinking eye, a dot to follow from side to side, then near and far focus." /><br/><sub><b>Guided exercises</b> (optional) during long breaks: blink, follow the dot, near and far, stretches.</sub></td>
+  </tr>
+  <tr>
+    <td colspan="2"><img src="media/stats.gif" alt="The Stats page: this week compared with last week, current and best streaks, then a year heatmap and the export buttons." /><br/><sub><b>Stats</b>: weekly summary, streaks, a year heatmap and CSV / Markdown export.</sub></td>
   </tr>
   <tr>
     <td colspan="2"><img src="media/settings.gif" alt="Settings window: Today, Screen Breaks with skip-difficulty cards, the Long breaks page and break-screen backgrounds." /><br/><sub><b>Settings</b> in light or dark, laid out like your system's own.</sub></td>
@@ -121,9 +126,9 @@ it's a great choice. Yonder is for everyone else: **every desktop, older Macs, f
 | Split-screen break | Windows and macOS 10.15+ | macOS 26 Tahoe and newer |
 | Your own sounds, images, gradients, messages | Yes | Yes |
 | Custom reminders | Up to 5 | Up to 5 |
-| Automation | Shell commands on break start/end, on every OS; global hotkeys | Shortcuts, AppleScript, Siri, Focus Filters |
+| Automation | `yonder://` links and command-line options, shell commands on break start/end, global hotkeys, on every OS | Shortcuts, AppleScript, Siri, Focus Filters |
 | Smart pause on macOS | Mic/camera in use (CoreAudio, CoreMediaIO), fullscreen, mirrored displays, known screen recorders and apps you choose | Camera/mic meetings, video, fullscreen, screen recording |
-| Stats | Screen time, breaks, daily history, JSON export | Includes app and website usage |
+| Stats | Screen time, breaks, weekly summary, streaks, year heatmap, CSV / Markdown / JSON export | Includes app and website usage |
 | iPhone / iPad companion | No | Yes |
 | Signed & notarized | Not yet ([#6](https://github.com/RMoura98/yonder/issues/6)) | Yes |
 
