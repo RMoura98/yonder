@@ -932,6 +932,11 @@ function renderState(s) {
     $("#homeCount").textContent = fmtClock(s.break.total_secs - s.break.elapsed_secs);
     $("#homeSub").textContent = t("of break left");
     ring.style.strokeDashoffset = String(326.7 * (s.break.elapsed_secs / s.break.total_secs));
+  } else if (s.phase === "smart" && left <= 0) {
+    // the break is due but held: the label below says what holds it and until when
+    $("#homeCount").textContent = t("Due");
+    $("#homeSub").textContent = t("break waiting");
+    ring.style.strokeDashoffset = "0";
   } else {
     $("#homeCount").textContent = fmtClock(left);
     $("#homeSub").textContent = t(s.next_is_long ? "until long break" : "until next break");

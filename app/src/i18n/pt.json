@@ -478,5 +478,12 @@
   "Yonder keeps a small log of what it does, about 1 MB at most. It holds app names and Yonder's own events, nothing you type or see. Attach it when you report a bug.": "O Yonder guarda um pequeno registo do que faz, com cerca de 1 MB no máximo. Contém nomes de aplicações e eventos do próprio Yonder, nada do que escreve ou vê. Anexe-o quando reportar um erro.",
   "Open logs folder": "Abrir pasta de registos",
   "Detailed logging": "Registo detalhado",
-  "Adds extra detail to the log. Turn it on when asked, or when you're chasing a bug.": "Acrescenta mais detalhe ao registo. Ative quando lhe pedirem, ou quando estiver a investigar um erro."
+  "Adds extra detail to the log. Turn it on when asked, or when you're chasing a bug.": "Acrescenta mais detalhe ao registo. Ative quando lhe pedirem, ou quando estiver a investigar um erro.",
+  "Break due — waiting while {reason}.": "Pausa pendente — à espera: {reason}.",
+  "It starts {t} after that.": "Começa {t} depois disso.",
+  "It starts right after.": "Começa logo a seguir.",
+  "At the latest in {t}.": "No máximo dentro de {t}.",
+  "Break in {t} — the hold is over": "Pausa dentro de {t} — a espera terminou",
+  "Due": "Agora",
+  "break waiting": "pausa em espera"
 }

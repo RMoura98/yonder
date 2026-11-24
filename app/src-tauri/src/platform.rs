@@ -537,6 +537,25 @@ pub fn fullscreen_app_active(_scanner: &mut ProcessScanner) -> bool {
 /// True while the microphone or camera is being used by any app.
 #[cfg(windows)]
 pub fn mic_or_camera_in_use() -> bool {
+    mic_or_camera_user().is_some()
+}
+
+/// The app using the microphone or camera, when the system says which one.
+#[cfg(windows)]
+pub fn mic_or_camera_app() -> Option<String> {
+    mic_or_camera_user().filter(|n| !n.is_empty())
+}
+
+#[cfg(not(windows))]
+pub fn mic_or_camera_app() -> Option<String> {
+    None
+}
+
+/// Windows records mic/camera use per app in the privacy consent store; an entry
+/// with a start time and no stop time is in use right now. Returns its app name
+/// (empty when it can't be told).
+#[cfg(windows)]
+fn mic_or_camera_user() -> Option<String> {
     use winreg::enums::HKEY_CURRENT_USER;
     use winreg::RegKey;
 
@@ -546,27 +565,57 @@ pub fn mic_or_camera_in_use() -> bool {
         start > 0 && stop == 0
     }
 
-    fn scan(key: &RegKey, depth: u8) -> bool {
+    fn scan(key: &RegKey, depth: u8) -> Option<String> {
         for name in key.enum_keys().flatten() {
             if let Ok(sub) = key.open_subkey(&name) {
                 if key_in_use(&sub) {
-                    return true;
+                    return Some(consent_app_name(&name));
                 }
-                if depth > 0 && name == "NonPackaged" && scan(&sub, depth - 1) {
-                    return true;
+                if depth > 0 && name == "NonPackaged" {
+                    if let Some(n) = scan(&sub, depth - 1) {
+                        return Some(n);
+                    }
                 }
             }
         }
-        false
+        None
     }
 
     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
     let base = r"Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore";
-    ["microphone", "webcam"].iter().any(|cap| {
-        hkcu.open_subkey(format!(r"{base}\{cap}"))
-            .map(|k| scan(&k, 1))
-            .unwrap_or(false)
+    ["microphone", "webcam"].iter().find_map(|cap| {
+        hkcu.open_subkey(format!(r"{base}\{cap}")).ok().and_then(|k| scan(&k, 1))
     })
+}
+
+/// A readable app name from a consent-store key: a desktop app's path with `#` for
+/// `\` ("C:#Users#me#AppData#Local#Discord#app-1.0#Discord.exe" → "Discord"), or a
+/// Store app's package family ("Microsoft.SkypeApp_kzf8qxf38zg5c" → "SkypeApp").
+#[cfg_attr(not(windows), allow(dead_code))]
+fn consent_app_name(key: &str) -> String {
+    if key.contains('#') {
+        let file = key.rsplit('#').next().unwrap_or(key);
+        let stem = file.strip_suffix(".exe").or_else(|| file.strip_suffix(".EXE")).unwrap_or(file);
+        return stem.to_string();
+    }
+    let family = key.split('_').next().unwrap_or(key);
+    family.rsplit('.').next().unwrap_or(family).to_string()
+}
+
+/// The name of the app whose window is in front ("Enshrouded"), for messages.
+#[cfg(windows)]
+pub fn foreground_app_name(scanner: &mut ProcessScanner) -> Option<String> {
+    use windows_sys::Win32::UI::WindowsAndMessaging::{GetForegroundWindow, GetWindowThreadProcessId};
+    let mut pid = 0u32;
+    unsafe { GetWindowThreadProcessId(GetForegroundWindow(), &mut pid) };
+    let exe = scanner.exe_of(pid)?;
+    let stem = std::path::Path::new(&exe).file_stem()?.to_string_lossy().into_owned();
+    (!stem.is_empty()).then_some(stem)
+}
+
+#[cfg(not(windows))]
+pub fn foreground_app_name(_scanner: &mut ProcessScanner) -> Option<String> {
+    None
 }
 
 #[cfg(target_os = "macos")]
@@ -1082,6 +1131,15 @@ mod tests {
         assert!(super::pipewire_screencast(yes));
         assert!(!super::pipewire_screencast(cam));
         assert!(!super::pipewire_screencast("not json"));
+    }
+
+    #[test]
+    fn consent_store_keys_become_app_names() {
+        use super::consent_app_name;
+        assert_eq!(consent_app_name(r"C:#Users#me#AppData#Local#Discord#app-1.0.9269#Discord.exe"), "Discord");
+        assert_eq!(consent_app_name(r"C:#Program Files#Zoom#bin#Zoom.EXE"), "Zoom");
+        assert_eq!(consent_app_name("Microsoft.SkypeApp_kzf8qxf38zg5c"), "SkypeApp");
+        assert_eq!(consent_app_name("MSTeams_8wekyb3d8bbwe"), "MSTeams");
     }
 
     #[test]

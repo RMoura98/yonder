@@ -112,6 +112,9 @@ pub struct Engine {
     pub brk: Option<BreakInfo>,
     pub smart_reason: Option<String>,
     pub smart_hold_until: i64,
+    /// The smart-pause reason was seen on the last tick (false while only the
+    /// cool-down after it keeps breaks held).
+    pub smart_live: bool,
     /// The current smart-pause reason is a fullscreen app (and nothing else), so the
     /// "when a break is due during fullscreen" choice applies. Set by the ticker.
     pub smart_fullscreen: bool,
@@ -340,10 +343,7 @@ impl Core {
             },
             "offhours" => tr("Outside office hours", &[]),
             // the reason is already translated where it's detected (lib.rs)
-            "smart" => tr(
-                "Holding breaks — {reason}",
-                &[("reason", &self.e.smart_reason.clone().unwrap_or_default())],
-            ),
+            "smart" => self.hold_label(next_in, &tr),
             "away" => tr("You're away — timer on hold", &[]),
             _ => {
                 if next_in <= 0 {
@@ -379,6 +379,39 @@ impl Core {
             focus,
             holding: phase == "working" && next_in <= 0 && self.e.typing_wait > 0,
         }
+    }
+
+    /// What smart pause is doing, in words: what holds the break and, once the break is
+    /// due, when it will start (after the cool-down, or at the hold limit at the latest).
+    fn hold_label(&self, next_in: i64, tr: &dyn Fn(&str, &[(&str, &str)]) -> String) -> String {
+        let reason = self.e.smart_reason.clone().unwrap_or_default();
+        let now = now_epoch();
+        if !self.e.smart_live {
+            // the activity ended; only the cool-down is left
+            let left = (self.e.smart_hold_until - now).max(0) as u64;
+            return if next_in <= 0 {
+                tr("Break in {t} — the hold is over", &[("t", &fmt_wait(left, tr))])
+            } else {
+                tr("Holding breaks — {reason}", &[("reason", &reason)])
+            };
+        }
+        if next_in > 0 {
+            return tr("Holding breaks — {reason}", &[("reason", &reason)]);
+        }
+        let mut label = tr("Break due — waiting while {reason}.", &[("reason", &reason)]);
+        let cd = self.settings.smart.cooldown_secs as u64;
+        label.push(' ');
+        label.push_str(&if cd > 0 {
+            tr("It starts {t} after that.", &[("t", &fmt_wait(cd, tr))])
+        } else {
+            tr("It starts right after.", &[])
+        });
+        let max = self.settings.smart.max_hold_mins as u64 * 60;
+        if max > 0 && self.e.held_secs < max {
+            label.push(' ');
+            label.push_str(&tr("At the latest in {t}.", &[("t", &fmt_wait(max - self.e.held_secs, tr))]));
+        }
+        label
     }
 
     /// (can_skip, seconds until skip unlocks, can_end_early)
@@ -417,11 +450,15 @@ impl Core {
         match smart {
             Some(r) => {
                 self.e.smart_reason = Some(r);
+                self.e.smart_live = true;
                 self.e.smart_hold_until = now + self.settings.smart.cooldown_secs as i64;
             }
-            None if now < self.e.smart_hold_until && self.e.smart_reason.is_some() => {}
+            None if now < self.e.smart_hold_until && self.e.smart_reason.is_some() => {
+                self.e.smart_live = false;
+            }
             None => {
                 self.e.smart_reason = None;
+                self.e.smart_live = false;
                 if !self.e.hold_overdue {
                     self.e.held_secs = 0;
                 }
@@ -967,6 +1004,20 @@ impl Core {
 
 pub fn now_epoch() -> i64 {
     chrono::Utc::now().timestamp()
+}
+
+/// A wait in words: "45 seconds", "1 minute", "12 minutes" (rounded up).
+fn fmt_wait(secs: u64, tr: &dyn Fn(&str, &[(&str, &str)]) -> String) -> String {
+    if secs < 60 {
+        tr("{n} seconds", &[("n", &secs.to_string())])
+    } else {
+        let m = secs.div_ceil(60);
+        if m == 1 {
+            tr("1 minute", &[])
+        } else {
+            tr("{n} minutes", &[("n", &m.to_string())])
+        }
+    }
 }
 
 pub fn fmt_dur(secs: u64) -> String {

@@ -478,5 +478,12 @@
   "Yonder keeps a small log of what it does, about 1 MB at most. It holds app names and Yonder's own events, nothing you type or see. Attach it when you report a bug.": "Yonder は自身の動作を記録する小さなログを保存します（最大約 1 MB）。含まれるのはアプリ名と Yonder 自身のイベントのみで、入力内容や画面の内容は記録されません。不具合を報告するときに添付してください。",
   "Open logs folder": "ログフォルダーを開く",
   "Detailed logging": "詳細ログ",
-  "Adds extra detail to the log. Turn it on when asked, or when you're chasing a bug.": "ログにより詳しい情報を追加します。求められたとき、または不具合を調べるときにオンにしてください。"
+  "Adds extra detail to the log. Turn it on when asked, or when you're chasing a bug.": "ログにより詳しい情報を追加します。求められたとき、または不具合を調べるときにオンにしてください。",
+  "Break due — waiting while {reason}.": "休憩の時間です — 待機中：{reason}。",
+  "It starts {t} after that.": "終わってから{t}後に始まります。",
+  "It starts right after.": "終わるとすぐに始まります。",
+  "At the latest in {t}.": "遅くとも{t}後に始まります。",
+  "Break in {t} — the hold is over": "{t}後に休憩 — 保留は終了しました",
+  "Due": "時間",
+  "break waiting": "休憩待ち"
 }

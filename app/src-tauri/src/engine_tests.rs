@@ -491,6 +491,41 @@ fn smart_pause_waits_for_cooldown_after_reason_clears() {
 }
 
 #[test]
+fn held_break_label_says_what_holds_it_and_when_it_starts() {
+    let mut s = test_settings();
+    s.language = "en".into();
+    s.smart.cooldown_secs = 60;
+    s.smart.max_hold_mins = 60;
+    let mut c = core(s);
+    // not due yet: the plain hold label
+    c.tick(0, Some("you're in a call (Discord)".into()));
+    assert_eq!(c.snapshot().label, "Holding breaks — you're in a call (Discord)");
+    tick_n(&mut c, 58, 0);
+    // due and held
+    c.tick(0, Some("you're in a call (Discord)".into()));
+    let l = c.snapshot().label;
+    assert!(l.starts_with("Break due — waiting while you're in a call (Discord)."), "{l}");
+    assert!(l.contains("It starts 1 minute after that."), "{l}");
+    assert!(l.contains("At the latest in 60 minutes."), "{l}");
+    // the call ended: only the cool-down is left
+    c.tick(0, None);
+    let l = c.snapshot().label;
+    assert!(l.starts_with("Break in ") && l.ends_with("the hold is over"), "{l}");
+}
+
+#[test]
+fn held_break_label_without_cooldown_or_limit() {
+    let mut s = test_settings();
+    s.language = "en".into();
+    s.smart.cooldown_secs = 0;
+    s.smart.max_hold_mins = 0;
+    let mut c = core(s);
+    tick_n(&mut c, 59, 0);
+    c.tick(0, Some("Steam is open".into()));
+    assert_eq!(c.snapshot().label, "Break due — waiting while Steam is open. It starts right after.");
+}
+
+#[test]
 fn smart_pause_with_zero_cooldown_releases_immediately() {
     let mut s = test_settings();
     s.smart.cooldown_secs = 0;

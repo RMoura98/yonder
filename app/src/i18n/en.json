@@ -478,5 +478,12 @@
   "Yonder keeps a small log of what it does, about 1 MB at most. It holds app names and Yonder's own events, nothing you type or see. Attach it when you report a bug.": "Yonder keeps a small log of what it does, about 1 MB at most. It holds app names and Yonder's own events, nothing you type or see. Attach it when you report a bug.",
   "Open logs folder": "Open logs folder",
   "Detailed logging": "Detailed logging",
-  "Adds extra detail to the log. Turn it on when asked, or when you're chasing a bug.": "Adds extra detail to the log. Turn it on when asked, or when you're chasing a bug."
+  "Adds extra detail to the log. Turn it on when asked, or when you're chasing a bug.": "Adds extra detail to the log. Turn it on when asked, or when you're chasing a bug.",
+  "Break due — waiting while {reason}.": "Break due — waiting while {reason}.",
+  "It starts {t} after that.": "It starts {t} after that.",
+  "It starts right after.": "It starts right after.",
+  "At the latest in {t}.": "At the latest in {t}.",
+  "Break in {t} — the hold is over": "Break in {t} — the hold is over",
+  "Due": "Due",
+  "break waiting": "break waiting"
 }

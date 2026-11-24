@@ -478,5 +478,12 @@
   "Yonder keeps a small log of what it does, about 1 MB at most. It holds app names and Yonder's own events, nothing you type or see. Attach it when you report a bug.": "Yonder conserve un petit journal de ce qu'il fait, 1 Mo au maximum. Il contient des noms d'applications et les événements de Yonder, rien de ce que vous tapez ou voyez. Joignez-le quand vous signalez un bug.",
   "Open logs folder": "Ouvrir le dossier des journaux",
   "Detailed logging": "Journalisation détaillée",
-  "Adds extra detail to the log. Turn it on when asked, or when you're chasing a bug.": "Ajoute plus de détails au journal. Activez-la quand on vous le demande, ou quand vous cherchez un bug."
+  "Adds extra detail to the log. Turn it on when asked, or when you're chasing a bug.": "Ajoute plus de détails au journal. Activez-la quand on vous le demande, ou quand vous cherchez un bug.",
+  "Break due — waiting while {reason}.": "Pause due — en attente : {reason}.",
+  "It starts {t} after that.": "Elle commencera {t} après.",
+  "It starts right after.": "Elle commencera juste après.",
+  "At the latest in {t}.": "Au plus tard dans {t}.",
+  "Break in {t} — the hold is over": "Pause dans {t} — l'attente est terminée",
+  "Due": "Prête",
+  "break waiting": "pause en attente"
 }

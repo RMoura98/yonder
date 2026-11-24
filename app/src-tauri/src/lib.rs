@@ -1211,19 +1211,19 @@ impl SmartHold {
         SmartHold { key, app: None }
     }
 
+    /// The reason as shown to the user, naming the app that holds the break when known:
+    /// "you're in a call (Discord)".
     fn text(&self, lang: &str) -> String {
         match &self.app {
-            Some(a) => i18n::tr(lang, self.key, &[("app", a)]),
+            Some(a) if self.key == "{app} is open" => i18n::tr(lang, self.key, &[("app", a)]),
+            Some(a) => format!("{} ({a})", i18n::tr(lang, self.key, &[])),
             None => i18n::tr(lang, self.key, &[]),
         }
     }
 
     /// English description for the log, including the app name.
     fn log_text(&self) -> String {
-        match &self.app {
-            Some(a) if self.key != "{app} is open" => format!("{} [{a}]", self.text("en")),
-            _ => self.text("en"),
-        }
+        self.text("en")
     }
 }
 
@@ -1237,11 +1237,11 @@ fn smart_reason(s: &Settings, scanner: &mut platform::ProcessScanner, frame: u64
     }
     let mut reason = None;
     if s.smart.meetings && platform::mic_or_camera_in_use() {
-        reason = Some(SmartHold::new("you're in a call"));
+        reason = Some(SmartHold { key: "you're in a call", app: platform::mic_or_camera_app() });
     }
     let mut fullscreen = false;
     if reason.is_none() && s.smart.fullscreen && platform::fullscreen_app_active(scanner) {
-        reason = Some(SmartHold::new("a fullscreen app is running"));
+        reason = Some(SmartHold { key: "a fullscreen app is running", app: platform::foreground_app_name(scanner) });
         fullscreen = true;
     }
     // A fullscreen app together with any other reason (DND, sharing, a focus app) keeps holding.

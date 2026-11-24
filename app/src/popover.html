@@ -137,6 +137,11 @@
         count.textContent = fmtClock(s.break.total_secs - s.break.elapsed_secs);
         $("#sub").textContent = t("of break left");
         $("#prog").style.strokeDashoffset = String(326.7 * (s.break.elapsed_secs / s.break.total_secs));
+      } else if (s.phase === "smart" && s.next_break_in <= 0) {
+        // the break is due but held: the label says what holds it and until when
+        count.textContent = t("Due");
+        $("#sub").textContent = t("break waiting");
+        $("#prog").style.strokeDashoffset = "0";
       } else {
         count.textContent = paused ? t("Paused") : fmtClock(Math.max(0, s.next_break_in));
         $("#sub").textContent = paused ? "" : t(s.next_is_long ? "until long break" : "until next break");
