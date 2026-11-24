@@ -66,8 +66,10 @@
           <li><a href="#wellness">Wellness &amp; custom reminders</a></li>
           <li><a href="#break-styles">Break screen styles</a></li>
           <li><a href="#shortcuts">Keyboard shortcuts</a></li>
+          <li><a href="#scripting">Scripting &amp; automation</a></li>
           <li><a href="#stats">Stats</a></li>
           <li><a href="#restarts">Restarts &amp; backups</a></li>
+          <li><a href="#logs">Logs &amp; troubleshooting</a></li>
         </ul>
         <h4>Develop</h4>
         <ul>
@@ -279,6 +281,56 @@ fi</code></pre>
         <div class="callout warm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg><div>Commands run with your user's permissions. Only add commands you understand.</div></div>
       </section>
 
+      <section class="doc-section" id="scripting">
+        <h2>Scripting &amp; automation</h2>
+        <p>You can control a running Yonder from a script, a launcher, a macro tool or another app, in two ways that do the same thing: <strong><code>yonder://</code> links</strong> and <strong>command-line options</strong>. If Yonder isn't running yet, it starts and then carries out the command.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>What it does</th><th>Command line</th><th>Link</th></tr></thead>
+            <tbody>
+              <tr><td>Start a break now (optional length in minutes, 1 to 120)</td><td><code>--break</code> or <code>--break 5</code></td><td><code>yonder://break</code> or <code>yonder://break/5</code></td></tr>
+              <tr><td>End or skip the break in progress (honors your <a href="#skip-difficulty">skip difficulty</a>)</td><td><code>--end-break</code></td><td><code>yonder://end-break</code></td></tr>
+              <tr><td>Skip the next break</td><td><code>--skip</code></td><td><code>yonder://skip</code></td></tr>
+              <tr><td>Postpone the next break (minutes, 1 to 120, default 5)</td><td><code>--snooze 10</code> (or <code>--postpone</code>)</td><td><code>yonder://snooze/10</code></td></tr>
+              <tr><td>Pause reminders for some minutes (1 to 1440), or until resumed if no number is given</td><td><code>--pause 30</code> or <code>--pause</code></td><td><code>yonder://pause/30</code> or <code>yonder://pause</code></td></tr>
+              <tr><td>Pause until tomorrow</td><td><code>--pause-tomorrow</code></td><td><code>yonder://pause-tomorrow</code></td></tr>
+              <tr><td>Resume reminders</td><td><code>--resume</code></td><td><code>yonder://resume</code></td></tr>
+              <tr><td>Pause if running, resume if paused</td><td><code>--toggle-pause</code></td><td><code>yonder://toggle-pause</code></td></tr>
+              <tr><td>Start a <a href="#focus-sessions">focus session</a> (optional work length in minutes, 1 to 240, for this session only)</td><td><code>--focus</code> or <code>--focus 50</code></td><td><code>yonder://focus</code> or <code>yonder://focus/50</code></td></tr>
+              <tr><td>Stop the focus session</td><td><code>--focus-stop</code></td><td><code>yonder://focus-stop</code></td></tr>
+              <tr><td>Start or stop the focus session</td><td><code>--focus-toggle</code></td><td><code>yonder://focus-toggle</code></td></tr>
+              <tr><td>Restart the countdown to the next break</td><td><code>--reset</code></td><td><code>yonder://reset</code></td></tr>
+              <tr><td>Open Settings</td><td><code>--settings</code></td><td><code>yonder://settings</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Links also accept the number as a query, such as <code>yonder://pause?minutes=30</code>. Options can be combined (<code>--pause 30 --verbose</code>) and <code>--pause=30</code> works too. Anything unknown or out of range, such as <code>--pause 0</code> or a typo, is ignored and noted in the <a href="#logs">log</a>; it never opens a window. Starting Yonder with a command, or with <code>--background</code>, doesn't open Settings. Yonder can't be quit or locked this way, and links can't change your settings.</p>
+        <h3>Windows</h3>
+        <p>Yonder is a windowed app, so it prints nothing to the terminal; it just acts. The installer puts it in <code>%LOCALAPPDATA%\Yonder</code>.</p>
+<pre><code># PowerShell or Command Prompt
+start yonder://pause/60
+&amp; "$env:LOCALAPPDATA\Yonder\yonder.exe" --break
+
+; AutoHotkey v2: Win+Shift+P pauses for an hour
+#+p::Run "yonder://pause/60"</code></pre>
+        <p>The links work after installing with the <code>.exe</code> installer, which registers the <code>yonder://</code> scheme for your account. The portable zip can't register it, so use the command-line options there (they work everywhere).</p>
+        <h3>macOS</h3>
+<pre><code># Terminal, Raycast, Alfred, Hammerspoon ...
+open "yonder://pause/60"
+/Applications/Yonder.app/Contents/MacOS/yonder --break</code></pre>
+        <p>In the Shortcuts app, add an <em>Open URLs</em> action with <code>yonder://break</code>, then run it from the menu bar, a keyboard shortcut or an automation (for example, pause when a Focus turns on). Use the executable path above rather than <code>open -a Yonder --args</code>, which is ignored when Yonder is already running. macOS learns about the link scheme the first time Yonder is opened from the Applications folder.</p>
+        <h3>Linux</h3>
+<pre><code>yonder --pause 30
+xdg-open "yonder://break/5"
+./Yonder_x.y.z_amd64.AppImage --skip
+
+# cron: pause during your Monday stand-up, resume after
+0 10 * * 1 DISPLAY=:0 yonder --pause 30
+30 10 * * 1 DISPLAY=:0 yonder --resume</code></pre>
+        <p>The <code>.deb</code> and <code>.rpm</code> packages register the <code>yonder://</code> scheme and put <code>yonder</code> on your PATH. An AppImage registers the scheme for itself the first time it runs (run it again if you move the file). Scripts started from cron or systemd need <code>DISPLAY</code> (X11) or <code>WAYLAND_DISPLAY</code> and <code>DBUS_SESSION_BUS_ADDRESS</code> set to reach the running instance.</p>
+        <div class="callout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><div>Any web page can offer a <code>yonder://</code> link, and your browser asks before opening it. That's why only break and timer controls are available through links: the worst a stray link can do is start or skip a break.</div></div>
+      </section>
+
       <section class="doc-section" id="stats">
         <h2>Stats</h2>
         <p>The Stats view shows today's screen score, a 14-day chart, a weekly summary, your streaks and a heatmap of the past year. It's meant as a gentle mirror, not a scoreboard.</p>
@@ -298,6 +350,26 @@ fi</code></pre>
         <p>Yonder saves a small snapshot of your countdown (time worked, snoozes, the short-break count, a pause and the reminder timers) about once a minute and when you quit. If you restart it within 10 minutes, for an update or a crash, the countdown carries on from where it was; the time it was closed counts as time away, so if that was as long as your <em>reset after being idle</em> setting it counts as a natural break and the countdown starts again. An older snapshot is ignored, and a break that was in progress is never resumed. The snapshot is <code>state.json</code> in the app data folder, next to <code>stats.json</code>.</p>
         <h3>Back up and restore settings</h3>
         <p>Open <em>Settings → About → Backup</em>. <strong>Export settings…</strong> downloads a <code>.yonder.json</code> file with all your settings, your custom sounds and your break background image. <strong>Import settings…</strong> reads such a file, checks it, and after a second click replaces your current settings. Stats are not included. Importing on a new computer restores everything, but note that a backup made by a newer Yonder can't be read by an older one.</p>
+      </section>
+
+      <section class="doc-section" id="logs">
+        <h2>Logs &amp; troubleshooting</h2>
+        <p>Yonder always keeps a small log file that helps explain what happened when something misbehaves. It records start-up (version, operating system, language), settings that couldn't be read, why smart pause kicked in (fullscreen, a call, Do Not Disturb, screen sharing, and the name of the app responsible), breaks starting, ending, skipped or postponed, update checks, scripting commands, and failures to detect something on your system. It never records what you type, window titles, files or anything on your screen; at most it names an app or process. Nothing is sent anywhere.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>System</th><th>Log folder</th></tr></thead>
+            <tbody>
+              <tr><td>Windows</td><td><code>%LOCALAPPDATA%\app.yonder.desktop\logs</code></td></tr>
+              <tr><td>macOS</td><td><code>~/Library/Logs/app.yonder.desktop</code></td></tr>
+              <tr><td>Linux</td><td><code>~/.local/share/app.yonder.desktop/logs</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Open it from <em>Settings → About → Troubleshooting → Open logs folder</em>. The current file is <code>yonder.log</code>; when it reaches about 350 KB it becomes <code>yonder.1.log</code>, then <code>yonder.2.log</code>, and the oldest is deleted, so the logs stay near 1 MB in total.</p>
+        <h3>More detail</h3>
+        <p>By default Yonder logs at <em>info</em> level. For a bug that's hard to pin down, turn on <strong>Detailed logging</strong> in <em>Settings → About → Troubleshooting</em>, or start Yonder with <code>--verbose</code>, then reproduce the problem. That adds the checks behind each decision, such as which smart-pause detectors ran. Turn it off afterwards; it only makes the file rotate faster.</p>
+        <h3>Reporting a bug</h3>
+        <p>Please attach <code>yonder.log</code> (and <code>yonder.1.log</code> if the problem is older) to your <a href="https://github.com/RMoura98/yonder/issues/new/choose">GitHub issue</a>. It's plain text, so skim it first if you like; there's nothing in it you'd need to remove.</p>
       </section>
 
       <section class="doc-section" id="building">
