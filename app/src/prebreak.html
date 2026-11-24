@@ -97,6 +97,17 @@
     // Expand/collapse by animating the card's real size (FLIP). The window grows
     // before an expansion and shrinks after a collapse, so nothing clips or jumps.
     let anim;
+    // The text can change while the card is open (a longer message, "Waiting for a pause
+    // in your typing…"); grow or shrink the window with it so nothing gets cut off.
+    // During an expand/collapse animation the window is fitted by mini() instead.
+    let lastW = 0, lastH = 0;
+    new ResizeObserver(() => {
+      if (anim && anim.playState === "running") return;
+      const r = card.getBoundingClientRect();
+      if (Math.abs(r.width - lastW) < 1 && Math.abs(r.height - lastH) < 1) return;
+      lastW = r.width; lastH = r.height;
+      fitTo(r);
+    }).observe(card);
     const mini = (on) => {
       if (card.classList.contains("mini") === on) return;
       anim?.cancel();
