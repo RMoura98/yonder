@@ -281,8 +281,15 @@ fi</code></pre>
 
       <section class="doc-section" id="stats">
         <h2>Stats</h2>
-        <p>The Stats view shows breaks taken, skipped and snoozed per day and week, plus your current streak of days with most breaks taken. It's meant as a gentle mirror, not a scoreboard.</p>
-        <p>Stats are stored only on your machine. Open <em>Settings → Stats</em> and use <strong>Export JSON</strong> to save a copy, or <strong>Reset</strong> to start fresh.</p>
+        <p>The Stats view shows today's screen score, a 14-day chart, a weekly summary, your streaks and a heatmap of the past year. It's meant as a gentle mirror, not a scoreboard.</p>
+        <h3>Weekly summary</h3>
+        <p><em>This week</em> compares the last 7 days with the 7 before: breaks taken, breaks skipped, screen time and <strong>adherence</strong>, the share of due breaks you took (natural breaks count as taken). Breaks that were due are estimated from your screen time and your current work interval, the same way the screen score is.</p>
+        <h3>Streaks</h3>
+        <p>A <strong>good day</strong> is a day where you took at least 80% of the breaks that were due. The <em>current streak</em> counts good days in a row up to today, and the <em>best streak</em> is the longest run Yonder has recorded. Days with no screen time (a weekend, a holiday) don't break a streak, and neither does today until it's over.</p>
+        <h3>Past year heatmap</h3>
+        <p>One square per day for the last 52 weeks, weeks running Monday to Sunday. Darker means a higher share of due breaks taken; an empty square is a day with no screen time. Hover a square for the date, breaks taken and skipped, and adherence. Month and weekday names follow the app language.</p>
+        <h3>Export and reset</h3>
+        <p>Stats are stored only on your machine, about a year of daily history in <code>stats.json</code>. Open <em>Settings → Stats</em> and use <strong>Export CSV</strong> (one row per day, ISO dates and seconds, for spreadsheets), <strong>Export Markdown</strong> (a readable journal table, newest first, in your language) or <strong>Export JSON</strong> (the raw file) to save a copy, or <strong>Reset</strong> to start fresh.</p>
       </section>
 
       <section class="doc-section" id="restarts">
