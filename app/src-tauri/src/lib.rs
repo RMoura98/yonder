@@ -1,5 +1,7 @@
+mod cli;
 mod engine;
 mod i18n;
+mod logger;
 mod media;
 mod platform;
 mod settings;
@@ -7,6 +9,7 @@ mod stats;
 mod updates;
 
 use engine::{Core, Effect, Snapshot};
+use logger::{log_debug, log_info, log_warn};
 use updates::UpdateInfo;
 use settings::{Reminder, Settings};
 use stats::Stats;
@@ -21,6 +24,7 @@ use tauri::menu::{IsMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, WebviewUrl, WebviewWindow, WebviewWindowBuilder, Wry};
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
+use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 use tauri_plugin_notification::NotificationExt;
 
@@ -62,6 +66,10 @@ struct AppState {
     popover_anchor: Mutex<Option<(f64, f64, f64, f64)>>,
     /// When the popover last closed, so the tray click that blurred it doesn't reopen it.
     popover_closed: Mutex<Option<Instant>>,
+    /// The last yonder:// link handled, to drop the duplicate some platforms deliver.
+    last_link: Mutex<Option<(String, Instant)>>,
+    /// Folder holding the log files.
+    log_dir: PathBuf,
 }
 
 fn state(app: &AppHandle) -> tauri::State<'_, AppState> {
@@ -336,7 +344,10 @@ fn start_break_windows(app: &AppHandle) {
     if state(app).core.lock().unwrap().settings.break_style == "notify" {
         return notify_break(app);
     }
-    let Ok(monitors) = app.available_monitors() else { return };
+    let monitors = match app.available_monitors() {
+        Ok(m) => m,
+        Err(e) => return log_warn!("couldn't list monitors for the break: {e}"),
+    };
     let needs_shot = {
         let st = state(app);
         let s = &st.core.lock().unwrap().settings;
@@ -440,12 +451,22 @@ fn show_reminders(app: &AppHandle, list: Vec<Reminder>) {
 fn apply(app: &AppHandle, fx: Vec<Effect>) {
     for f in fx {
         match f {
-            Effect::ShowPrebreak => show_prebreak(app),
+            Effect::ShowPrebreak => {
+                log_debug!("heads-up shown");
+                show_prebreak(app)
+            }
             Effect::HidePrebreak => {
                 close_window(app, "prebreak");
                 close_window(app, "cursor");
             }
             Effect::StartBreak => {
+                {
+                    let st = state(app);
+                    let c = st.core.lock().unwrap();
+                    if let Some(b) = &c.e.brk {
+                        log_info!("break started: {} ({}s, style {})", b.kind, b.total_secs, c.settings.break_style);
+                    }
+                }
                 close_window(app, "cursor");
                 if state(app).core.lock().unwrap().settings.pause_media {
                     media::pause_playing();
@@ -453,6 +474,7 @@ fn apply(app: &AppHandle, fx: Vec<Effect>) {
                 start_break_windows(app)
             }
             Effect::EndBreak { delay_ms } => {
+                log_info!("break ended");
                 // Resume only what we paused, even if the setting was turned off mid-break.
                 media::resume_paused();
                 end_break_windows(app, delay_ms)
@@ -566,11 +588,15 @@ fn register_shortcuts(app: &AppHandle) {
         if accel.trim().is_empty() {
             return;
         }
-        let _ = gs.on_shortcut(accel.trim(), move |app, _s, ev| {
+        let res = gs.on_shortcut(accel.trim(), move |app, _s, ev| {
             if ev.state == ShortcutState::Pressed {
+                log_debug!("shortcut pressed: {action}");
                 run_action(app, action, None);
             }
         });
+        if let Err(e) = res {
+            log_warn!("couldn't register shortcut '{}' for {action}: {e}", accel.trim());
+        }
     };
     bind(&sc.take_break, "take_break");
     bind(&sc.toggle_pause, "toggle_pause");
@@ -582,13 +608,17 @@ fn register_shortcuts(app: &AppHandle) {
 
 fn run_action(app: &AppHandle, name: &str, arg: Option<i64>) {
     match name {
+        "reminder_done" | "open_settings" | "test_prebreak" | "test_reminder" => log_debug!("action: {name}"),
+        _ => log_info!("action: {name}{}", arg.map(|a| format!(" {a}")).unwrap_or_default()),
+    }
+    match name {
         "take_break" => with_core(app, |c| c.take_break_now(arg.map(|a| a as u32))),
         "skip" => with_core(app, |c| c.skip_next()),
         "skip_held" => with_core(app, |c| c.skip_held()),
         "end_break" => with_core(app, |c| c.skip_or_end_break()),
         "snooze" => with_core(app, |c| c.snooze(arg.unwrap_or(5) as u32)),
         "start_focus" => with_core(app, |c| {
-            c.start_focus();
+            c.start_focus_for(arg.map(|a| a as u32));
             vec![]
         }),
         "stop_focus" => with_core(app, |c| c.stop_focus()),
@@ -638,6 +668,33 @@ fn run_action(app: &AppHandle, name: &str, arg: Option<i64>) {
     }
 }
 
+// ============================================================== scripting
+
+/// Runs what a command line or a yonder:// link asked for; unknown input is only logged.
+fn run_commands(app: &AppHandle, source: &str, parsed: &cli::Parsed) {
+    for bad in &parsed.ignored {
+        log_warn!("ignored {source} command: {bad}");
+    }
+    for c in &parsed.commands {
+        log_info!("{source} command: {}{}", c.action, c.arg.map(|a| format!(" {a}")).unwrap_or_default());
+        run_action(app, c.action, c.arg);
+    }
+}
+
+/// Handles `yonder://` links. The same link can arrive twice (arguments and an OS event).
+fn run_links(app: &AppHandle, urls: Vec<String>) {
+    let key = urls.join(" ");
+    {
+        let st = state(app);
+        let mut last = st.last_link.lock().unwrap();
+        if matches!(&*last, Some((k, t)) if *k == key && t.elapsed() < Duration::from_secs(2)) {
+            return;
+        }
+        *last = Some((key, Instant::now()));
+    }
+    run_commands(app, "link", &cli::parse_args(&urls));
+}
+
 // ================================================================== commands
 
 #[tauri::command]
@@ -654,6 +711,10 @@ async fn save_settings(app: AppHandle, settings: Settings) -> Result<(), String>
 /// Stores new settings and refreshes everything that depends on them.
 fn apply_settings(app: &AppHandle, settings: Settings) {
     let launch = settings.launch_at_login;
+    if settings.verbose_logging != state(app).core.lock().unwrap().settings.verbose_logging {
+        log_info!("verbose logging {}", if settings.verbose_logging { "on" } else { "off" });
+        logger::set_verbose(settings.verbose_logging || std::env::args().any(|a| a == "--verbose"));
+    }
     {
         let st = state(app);
         let mut core = st.core.lock().unwrap();
@@ -667,7 +728,9 @@ fn apply_settings(app: &AppHandle, settings: Settings) {
     relabel_tray(app);
     let al = app.autolaunch();
     if launch != al.is_enabled().unwrap_or(false) {
-        let _ = if launch { al.enable() } else { al.disable() };
+        if let Err(e) = if launch { al.enable() } else { al.disable() } {
+            log_warn!("couldn't {} launch at login: {e}", if launch { "enable" } else { "disable" });
+        }
     }
     broadcast(app);
 }
@@ -1058,7 +1121,17 @@ fn set_tray_update(app: &AppHandle, info: Option<&UpdateInfo>) {
 /// Asks GitHub for a newer release. `manual` checks ignore a skipped version.
 fn check_for_updates(app: &AppHandle, manual: bool) -> Result<Option<UpdateInfo>, String> {
     let current = app.package_info().version.to_string();
-    let found = updates::fetch_latest(&current)?;
+    let found = match updates::fetch_latest(&current) {
+        Ok(f) => f,
+        Err(e) => {
+            log_warn!("update check failed ({}): {e}", if manual { "manual" } else { "automatic" });
+            return Err(e);
+        }
+    };
+    match &found {
+        Some(u) => log_info!("update check: v{} is available (running {current})", u.version),
+        None => log_info!("update check: up to date ({current})"),
+    }
     let skipped = state(app).core.lock().unwrap().settings.skipped_update.clone();
     let visible = found.filter(|u| manual || u.version != skipped);
     let changed = {
@@ -1113,15 +1186,49 @@ async fn skip_update(app: AppHandle, version: String) {
 }
 
 #[tauri::command]
+async fn open_logs_folder(app: AppHandle) {
+    let dir = state(&app).log_dir.clone();
+    let _ = std::fs::create_dir_all(&dir);
+    platform::open_folder(&dir);
+}
+
+#[tauri::command]
 fn app_version(app: AppHandle) -> String {
     app.package_info().version.to_string()
 }
 
 // ================================================================= tick loop
 
+/// Why breaks are held right now: an English text key plus the app, if one is to blame.
+#[derive(Clone, PartialEq)]
+struct SmartHold {
+    key: &'static str,
+    app: Option<String>,
+}
+
+impl SmartHold {
+    fn new(key: &'static str) -> Self {
+        SmartHold { key, app: None }
+    }
+
+    fn text(&self, lang: &str) -> String {
+        match &self.app {
+            Some(a) => i18n::tr(lang, self.key, &[("app", a)]),
+            None => i18n::tr(lang, self.key, &[]),
+        }
+    }
+
+    /// English description for the log, including the app name.
+    fn log_text(&self) -> String {
+        match &self.app {
+            Some(a) if self.key != "{app} is open" => format!("{} [{a}]", self.text("en")),
+            _ => self.text("en"),
+        }
+    }
+}
+
 /// The reason smart pause is active, and whether it is purely a fullscreen app.
-fn smart_reason(s: &Settings, scanner: &mut platform::ProcessScanner, frame: u64, cache: &mut Option<(String, bool)>) -> Option<(String, bool)> {
-    let lang = i18n::resolve(&s.language);
+fn smart_reason(s: &Settings, scanner: &mut platform::ProcessScanner, frame: u64, cache: &mut Option<(SmartHold, bool)>) -> Option<(SmartHold, bool)> {
     if !s.smart.enabled {
         return None;
     }
@@ -1130,11 +1237,11 @@ fn smart_reason(s: &Settings, scanner: &mut platform::ProcessScanner, frame: u64
     }
     let mut reason = None;
     if s.smart.meetings && platform::mic_or_camera_in_use() {
-        reason = Some(i18n::tr(lang, "you're in a call", &[]));
+        reason = Some(SmartHold::new("you're in a call"));
     }
     let mut fullscreen = false;
     if reason.is_none() && s.smart.fullscreen && platform::fullscreen_app_active(scanner) {
-        reason = Some(i18n::tr(lang, "a fullscreen app is running", &[]));
+        reason = Some(SmartHold::new("a fullscreen app is running"));
         fullscreen = true;
     }
     // A fullscreen app together with any other reason (DND, sharing, a focus app) keeps holding.
@@ -1142,30 +1249,32 @@ fn smart_reason(s: &Settings, scanner: &mut platform::ProcessScanner, frame: u64
         fullscreen = false;
     }
     if reason.is_none() && s.smart.dnd && platform::dnd_active() {
-        reason = Some(i18n::tr(lang, "Do Not Disturb is on", &[]));
+        reason = Some(SmartHold::new("Do Not Disturb is on"));
     }
     if reason.is_none() && s.smart.screen_share && platform::screen_shared_by_system() {
-        reason = Some(i18n::tr(lang, "you're sharing or recording your screen", &[]));
+        reason = Some(SmartHold::new("you're sharing or recording your screen"));
     }
     let need_scan = !s.smart.apps.is_empty()
         || s.smart.screen_share
         || (s.smart.meetings && cfg!(target_os = "macos"));
     if reason.is_none() && need_scan {
         let names = scanner.names();
-        if s.smart.meetings
-            && names
-                .iter()
-                .any(|n| platform::MEETING_PROCESS_HINTS.iter().any(|h| n == h))
-        {
-            reason = Some(i18n::tr(lang, "you're in a call", &[]));
-        } else if s.smart.screen_share && platform::screen_capture_app(&names).is_some() {
-            reason = Some(i18n::tr(lang, "you're sharing or recording your screen", &[]));
+        let meeting_app = if s.smart.meetings {
+            names.iter().find(|n| platform::MEETING_PROCESS_HINTS.iter().any(|h| *n == h))
+        } else {
+            None
+        };
+        let capture_app = if s.smart.screen_share { platform::screen_capture_app(&names) } else { None };
+        if let Some(n) = meeting_app {
+            reason = Some(SmartHold { key: "you're in a call", app: Some(n.clone()) });
+        } else if let Some(app) = capture_app {
+            reason = Some(SmartHold { key: "you're sharing or recording your screen", app: Some(app.to_string()) });
         } else if let Some(app) = s.smart.apps.iter().find(|a| {
             let a = a.trim().to_lowercase();
             let a = a.trim_end_matches(".exe").trim_end_matches(".app");
             !a.is_empty() && names.iter().any(|n| n == a || n.starts_with(a))
         }) {
-            reason = Some(i18n::tr(lang, "{app} is open", &[("app", app.trim())]));
+            reason = Some(SmartHold { key: "{app} is open", app: Some(app.trim().to_string()) });
         }
     }
     let reason = reason.map(|r| (r, fullscreen));
@@ -1182,7 +1291,8 @@ fn save_state(app: &AppHandle) {
 fn spawn_ticker(app: AppHandle) {
     std::thread::spawn(move || {
         let mut scanner = platform::ProcessScanner::new();
-        let mut cache = None;
+        let mut cache: Option<(SmartHold, bool)> = None;
+        let mut last_hold: Option<(SmartHold, bool)> = None;
         let mut frame: u64 = 0;
         loop {
             std::thread::sleep(Duration::from_secs(1));
@@ -1190,14 +1300,24 @@ fn spawn_ticker(app: AppHandle) {
             let idle = platform::idle_secs();
             let settings = state(&app).core.lock().unwrap().settings.clone();
             let on_break = state(&app).core.lock().unwrap().e.brk.is_some();
-            let reason = if on_break {
+            let hold = if on_break {
                 cache.clone()
             } else {
                 smart_reason(&settings, &mut scanner, frame, &mut cache)
             };
+            if hold != last_hold {
+                match &hold {
+                    Some((h, _)) => log_info!("smart pause on: {}", h.log_text()),
+                    None => log_info!("smart pause off"),
+                }
+                last_hold = hold.clone();
+            }
+            let lang = i18n::resolve(&settings.language);
+            let fullscreen_only = hold.as_ref().map_or(false, |h| h.1);
+            let reason = hold.map(|h| h.0.text(lang));
             with_core(&app, |c| {
-                c.e.smart_fullscreen = reason.as_ref().map_or(false, |r| r.1);
-                c.tick(idle, reason.map(|r| r.0))
+                c.e.smart_fullscreen = fullscreen_only;
+                c.tick(idle, reason)
             });
             if frame % 60 == 0 {
                 save_state(&app);
@@ -1208,10 +1328,77 @@ fn spawn_ticker(app: AppHandle) {
 
 // ======================================================================= run
 
+fn log_startup(app: &AppHandle, s: &Settings, parsed: &cli::Parsed) {
+    let os = sysinfo::System::long_os_version().unwrap_or_else(|| std::env::consts::OS.into());
+    log_info!(
+        "Yonder {} starting on {os} ({}), language {}",
+        app.package_info().version,
+        std::env::consts::ARCH,
+        i18n::resolve(&s.language)
+    );
+    #[cfg(target_os = "linux")]
+    log_info!(
+        "session: {} / {}{}",
+        std::env::var("XDG_SESSION_TYPE").unwrap_or_else(|_| "unknown".into()),
+        std::env::var("XDG_CURRENT_DESKTOP").unwrap_or_else(|_| "unknown".into()),
+        if std::env::var_os("APPIMAGE").is_some() { " (AppImage)" } else { "" }
+    );
+    log_info!(
+        "smart pause {} (meetings {}, fullscreen {}, dnd {}, screen share {}, {} apps), break style {}, verbose {}",
+        s.smart.enabled,
+        s.smart.meetings,
+        s.smart.fullscreen,
+        s.smart.dnd,
+        s.smart.screen_share,
+        s.smart.apps.len(),
+        s.break_style,
+        logger::verbose()
+    );
+    if parsed.background {
+        log_debug!("started with --background");
+    }
+}
+
+/// Registers the yonder:// scheme where the installer can't, and listens for OS link events.
+fn setup_deep_links(app: &AppHandle) {
+    let links = app.deep_link();
+    // AppImages aren't installed, so there is no package to register the scheme.
+    #[cfg(target_os = "linux")]
+    if std::env::var_os("APPIMAGE").is_some() {
+        match links.register("yonder") {
+            Ok(()) => log_debug!("registered the yonder:// scheme for this AppImage"),
+            Err(e) => log_warn!("couldn't register the yonder:// scheme: {e}"),
+        }
+    }
+    let handle = app.clone();
+    links.on_open_url(move |ev| {
+        run_links(&handle, ev.urls().iter().map(|u| u.to_string()).collect());
+    });
+    // macOS delivers the link that launched the app as an event; others pass it as an argument.
+    #[cfg(target_os = "macos")]
+    match links.get_current() {
+        Ok(Some(urls)) => run_links(app, urls.iter().map(|u| u.to_string()).collect()),
+        Ok(None) => {}
+        Err(e) => log_warn!("couldn't read the launch link: {e}"),
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| open_settings(app)))
+        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            let parsed = cli::parse_args(args.get(1..).unwrap_or(&[]));
+            if parsed.verbose {
+                logger::set_verbose(true);
+            }
+            if parsed.is_request() {
+                run_commands(app, "command-line", &parsed);
+            } else {
+                log_debug!("second launch without commands: opening settings");
+                open_settings(app);
+            }
+        }))
+        .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, Some(vec!["--background"])))
@@ -1228,7 +1415,14 @@ pub fn run() {
                 background: data.join("background.txt"),
                 sounds: data.join("sounds"),
             };
+            let log_dir = app.path().app_log_dir()?;
+            logger::init(log_dir.clone());
+            logger::install_panic_hook();
+            let args: Vec<String> = std::env::args().collect();
+            let parsed = cli::parse_args(args.get(1..).unwrap_or(&[]));
             let settings = Settings::load(&paths.settings);
+            logger::set_verbose(parsed.verbose || settings.verbose_logging);
+            log_startup(app.handle(), &settings, &parsed);
             let stats = Stats::load(&paths.stats);
             let first_run = !settings.onboarded;
             let launch = settings.launch_at_login;
@@ -1246,20 +1440,29 @@ pub fn run() {
                 update: Mutex::new(None),
                 popover_anchor: Mutex::new(None),
                 popover_closed: Mutex::new(None),
+                last_link: Mutex::new(None),
+                log_dir,
             });
 
             let handle = app.handle().clone();
-            build_tray(&handle)?;
+            if let Err(e) = build_tray(&handle) {
+                log_warn!("couldn't create the tray icon: {e}");
+                return Err(e.into());
+            }
             register_shortcuts(&handle);
             if first_run && launch {
-                let _ = handle.autolaunch().enable();
+                if let Err(e) = handle.autolaunch().enable() {
+                    log_warn!("couldn't enable launch at login: {e}");
+                }
             }
-            let background = std::env::args().any(|a| a == "--background");
-            if first_run || !background {
+            // Launched with a command (or `--background`): stay quiet unless it's the first run.
+            if first_run || !parsed.is_request() {
                 open_settings(&handle);
             }
+            setup_deep_links(&handle);
             spawn_update_checker(handle.clone());
-            spawn_ticker(handle);
+            spawn_ticker(handle.clone());
+            run_commands(&handle, "command-line", &parsed);
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -1285,7 +1488,8 @@ pub fn run() {
             check_updates_now,
             get_update,
             skip_update,
-            app_version
+            app_version,
+            open_logs_folder
         ])
         .build(tauri::generate_context!())
         .expect("error while building Yonder")

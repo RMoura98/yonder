@@ -68,6 +68,9 @@ pub struct FocusSession {
     pub cycle: u32,
     /// Active screen seconds spent in the current focus period.
     pub work_elapsed: u64,
+    /// Length of the work period for this session only (`yonder --focus 25`);
+    /// `None` uses the setting.
+    pub work_mins: Option<u32>,
 }
 
 #[derive(Serialize, Clone, Debug)]
@@ -244,7 +247,8 @@ impl Core {
     }
 
     fn focus_work_secs(&self) -> u64 {
-        self.settings.focus.work_mins.max(1) as u64 * 60
+        let mins = self.e.focus.as_ref().and_then(|f| f.work_mins).unwrap_or(self.settings.focus.work_mins);
+        mins.max(1) as u64 * 60
     }
 
     /// Seconds until the next break and whether it is a focus break.
@@ -930,7 +934,12 @@ impl Core {
     /// Starts a focus session (cycle 1). The eye-break countdown keeps running and is
     /// merged with the focus breaks, see `next_break`.
     pub fn start_focus(&mut self) {
-        self.e.focus = Some(FocusSession { cycle: 1, work_elapsed: 0 });
+        self.start_focus_for(None);
+    }
+
+    /// Like `start_focus`, with a work period of `mins` instead of the setting.
+    pub fn start_focus_for(&mut self, mins: Option<u32>) {
+        self.e.focus = Some(FocusSession { cycle: 1, work_elapsed: 0, work_mins: mins.filter(|m| *m > 0) });
     }
 
     /// Stops the session; the normal eye-break schedule carries on untouched.

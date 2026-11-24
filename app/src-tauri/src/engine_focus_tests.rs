@@ -256,3 +256,13 @@ fn stopping_mid_break_lets_the_break_finish() {
     assert_eq!(ends(&tick_n(&mut c, 300, 0)), 1);
     assert!(c.snapshot().focus.is_none());
 }
+
+#[test]
+fn focus_can_override_the_work_period_for_one_session() {
+    let mut c = Core::new(test_settings(), Stats::default());
+    c.start_focus_for(Some(7));
+    assert_eq!(c.focus_work_secs(), 7 * 60);
+    c.stop_focus();
+    c.start_focus_for(None);
+    assert_eq!(c.focus_work_secs(), c.settings.focus.work_mins as u64 * 60);
+}
