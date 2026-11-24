@@ -328,10 +328,23 @@
         <div class="stat"><div class="l">Breaks taken (7d)</div><div class="v" id="sTaken">—</div></div>
         <div class="stat"><div class="l">Natural breaks (7d)</div><div class="v" id="sNatural">—</div></div>
       </div>
+      <h3>This week <small>last 7 days vs the 7 before</small></h3>
+      <div class="tiles" id="weekTiles"></div>
+      <h3>Streaks</h3>
+      <div class="tiles two">
+        <div class="stat"><div class="l">Current streak</div><div class="v" id="sStreak">—</div></div>
+        <div class="stat"><div class="l">Best streak</div><div class="v" id="sBest">—</div></div>
+      </div>
+      <p class="foot">A good day is one where you took at least 80% of the breaks that were due. Days with no screen time don't break a streak.</p>
       <h3>Last 14 days</h3>
       <div class="list chart" id="chart"></div>
       <div class="legend"><span><i class="sw a"></i>Screen time</span><span><i class="sw b"></i>Breaks taken</span></div>
-      <div class="btn-row"><button class="btn" id="exportStats"><i data-icon="download" data-size="18"></i>Export JSON</button><button class="btn danger" id="resetStats">Reset stats</button></div>
+      <h3>Past year</h3>
+      <div class="list heat-wrap"><div class="heat" id="heat" role="list" aria-label="Break adherence for each day of the past year"></div></div>
+      <div class="legend heat-legend"><span>Fewer breaks taken</span><i class="cell l0"></i><i class="cell l1"></i><i class="cell l2"></i><i class="cell l3"></i><i class="cell l4"></i><span>All breaks taken</span></div>
+      <h3>Export history</h3>
+      <div class="btn-row"><button class="btn" id="exportCsv"><i data-icon="download" data-size="18"></i>Export CSV</button><button class="btn" id="exportMd"><i data-icon="download" data-size="18"></i>Export Markdown</button><button class="btn" id="exportStats"><i data-icon="download" data-size="18"></i>Export JSON</button></div>
+      <div class="btn-row"><button class="btn danger" id="resetStats">Reset stats</button></div>
       <p class="foot">Everything stays on this computer.</p>
     </section>
 

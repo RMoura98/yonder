@@ -2,6 +2,7 @@ import { invoke, listen, action, applyTheme, fmtClock, fmtHuman } from "./api.js
 import { SOUNDS, playSound } from "./sounds.js";
 import { ANIMATED, GRADIENTS, TEXTURES } from "./backgrounds.js";
 import { icon as baseIcon, hydrateIcons, PICKABLE, ICON_PATHS } from "./icons.js";
+import { adherence, streaks, weeklySummary, heatmap, toCsv, toMarkdown, dayKey } from "./stats-logic.js";
 import { initI18n, applyI18n, t, tr, plural, ordinal, locale, LANGUAGES } from "./i18n.js";
 
 // Prefer a filled glyph when asked for "<name>_fill", falling back to the outline.
@@ -702,7 +703,6 @@ function initShortcuts() {
 }
 
 // ------------------------------------------------------------------ stats
-const dayKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 function score(d) {
   if (!d || !d.screen_secs) return "—";
   const expected = Math.max(1, Math.floor(d.screen_secs / (S.work_mins * 60)));
@@ -727,6 +727,9 @@ async function renderStats() {
   $("#sTaken").textContent = sum(last7, "breaks_taken");
   $("#sNatural").textContent = sum(last7, "natural_breaks");
 
+  renderWeek(stats.days);
+  renderHeat(stats.days);
+
   const max = Math.max(3600, ...days.map((d) => d.screen_secs || 0));
   const maxB = Math.max(1, ...days.map((d) => d.breaks_taken || 0));
   const chart = $("#chart");
@@ -744,8 +747,97 @@ async function renderStats() {
   }
 }
 
+const pct = (a) => Math.round((a ?? 0) * 100);
+const signed = (n, fmt = String) => (n > 0 ? "+" : n < 0 ? "−" : "") + fmt(Math.abs(n));
+const daysLabel = (n) => plural(n, "1 day", "{n} days");
+
+function renderWeek(days) {
+  const { thisWeek: a, lastWeek: b } = weeklySummary(days, S.work_mins);
+  const hasLast = b.screen_secs > 0;
+  const tile = (label, cur, prev, fmt) => {
+    const diff = cur - prev;
+    const delta = !hasLast ? t("No data last week") : diff === 0 ? t("Same as last week") : t("{d} vs last week", { d: signed(diff, fmt) });
+    return `<div class="stat"><div class="l">${esc(label)}</div><div class="v">${esc(fmt(cur))}</div><div class="delta">${esc(delta)}</div></div>`;
+  };
+  $("#weekTiles").innerHTML =
+    tile(t("Breaks taken"), a.breaks_taken, b.breaks_taken, String) +
+    tile(t("Breaks skipped"), a.breaks_skipped, b.breaks_skipped, String) +
+    tile(t("Screen time"), a.screen_secs, b.screen_secs, fmtHuman) +
+    (a.adherence == null
+      ? `<div class="stat"><div class="l">${esc(t("Adherence"))}</div><div class="v">—</div><div class="delta"> </div></div>`
+      : tile(t("Adherence"), pct(a.adherence), pct(b.adherence), (n) => n + "%"));
+  const { current, best } = streaks(days, S.work_mins);
+  $("#sStreak").textContent = daysLabel(current);
+  $("#sBest").textContent = daysLabel(best);
+}
+
+function renderHeat(days) {
+  const { weeks } = heatmap(days, S.work_mins);
+  const fmt = (o) => new Intl.DateTimeFormat(locale(), o);
+  const month = fmt({ month: "short" });
+  const full = fmt({ weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  const todayKey = dayKey(new Date());
+  let html = "";
+  let lastMonth = -1;
+  let lastCol = -9;
+  weeks.forEach((col, w) => {
+    const m = col[0].date.getMonth();
+    if (m === lastMonth) return;
+    lastMonth = m;
+    // a month that starts in the first column's last days would collide with the next label
+    if (w - lastCol >= 3 && w <= 50 && !(w === 0 && weeks[1][0].date.getMonth() !== m)) {
+      html += `<span class="m" style="grid-column:${w + 2}">${esc(month.format(col[0].date))}</span>`;
+      lastCol = w;
+    }
+  });
+  // Mon, Wed, Fri labels (2024-01-01 was a Monday)
+  const wd = fmt({ weekday: "short" });
+  for (const r of [0, 2, 4]) html += `<span class="wd" style="grid-row:${r + 2}" aria-hidden="true">${esc(wd.format(new Date(2024, 0, 1 + r)))}</span>`;
+  weeks.forEach((col, w) =>
+    col.forEach((c, r) => {
+      if (!c) return;
+      const d = c.day || {};
+      const a = adherence(c.day, S.work_mins);
+      const info =
+        a == null
+          ? t("No activity")
+          : [t("Breaks taken: {n} · skipped: {m}", { n: d.breaks_taken || 0, m: d.breaks_skipped || 0 }), t("Adherence: {p}%", { p: pct(a) })].join(" · ");
+      const label = full.format(c.date) + ": " + info;
+      html += `<i class="cell l${c.level}${c.key === todayKey ? " today" : ""}" role="listitem" style="grid-column:${w + 2};grid-row:${r + 2}" title="${esc(label)}" aria-label="${esc(label)}"></i>`;
+    })
+  );
+  $("#heat").innerHTML = html;
+}
+
+function download(name, text, type) {
+  const blob = new Blob([text], { type });
+  Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: name }).click();
+}
+
+async function exportHistory(kind) {
+  const stats = await invoke("get_stats");
+  const keys = Object.keys(stats.days);
+  if (!keys.length) return toast(t("Nothing to export yet"));
+  const stamp = dayKey(new Date());
+  if (kind === "csv") download(`yonder-history-${stamp}.csv`, toCsv(stats.days), "text/csv");
+  else {
+    const dfmt = new Intl.DateTimeFormat(locale(), { weekday: "short", year: "numeric", month: "short", day: "numeric" });
+    const md = toMarkdown(stats.days, {
+      title: t("Yonder break journal"),
+      summary: t("Exported on {date}. {n} days of history, newest first.", { date: dfmt.format(new Date()), n: keys.length }),
+      headers: [t("Date"), t("Screen time"), t("Breaks taken"), t("Skipped"), t("Natural breaks"), t("Reminders done"), t("Longest stretch")],
+      fmtDate: (d) => dfmt.format(d),
+      fmtDur: fmtHuman,
+    });
+    download(`yonder-history-${stamp}.md`, md, "text/markdown");
+  }
+  toast(t("History exported"));
+}
+
 let confirmReset = 0;
 function initStats() {
+  $("#exportCsv").onclick = () => exportHistory("csv");
+  $("#exportMd").onclick = () => exportHistory("md");
   $("#exportStats").onclick = async () => {
     const stats = await invoke("get_stats");
     const blob = new Blob([JSON.stringify(stats, null, 2)], { type: "application/json" });
