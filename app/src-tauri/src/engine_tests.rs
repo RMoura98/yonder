@@ -637,6 +637,26 @@ fn manual_pause_stops_counting_until_resumed() {
 }
 
 #[test]
+fn overdue_hold_does_not_wait_for_typing() {
+    let mut s = test_settings();
+    s.wait_while_typing = true;
+    s.smart.max_hold_mins = 1;
+    s.prebreak_enabled = false;
+    let mut c = core(s);
+    tick_n(&mut c, 59, 0);
+    // held by a game for the full minute, keys pressed all along (idle 0)
+    let mut started = 0;
+    for _ in 0..62 {
+        started += starts(&c.tick(0, Some("a fullscreen app is running".into())));
+    }
+    assert!(c.e.hold_overdue || started > 0);
+    for _ in 0..3 {
+        started += starts(&c.tick(0, Some("a fullscreen app is running".into())));
+    }
+    assert_eq!(started, 1, "an overdue break starts at once, typing or not");
+}
+
+#[test]
 fn start_now_begins_a_scheduled_break() {
     let mut c = core(test_settings());
     let fx = c.start_now();

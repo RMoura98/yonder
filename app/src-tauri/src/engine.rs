@@ -377,7 +377,7 @@ impl Core {
             held_secs: self.e.held_secs,
             overdue: self.e.hold_overdue,
             focus,
-            holding: phase == "working" && next_in <= 0 && self.e.typing_wait > 0,
+            holding: self.e.brk.is_none() && next_in <= 0 && self.e.typing_wait > 0,
         }
     }
 
@@ -596,7 +596,13 @@ impl Core {
         }
 
         if rem <= 0 {
-            if self.settings.wait_while_typing && idle < 2 && self.e.typing_wait < MAX_TYPING_WAIT {
+            // After a long smart-pause hold the break has waited enough; and in a game the
+            // keys never stop, so typing would only hold it up again.
+            if self.settings.wait_while_typing
+                && !self.e.hold_overdue
+                && idle < 2
+                && self.e.typing_wait < MAX_TYPING_WAIT
+            {
                 self.e.typing_wait += 1;
             } else {
                 self.start_scheduled_break(&mut fx);
