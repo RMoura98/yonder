@@ -17,7 +17,7 @@ const settings = {
   ],
   break_style: "fullscreen", background: "blur", gradient: "dusk", has_image: false, texture: "linen",
   sound_enabled: true, sound: "chime", volume: 0.6, idle_reset_mins: 5,
-  smart: { enabled: true, meetings: true, fullscreen: true, apps: ["obs64", "POWERPNT"], cooldown_secs: 60 },
+  smart: { enabled: true, meetings: true, fullscreen: true, fullscreen_action: "wait", apps: ["obs64", "POWERPNT"], cooldown_secs: 60, max_hold_mins: 60, dnd: false, screen_share: false },
   office_hours: { enabled: true, days: days7.slice(), start: "09:00", end: "18:00" },
   planned: [{ id: "lunch", enabled: true, title: "Lunch", icon: "restaurant", time: "12:30", duration_mins: 30, days: days7.slice() }],
   wellness: {
