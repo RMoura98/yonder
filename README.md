@@ -21,7 +21,7 @@ desktop into a calm break screen, and stays out of the way while you're in a cal
 ## Features
 
 - **Smart breaks.** Balanced (20 min / 20 s), Deep Focus, Eye Care and Wellness presets, or your own timing, with optional long breaks.
-- **Break screens you'll like.** Blurred desktop, split-screen (your desktop parts to reveal a texture), animated Aurora / Nebula / Ripple, gradients or your own image, **Gentle** (the screen just dims and clicks pass through, so a call or a game keeps going), or **Notification only** (a desktop notification and a chime, no window). Rolling countdown and your own messages.
+- **Break screens you'll like.** Blurred desktop (edge to edge, even over a borderless game), split-screen (your desktop parts to reveal a texture), animated Aurora / Nebula / Ripple, gradients or your own image, **Gentle** (the screen just dims and clicks pass through, so a call or a game keeps going), or **Notification only** (a desktop notification and a chime, no window). Rolling countdown and your own messages.
 - **Guided exercises (optional).** Long breaks can walk you through a calm routine sized to the break: slow blinks, a dot to follow, near and far focus, neck and shoulder stretches, palming. Off by default, respects reduced motion. Exercise ideas from Workrave and Safe Eyes.
 - **Your own sounds.** Fifteen built-in synthesized sounds, or add any MP3, WAV, OGG or M4A file and use it for breaks or for each reminder.
 - **Heads-up, never a surprise.** A frosted heads-up card before each break (start now, +1m, +5m, +15m), and a countdown that follows your cursor for the last five seconds.
