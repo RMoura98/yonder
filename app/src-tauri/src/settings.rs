@@ -182,25 +182,16 @@ impl Default for Focus {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+/// Global hotkeys. All empty by default: a global hotkey takes its keys from
+/// every other app, so the person picks their own in Keyboard Shortcuts.
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
 #[serde(default)]
 pub struct Shortcuts {
     pub take_break: String,
     pub toggle_pause: String,
     pub skip_break: String,
-    /// Starts or stops a focus session. Empty by default.
+    /// Starts or stops a focus session.
     pub toggle_focus: String,
-}
-
-impl Default for Shortcuts {
-    fn default() -> Self {
-        Self {
-            take_break: "CmdOrCtrl+Alt+B".into(),
-            toggle_pause: "CmdOrCtrl+Alt+P".into(),
-            skip_break: "CmdOrCtrl+Alt+S".into(),
-            toggle_focus: String::new(),
-        }
-    }
 }
 
 /// Optional evening screen filter: warms and dims the display on a schedule.
@@ -281,6 +272,10 @@ pub struct Settings {
     pub wellness: Wellness,
     pub focus: Focus,
     pub shortcuts: Shortcuts,
+    /// Set once the old default shortcuts (Ctrl/Cmd+Alt+B/P/S) were cleared. Older
+    /// settings files lack it (field-level default: false) and get migrated.
+    #[serde(default)]
+    pub shortcuts_opt_in: bool,
     pub hooks: Hooks,
     pub evening: Evening,
     pub launch_at_login: bool,
@@ -352,6 +347,7 @@ impl Default for Settings {
             wellness: Wellness::default(),
             focus: Focus::default(),
             shortcuts: Shortcuts::default(),
+            shortcuts_opt_in: true,
             hooks: Hooks::default(),
             evening: Evening::default(),
             launch_at_login: true,
@@ -411,6 +407,22 @@ impl Settings {
         }
         if crate::evening::parse_hhmm(&e.to).is_none() {
             e.to = d.to;
+        }
+        // Shortcuts used to default to Ctrl/Cmd+Alt+B/P/S, global hotkeys that took
+        // those keys from every other app. Clear the ones still on the old default
+        // once; shortcuts the person picked themselves stay.
+        if !self.shortcuts_opt_in {
+            let sc = &mut self.shortcuts;
+            for (field, old) in [
+                (&mut sc.take_break, "CmdOrCtrl+Alt+B"),
+                (&mut sc.toggle_pause, "CmdOrCtrl+Alt+P"),
+                (&mut sc.skip_break, "CmdOrCtrl+Alt+S"),
+            ] {
+                if *field == old {
+                    field.clear();
+                }
+            }
+            self.shortcuts_opt_in = true;
         }
     }
 
@@ -580,6 +592,29 @@ mod tests {
         assert_eq!(b.settings.custom_sounds.len(), 1);
         assert_eq!(b.settings.sound, "file:s1");
         assert_eq!(b.settings.wellness.posture.sound, "none");
+    }
+
+    #[test]
+    fn shortcuts_start_unset() {
+        let s = Settings::default();
+        assert!(s.shortcuts.take_break.is_empty() && s.shortcuts.toggle_pause.is_empty() && s.shortcuts.skip_break.is_empty());
+        assert!(s.shortcuts_opt_in);
+    }
+
+    #[test]
+    fn old_default_shortcuts_are_cleared_once_custom_ones_stay() {
+        let old = r#"{"shortcuts":{"take_break":"CmdOrCtrl+Alt+B","toggle_pause":"CmdOrCtrl+Alt+P","skip_break":"CmdOrCtrl+Shift+K"}}"#;
+        let mut s: Settings = serde_json::from_str(old).unwrap();
+        assert!(!s.shortcuts_opt_in);
+        s.migrate();
+        assert_eq!(s.shortcuts.take_break, "");
+        assert_eq!(s.shortcuts.toggle_pause, "");
+        assert_eq!(s.shortcuts.skip_break, "CmdOrCtrl+Shift+K");
+        // after migrating, picking an old default on purpose sticks
+        s.shortcuts.toggle_pause = "CmdOrCtrl+Alt+P".into();
+        let mut again: Settings = serde_json::from_str(&serde_json::to_string(&s).unwrap()).unwrap();
+        again.migrate();
+        assert_eq!(again.shortcuts.toggle_pause, "CmdOrCtrl+Alt+P");
     }
 
     #[test]

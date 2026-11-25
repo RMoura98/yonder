@@ -39,7 +39,7 @@ const settings = {
     combine: true, reset_after_break: false, ripple: true,
   },
   focus: { work_mins: 25, break_mins: 5, long_break_mins: 15, long_every: 4, merge_window_mins: 3 },
-  shortcuts: { take_break: "CmdOrCtrl+Alt+B", toggle_pause: "CmdOrCtrl+Alt+P", skip_break: "CmdOrCtrl+Alt+S", toggle_focus: "" },
+  shortcuts: { take_break: "", toggle_pause: "", skip_break: "", toggle_focus: "" },
   hooks: { on_break_start: "", on_break_end: "" },
   exercises: false, exercises_short: false,
   launch_at_login: true, theme: "system", onboarded: true, language: "en", check_updates: true, tray_countdown: true, skipped_update: "",

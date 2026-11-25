@@ -761,12 +761,22 @@ const pretty = (a) => {
 function initShortcuts() {
   for (const input of $$("[data-keys]")) {
     const path = input.dataset.keys;
-    input.value = pretty(get(path));
+    // × next to a set shortcut unsets it (Backspace does too). Hidden, not removed,
+    // while unset so every row's field stays aligned.
+    const clear = el(`<button type="button" class="x" title="${esc(t("Remove"))}" aria-label="${esc(t("Remove"))}">${X()}</button>`);
+    input.after(clear);
+    const show = () => {
+      input.value = pretty(get(path));
+      clear.style.visibility = get(path) ? "" : "hidden";
+    };
+    const unset = () => { set(path, ""); save(); show(); };
+    show();
+    clear.addEventListener("click", unset);
     input.addEventListener("focus", () => (input.value = t("Press keys…")));
-    input.addEventListener("blur", () => (input.value = pretty(get(path))));
+    input.addEventListener("blur", show);
     input.addEventListener("keydown", (e) => {
       e.preventDefault();
-      if (e.key === "Backspace" || e.key === "Delete") { set(path, ""); input.blur(); save(); return; }
+      if (e.key === "Backspace" || e.key === "Delete") { input.blur(); unset(); return; }
       if (e.key === "Escape") return input.blur();
       const a = accelFrom(e);
       if (!a) return;
