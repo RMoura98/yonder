@@ -18,7 +18,8 @@ const APP_VERSION = (() => {
 const settings = {
   mode: "balanced", work_mins: 20, break_secs: 20, long_enabled: false, long_mins: 5, long_every: 3,
   skip_difficulty: "balanced", wait_while_typing: true, allow_end_early: true, lock_on_break: false,
-  prebreak_enabled: true, prebreak_secs: 60, prebreak_visible_secs: 10,
+  prebreak_enabled: true, prebreak_secs: 60, prebreak_visible_secs: 10, prebreak_style: "cursor",
+  evening: { enabled: true, from: "21:00", to: "07:00", transition_mins: 30, temperature: 3400, dim: 10 },
   messages: [
     "Look at something at least 20 feet away.",
     "Let your eyes go soft. Breathe out slowly.",
@@ -43,12 +44,12 @@ const settings = {
   exercises: false, exercises_short: false,
   launch_at_login: true, theme: "system", onboarded: true, language: "en", check_updates: true, tray_countdown: true, skipped_update: "",
 };
-if (scene === "hero") Object.assign(settings, { prebreak_secs: 10, prebreak_visible_secs: 3 });
+if (scene === "hero") Object.assign(settings, { prebreak_secs: 14, prebreak_visible_secs: 60 });
 if (scene === "split") Object.assign(settings, { break_style: "split", texture: "mat_teal" });
 if (scene === "gentle") Object.assign(settings, { break_style: "gentle" });
 if (scene === "exercises") Object.assign(settings, { exercises: true, long_enabled: true });
 if (scene === "setup") Object.assign(settings, { onboarded: false, theme: "light" });
-if (scene === "settings" || scene === "popover" || scene === "stats") settings.theme = "dark";
+if (scene === "settings" || scene === "popover" || scene === "stats" || scene === "evening") settings.theme = "dark";
 if (scene === "settingsLight") settings.theme = "light";
 if (scene === "focus") settings.theme = "light";
 
@@ -124,6 +125,8 @@ const TEASER = (window.TEASER = {
       case "platform_name": return "windows";
       case "app_version": return APP_VERSION;
       case "get_update": return null;
+      case "get_evening_status": return { supported: true, reason: "", active: false, strength: 0 };
+      case "screen_access": return true;
       case "action": return stageAction(args.name);
       case "fit_window": return fit(win, args);
       default: return null;
@@ -242,20 +245,19 @@ async function runBreak(stepMs, kind = "short", total = 20, from = 1) {
 
 const SCENES = {
   async hero() {
+    // The default heads-up: a small "Break in 0:14" next to the cursor that follows it,
+    // then the last seconds count down ("Starting break in 5…1"), then the desktop blurs.
     await sleep(500);
-    const wander = moveCursor(760, 470, 2600);
-    let next = 10;
+    let next = 14;
     setState(snapWorking(next));
-    openFrame("prebreak", "/app/prebreak.html", { left: (W - 400) / 2 + "px", top: "48px", width: "400px", height: "140px" });
-    await sleep(450);
-    while (next > 4) {
-      await sleep(430);
+    openFrame("cursor", "/app/cursor.html", { left: cursor.x + 18 + "px", top: cursor.y + 22 + "px", width: "210px", height: "48px" });
+    const wander = moveCursor(760, 470, 3000);
+    while (next > 5) {
+      await sleep(420);
       setState(snapWorking(--next));
     }
     await wander;
-    // final seconds: the countdown pill trails the cursor
-    openFrame("cursor", "/app/cursor.html", { left: cursor.x + 18 + "px", top: cursor.y + 22 + "px", width: "210px", height: "48px" });
-    const drift = moveCursor(980, 600, 2300);
+    const drift = moveCursor(980, 600, 2600);
     while (next > 1) {
       await sleep(650);
       setState(snapWorking(--next));
@@ -437,6 +439,43 @@ const SCENES = {
     await sleep(1500);
   },
 
+  // Evening filter: open its page, warm the slider, and the whole screen warms and dims
+  // (the real filter changes the display's colours; here a warm multiply layer stands in).
+  async evening() {
+    const f = settingsFrame;
+    const warm = document.createElement("div");
+    warm.style.cssText = "position:fixed;inset:0;pointer-events:none;z-index:9;mix-blend-mode:multiply;opacity:0;background:rgb(255,196,140)";
+    const dim = document.createElement("div");
+    dim.style.cssText = "position:fixed;inset:0;pointer-events:none;z-index:9;opacity:0;background:#000";
+    document.body.append(warm, dim);
+    await sleep(900);
+    await clickIn(f, '#nav a[data-page="evening"]', 700);
+    await sleep(1200);
+    // drag the colour temperature slider from neutral to warm
+    const d = f.contentDocument;
+    const slider = d.querySelector('#page-evening input[data-bind="evening.temperature"]');
+    if (slider) {
+      const fr = f.getBoundingClientRect();
+      const r = slider.getBoundingClientRect();
+      const at = (v) => fr.left + r.left + ((v - 2700) / (6500 - 2700)) * r.width;
+      slider.value = 6500; slider.dispatchEvent(new Event("input", { bubbles: true }));
+      await moveCursor(at(6500), fr.top + r.top + r.height / 2, 700);
+      await sleep(150);
+      for (let v = 6500; v >= 3400; v -= 100) {
+        slider.value = v;
+        slider.dispatchEvent(new Event("input", { bubbles: true }));
+        cursor.x = at(v); placeCursor();
+        const k = (6500 - v) / (6500 - 3400);
+        warm.style.opacity = String(0.9 * k);
+        dim.style.opacity = String(0.1 * k);
+        await sleep(45);
+      }
+    }
+    await sleep(900);
+    await moveCursor(1080, 640, 900);
+    await sleep(1600);
+  },
+
   async settingsLight() {
     const f = settingsFrame;
     cursorEl.classList.add("hidden");
@@ -448,7 +487,7 @@ const SCENES = {
 
 // Settings scenes: open the window before recording so frame 0 is fully rendered.
 let settingsFrame = null;
-if (scene === "settings" || scene === "settingsLight" || scene === "setup" || scene === "focus" || scene === "stats") {
+if (scene === "settings" || scene === "settingsLight" || scene === "setup" || scene === "focus" || scene === "stats" || scene === "evening") {
   if (scene !== "settingsLight") document.body.classList.add("dim");
   settingsFrame = openFrame("settings", "/app/index.html", { left: "310px", top: "130px", width: "980px", height: "690px" });
   settingsFrame.classList.add("settings");

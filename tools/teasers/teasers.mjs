@@ -32,6 +32,7 @@ const SCENES = {
   focus: { poster: 4.5, gifw: 960, fps: 18 },
   exercises: { poster: 7.0, gifw: 960, fps: 18 },
   stats: { poster: 5.0, gifw: 960, fps: 18 },
+  evening: { poster: 6.5, gifw: 960, fps: 18 },
 };
 
 const wanted = process.argv.slice(2).length ? process.argv.slice(2) : [...Object.keys(SCENES), "settingsLight"];
