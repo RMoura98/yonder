@@ -498,5 +498,6 @@
   "Small text next to the cursor": "Small text next to the cursor",
   "Card with snooze buttons": "Card with snooze buttons",
   "Show it for": "Show it for",
-  "Then it fades away. Snooze or skip from Yonder's icon.": "Then it fades away. Snooze or skip from Yonder's icon."
+  "Then it fades away. Snooze or skip from Yonder's icon.": "Then it fades away. Snooze or skip from Yonder's icon.",
+  "Blurred desktop and Split screen need a screenshot. On Wayland your system may ask permission the first time; if it can't be taken, Yonder shows the backdrop instead.": "Blurred desktop and Split screen need a screenshot. On Wayland your system may ask permission the first time; if it can't be taken, Yonder shows the backdrop instead."
 }

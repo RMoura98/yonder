@@ -498,5 +498,6 @@
   "Small text next to the cursor": "カーソルの横に小さなテキスト",
   "Card with snooze buttons": "スヌーズボタン付きのカード",
   "Show it for": "表示時間",
-  "Then it fades away. Snooze or skip from Yonder's icon.": "その後は消えます。スヌーズやスキップは Yonder のアイコンから。"
+  "Then it fades away. Snooze or skip from Yonder's icon.": "その後は消えます。スヌーズやスキップは Yonder のアイコンから。",
+  "Blurred desktop and Split screen need a screenshot. On Wayland your system may ask permission the first time; if it can't be taken, Yonder shows the backdrop instead.": "ぼかしデスクトップと分割画面にはスクリーンショットが必要です。Wayland では初回に許可を求められることがあります。取得できない場合、Yonder は背景を表示します。"
 }

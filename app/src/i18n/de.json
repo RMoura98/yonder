@@ -498,5 +498,6 @@
   "Small text next to the cursor": "Kleiner Text neben dem Mauszeiger",
   "Card with snooze buttons": "Karte mit Tasten zum Verschieben",
   "Show it for": "Anzeigen für",
-  "Then it fades away. Snooze or skip from Yonder's icon.": "Danach blendet er sich aus. Verschieben oder überspringen über das Yonder-Symbol."
+  "Then it fades away. Snooze or skip from Yonder's icon.": "Danach blendet er sich aus. Verschieben oder überspringen über das Yonder-Symbol.",
+  "Blurred desktop and Split screen need a screenshot. On Wayland your system may ask permission the first time; if it can't be taken, Yonder shows the backdrop instead.": "Verschwommener Desktop und geteilter Bildschirm brauchen einen Screenshot. Unter Wayland fragt das System beim ersten Mal eventuell nach Erlaubnis; ist kein Screenshot möglich, zeigt Yonder stattdessen den Hintergrund."
 }

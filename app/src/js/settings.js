@@ -438,8 +438,9 @@ function initScreen() {
   );
   paintStyle();
   if (platform === "linux") {
-    $("#splitBtn").disabled = true;
-    $("#splitBtn span:last-child").textContent = t("Not available on Linux yet");
+    const note = $("#linuxShotNote");
+    note.textContent = t("Blurred desktop and Split screen need a screenshot. On Wayland your system may ask permission the first time; if it can't be taken, Yonder shows the backdrop instead.");
+    note.hidden = false;
   }
 
   // backgrounds
@@ -454,9 +455,7 @@ function initScreen() {
     nebula: "radial-gradient(circle at 35% 40%,#3d2a6b 0,transparent 50%),radial-gradient(circle at 65% 60%,#1d4e89 0,transparent 50%),#06060f",
     ripple: "repeating-radial-gradient(circle at 50% 50%,rgba(159,216,203,.28) 0 2px,transparent 2px 16px),linear-gradient(135deg,#0e3b43,#12253d)",
   };
-  if (platform !== "linux") {
-    box.appendChild(el(`<button class="swatch blurprev" data-bg="blur" title="${esc(t("Your desktop, frosted behind the countdown"))}"><span>${esc(t("Blurred desktop"))}</span></button>`));
-  }
+  box.appendChild(el(`<button class="swatch blurprev" data-bg="blur" title="${esc(t("Your desktop, frosted behind the countdown"))}"><span>${esc(t("Blurred desktop"))}</span></button>`));
   for (const a of ANIMATED) box.appendChild(el(`<button class="swatch" data-bg="${a.id}" style="background:${preview[a.id]}"><span>${esc(t(a.name))}</span></button>`));
   for (const [id, g] of Object.entries(GRADIENTS)) {
     box.appendChild(el(`<button class="swatch" data-bg="gradient" data-g="${id}" style="background:${g}"><span>${esc(t(id[0].toUpperCase() + id.slice(1)))}</span></button>`));

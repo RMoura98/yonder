@@ -498,5 +498,6 @@
   "Small text next to the cursor": "光标旁的小文字",
   "Card with snooze buttons": "带推迟按钮的卡片",
   "Show it for": "显示时长",
-  "Then it fades away. Snooze or skip from Yonder's icon.": "之后会自动消失。可通过 Yonder 图标推迟或跳过。"
+  "Then it fades away. Snooze or skip from Yonder's icon.": "之后会自动消失。可通过 Yonder 图标推迟或跳过。",
+  "Blurred desktop and Split screen need a screenshot. On Wayland your system may ask permission the first time; if it can't be taken, Yonder shows the backdrop instead.": "模糊桌面和分屏需要截取屏幕。在 Wayland 下，系统首次可能会请求授权；如果无法截屏，Yonder 会改为显示背景。"
 }

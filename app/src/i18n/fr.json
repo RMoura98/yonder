@@ -498,5 +498,6 @@
   "Small text next to the cursor": "Petit texte à côté du curseur",
   "Card with snooze buttons": "Carte avec boutons de report",
   "Show it for": "Afficher pendant",
-  "Then it fades away. Snooze or skip from Yonder's icon.": "Puis il disparaît. Reportez ou passez depuis l'icône de Yonder."
+  "Then it fades away. Snooze or skip from Yonder's icon.": "Puis il disparaît. Reportez ou passez depuis l'icône de Yonder.",
+  "Blurred desktop and Split screen need a screenshot. On Wayland your system may ask permission the first time; if it can't be taken, Yonder shows the backdrop instead.": "Le bureau flouté et l'écran partagé ont besoin d'une capture d'écran. Sous Wayland, le système peut demander l'autorisation la première fois ; si elle est impossible, Yonder affiche l'arrière-plan."
 }
