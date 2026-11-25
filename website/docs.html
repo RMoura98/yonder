@@ -64,6 +64,7 @@
         <h4>Personalize</h4>
         <ul>
           <li><a href="#wellness">Wellness &amp; custom reminders</a></li>
+          <li><a href="#evening-filter">Evening filter</a></li>
           <li><a href="#break-styles">Break screen styles</a></li>
           <li><a href="#shortcuts">Keyboard shortcuts</a></li>
           <li><a href="#scripting">Scripting &amp; automation</a></li>
@@ -226,6 +227,25 @@ sudo apt update &amp;&amp; sudo apt install yonder</code></pre>
         <p>Create up to <strong>5 custom reminders</strong>. Each one has a title, an optional message, an icon, a sound and an interval. Reminders appear as small, non-blocking cards in a corner of the screen.</p>
         <h3>Stacking</h3>
         <p>If several reminders come due at the same time, they collapse into a single <strong>orb</strong> showing how many are waiting. Click the orb to expand and dismiss them one by one, or all at once.</p>
+      </section>
+
+      <section class="doc-section" id="evening-filter">
+        <h2>Evening filter</h2>
+        <p>An optional filter that warms and dims your screen in the evening, in <em>Settings → Evening filter</em>. It is <strong>off by default</strong>.</p>
+        <ul>
+          <li><strong>Schedule</strong> — turn on <em>Turn on in the evening</em> and pick a <em>From</em> and <em>To</em> time (the default is 21:00 to 07:00; the end can be after midnight). The filter fades in after the start time and out after the end time over the <em>Fade over</em> period (30 minutes by default, or no fade).</li>
+          <li><strong>Strength</strong> — a <em>Color temperature</em> slider (2700–6500 K, default 3400 K; 6500 K means no tint) and a <em>Dimming</em> slider (0–60%, default 10%). <em>Preview</em> shows the filter at full strength for a few seconds and then puts the screen back.</li>
+          <li><strong>Tray menu</strong> — <em>Turn on evening filter</em> / <em>Turn off evening filter</em> flips it right away, even when the schedule is off. The choice lasts until the schedule next starts or ends.</li>
+        </ul>
+        <h3>How it works on each system</h3>
+        <ul>
+          <li><strong>Windows</strong> — Yonder sets the gamma ramp of every display. Windows refuses ramps that are too dark or too far from normal, so the filter is limited to about 3400 K with light dimming: warmer settings look the same, and if a display still refuses, Yonder retries with a milder ramp.</li>
+          <li><strong>macOS</strong> — Yonder sets the display transfer tables through CoreGraphics. macOS also drops them by itself when Yonder exits.</li>
+          <li><strong>Linux (X11)</strong> — Yonder sets the RandR gamma of each display. <strong>Wayland</strong> has no gamma interface for ordinary apps, so the filter is unavailable there and the page says so; GNOME's Night Light and KDE's Night Color do the same job.</li>
+        </ul>
+        <p>Because it works on the display's color tables, nothing is drawn over your windows: clicks and focus are not affected. Don't run another color filter (f.lux, Night Light, Night Shift) at the same time, since they would fight over the same tables.</p>
+        <h3>It never stays stuck on</h3>
+        <p>The screen is restored when you quit Yonder. While the filter is on, Yonder keeps a small marker file; if Yonder is killed or crashes, the next start sees it and resets the display to normal before doing anything else. The filter also re-applies itself every 30 seconds in case another program resets the display. Times are fixed clock times; a sunset-based schedule is not available.</p>
       </section>
 
       <section class="doc-section" id="break-styles">
