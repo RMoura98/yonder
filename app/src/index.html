@@ -20,6 +20,7 @@
       <a data-page="smart" data-tile="blue" data-ic="pause">Smart Pause</a>
       <a data-page="wellness" data-tile="coral" data-ic="favorite">Wellness Reminders</a>
       <a data-page="focus" data-tile="violet" data-ic="timer">Focus session</a>
+      <a data-page="evening" data-tile="amber" data-ic="bedtime">Evening filter</a>
       <h4>Behavior &amp; Feedback</h4>
       <a data-page="screen" data-tile="violet" data-ic="palette">Break Screen</a>
       <a data-page="alerts" data-tile="amber" data-ic="notifications_active">Heads-up</a>
@@ -238,6 +239,31 @@
         <div class="row"><label>Reset reminder timers after a break<small>Otherwise they keep counting through breaks.</small></label><input type="checkbox" class="switch" data-bind="wellness.reset_after_break" /></div>
         <div class="row"><label>Ripple when a reminder appears</label><input type="checkbox" class="switch" data-bind="wellness.ripple" /></div>
       </div>
+    </section>
+
+    <!-- ============================================================ EVENING -->
+    <section class="page" id="page-evening" data-title="Evening filter">
+      <p class="foot top">Warms and dims your screen in the evening so it's easier on your eyes. It's off by default, and your screen is always restored when Yonder quits.</p>
+      <div class="list">
+        <div class="row"><label>Turn on in the evening<small>Fades in at the start time and out after the end time.</small></label><input type="checkbox" class="switch" data-bind="evening.enabled" /></div>
+      </div>
+      <div data-show="evening.enabled">
+        <h3>Schedule</h3>
+        <div class="list">
+          <div class="row"><label>From</label><input type="time" data-bind="evening.from" /></div>
+          <div class="row"><label>To</label><input type="time" data-bind="evening.to" /></div>
+          <div class="row"><label>Fade over</label><span class="stepper"><select id="evFade" data-bind="evening.transition_mins" data-type="number"></select></span></div>
+        </div>
+      </div>
+      <h3>Strength <button class="link" id="evPreview">Preview</button></h3>
+      <div class="list">
+        <div class="row"><label>Color temperature<small id="evTempNote"></small></label><input type="range" min="2700" max="6500" step="100" data-bind="evening.temperature" data-type="number" /></div>
+        <div class="row"><label>Dimming<small id="evDimNote"></small></label><input type="range" min="0" max="60" step="5" data-bind="evening.dim" data-type="number" /></div>
+      </div>
+      <p class="foot">You can also turn the filter on or off from the tray menu. That choice lasts until the schedule next starts or ends.</p>
+      <p class="foot" id="evWinNote" hidden>Windows limits how strong a screen filter can be, so settings warmer than about 3400 K look the same.</p>
+      <p class="foot" id="evUnsupported" hidden></p>
+      <p class="foot">Don't run another color filter (f.lux, Night Light, Night Shift) at the same time: they would fight over the screen.</p>
     </section>
 
     <!-- ======================================================= BREAK SCREEN -->

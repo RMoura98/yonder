@@ -605,6 +605,53 @@ function initWellness() {
 }
 
 // ------------------------------------------------------------------ smart
+function initEvening() {
+  const fade = $("#evFade");
+  fade.innerHTML = "";
+  for (const n of [0, 15, 30, 45, 60]) {
+    fade.add(new Option(n ? plural(n, "1 minute", "{n} minutes") : t("No fade"), String(n)));
+  }
+  if (![...fade.options].some((o) => o.value === String(S.evening.transition_mins))) {
+    fade.add(new Option(plural(S.evening.transition_mins, "1 minute", "{n} minutes"), String(S.evening.transition_mins)));
+  }
+  fade.value = String(S.evening.transition_mins);
+
+  const temp = $("[data-bind='evening.temperature']");
+  const dim = $("[data-bind='evening.dim']");
+  const paint = () => {
+    $("#evTempNote").textContent = `${temp.value} K`;
+    $("#evDimNote").textContent = `${dim.value}%`;
+  };
+  temp.addEventListener("input", paint);
+  dim.addEventListener("input", paint);
+  paint();
+
+  if (platform === "windows") $("#evWinNote").hidden = false;
+  invoke("get_evening_status").then((st) => {
+    if (st.supported) return;
+    const msg = {
+      wayland: "The evening filter isn't available on Wayland. GNOME's Night Light and KDE's Night Color do the same job.",
+      "no-display": "No display to filter was found.",
+    }[st.reason] || "The evening filter isn't available on this system.";
+    const note = $("#evUnsupported");
+    note.textContent = t(msg);
+    note.hidden = false;
+    $("#evPreview").disabled = true;
+  });
+
+  // Preview: save what's on screen first, then show the filter for a few seconds (it restores itself).
+  $("#evPreview").onclick = async () => {
+    clearTimeout(saveTimer);
+    try {
+      await invoke("save_settings", { settings: S });
+      await action("evening_preview");
+      toast(t("Previewing the filter for a few seconds"));
+    } catch (e) {
+      toast(t("Couldn't save: {e}", { e }));
+    }
+  };
+}
+
 function initSmart() {
   if (platform === "macos") {
     $("#dndNote").textContent = t("Reads macOS Focus when possible; may need Full Disk Access for Yonder.");
@@ -1192,6 +1239,7 @@ function renderAll() {
   initScreen();
   initSounds();
   initWellness();
+  initEvening();
   initSmart();
   initSchedule();
   initShortcuts();
