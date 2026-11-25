@@ -493,5 +493,10 @@
   "Screen recording": "屏幕录制",
   "Allow…": "允许…",
   "Allowed. Breaks can show your desktop.": "已允许。休息画面可以显示你的桌面。",
-  "Not allowed yet. Breaks use a plain background until you allow it.": "尚未允许。在你允许之前，休息画面会使用纯色背景。"
+  "Not allowed yet. Breaks use a plain background until you allow it.": "尚未允许。在你允许之前，休息画面会使用纯色背景。",
+  "Break in {t}": "{t} 后休息",
+  "Small text next to the cursor": "光标旁的小文字",
+  "Card with snooze buttons": "带推迟按钮的卡片",
+  "Show it for": "显示时长",
+  "Then it fades away. Snooze or skip from Yonder's icon.": "之后会自动消失。可通过 Yonder 图标推迟或跳过。"
 }

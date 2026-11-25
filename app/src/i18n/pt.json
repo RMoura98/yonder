@@ -493,5 +493,10 @@
   "Screen recording": "Gravação do ecrã",
   "Allow…": "Autorizar…",
   "Allowed. Breaks can show your desktop.": "Autorizado. As pausas podem mostrar o teu ambiente de trabalho.",
-  "Not allowed yet. Breaks use a plain background until you allow it.": "Ainda não autorizado. As pausas usam um fundo simples até autorizares."
+  "Not allowed yet. Breaks use a plain background until you allow it.": "Ainda não autorizado. As pausas usam um fundo simples até autorizares.",
+  "Break in {t}": "Pausa daqui a {t}",
+  "Small text next to the cursor": "Texto pequeno junto ao cursor",
+  "Card with snooze buttons": "Cartão com botões para adiar",
+  "Show it for": "Mostrar durante",
+  "Then it fades away. Snooze or skip from Yonder's icon.": "Depois desaparece. Adia ou salta a partir do ícone do Yonder."
 }

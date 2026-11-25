@@ -178,6 +178,8 @@ function bindAll() {
         input.value = v;
       }
       set(path, v);
+      // keep other controls bound to the same setting in step (e.g. both heads-up duration rows)
+      for (const other of $$(`[data-bind="${path}"]`)) if (other !== input && other.type !== "checkbox" && !other.classList.contains("seg")) other.value = input.value;
       if (input.hasAttribute("data-custom")) markCustomMode();
       save();
     });

@@ -493,5 +493,10 @@
   "Screen recording": "画面収録",
   "Allow…": "許可…",
   "Allowed. Breaks can show your desktop.": "許可済み。休憩画面にデスクトップを表示できます。",
-  "Not allowed yet. Breaks use a plain background until you allow it.": "まだ許可されていません。許可するまで、休憩はシンプルな背景を使います。"
+  "Not allowed yet. Breaks use a plain background until you allow it.": "まだ許可されていません。許可するまで、休憩はシンプルな背景を使います。",
+  "Break in {t}": "{t} 後に休憩",
+  "Small text next to the cursor": "カーソルの横に小さなテキスト",
+  "Card with snooze buttons": "スヌーズボタン付きのカード",
+  "Show it for": "表示時間",
+  "Then it fades away. Snooze or skip from Yonder's icon.": "その後は消えます。スヌーズやスキップは Yonder のアイコンから。"
 }

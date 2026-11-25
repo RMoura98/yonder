@@ -282,10 +282,16 @@
       <h3>Before a break <button class="link" data-act="test_prebreak">Preview</button></h3>
       <div class="list">
         <div class="row"><label>Show a heads-up before a break</label><input type="checkbox" class="switch" data-bind="prebreak_enabled" /></div>
-        <div class="row" data-show="prebreak_enabled"><label>Show it</label><span class="stepper"><select data-bind="prebreak_secs" data-type="number">
-          <option value="15">15 seconds before</option><option value="30">30 seconds before</option><option value="60">1 minute before</option><option value="120">2 minutes before</option><option value="300">5 minutes before</option></select></span></div>
-        <div class="row" data-show="prebreak_enabled"><label>Keep it expanded for<small>Then it shrinks into a small countdown.</small></label><span class="stepper"><select data-bind="prebreak_visible_secs" data-type="number">
-          <option value="5">5 seconds</option><option value="10">10 seconds</option><option value="20">20 seconds</option><option value="60">1 minute</option></select></span></div>
+        <div data-show="prebreak_enabled">
+          <div class="row"><label>Show it</label><span class="stepper"><select data-bind="prebreak_secs" data-type="number">
+            <option value="15">15 seconds before</option><option value="30">30 seconds before</option><option value="60">1 minute before</option><option value="120">2 minutes before</option><option value="300">5 minutes before</option></select></span></div>
+          <div class="row"><label>Style</label><span class="stepper"><select data-bind="prebreak_style">
+            <option value="cursor">Small text next to the cursor</option><option value="card">Card with snooze buttons</option></select></span></div>
+          <div class="row" data-show="prebreak_style=card"><label>Keep it expanded for<small>Then it shrinks into a small countdown.</small></label><span class="stepper"><select data-bind="prebreak_visible_secs" data-type="number">
+            <option value="5">5 seconds</option><option value="10">10 seconds</option><option value="20">20 seconds</option><option value="60">1 minute</option></select></span></div>
+          <div class="row" data-show="prebreak_style=cursor"><label>Show it for<small>Then it fades away. Snooze or skip from Yonder's icon.</small></label><span class="stepper"><select data-bind="prebreak_visible_secs" data-type="number">
+            <option value="5">5 seconds</option><option value="10">10 seconds</option><option value="20">20 seconds</option><option value="60">1 minute</option></select></span></div>
+        </div>
       </div>
       <p class="foot">In the last five seconds a small countdown follows your cursor, so a break never catches you mid-sentence.</p>
     </section>

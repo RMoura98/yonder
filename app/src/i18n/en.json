@@ -493,5 +493,10 @@
   "Screen recording": "Screen recording",
   "Allow…": "Allow…",
   "Allowed. Breaks can show your desktop.": "Allowed. Breaks can show your desktop.",
-  "Not allowed yet. Breaks use a plain background until you allow it.": "Not allowed yet. Breaks use a plain background until you allow it."
+  "Not allowed yet. Breaks use a plain background until you allow it.": "Not allowed yet. Breaks use a plain background until you allow it.",
+  "Break in {t}": "Break in {t}",
+  "Small text next to the cursor": "Small text next to the cursor",
+  "Card with snooze buttons": "Card with snooze buttons",
+  "Show it for": "Show it for",
+  "Then it fades away. Snooze or skip from Yonder's icon.": "Then it fades away. Snooze or skip from Yonder's icon."
 }

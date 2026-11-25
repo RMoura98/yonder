@@ -30,40 +30,81 @@
   <script type="module">
     import { listen, invoke } from "./js/api.js";
     import { clockBadge, setClock } from "./js/clock.js";
+    import { playSound } from "./js/sounds.js";
     import { initI18n, t } from "./js/i18n.js";
     const pill = document.getElementById("pill");
+    const label = document.getElementById("label");
     document.getElementById("badge").innerHTML = clockBadge(26);
     const settings = await invoke("get_settings");
     await initI18n(settings.language);
-    // the number keeps its own element so it can animate
-    document.getElementById("label").innerHTML = t("Starting break in {n}", { n: '<span id="n">5</span>' });
-    let n = document.getElementById("n");
-    let holding = false;
+
+    // Two jobs: the "cursor" heads-up ("Break in 0:54", shown for a while, then fades away)
+    // and, in every style, the last five seconds ("Starting break in 5…1").
+    const FINAL = 5;
+    const lead = Math.max(1, settings.prebreak_secs);
+    const visibleMs = Math.max(3, settings.prebreak_visible_secs) * 1000;
+    const openedAt = Date.now();
+    let mode = ""; // early | final | holding
+    let n = null;
+    let closing = false;
+    let lastLeft = Infinity;
+    // Past its time, the heads-up leaves, unless the final countdown is about to take over.
+    const expired = () => mode === "early" && lastLeft > FINAL + 2 && Date.now() - openedAt > visibleMs;
+
+    const fit = () => {
+      const r = pill.getBoundingClientRect();
+      invoke("fit_window", { width: Math.ceil(r.width + 40), height: Math.ceil(r.height + 40) });
+    };
+    const mmss = (secs) => `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}`;
+    const setMode = (m, left) => {
+      if (mode === m) return;
+      mode = m;
+      if (m === "holding") label.textContent = t("Break when you pause typing");
+      else if (m === "early") label.innerHTML = t("Break in {t}", { t: '<span id="n"></span>' });
+      else label.innerHTML = t("Starting break in {n}", { n: `<span id="n">${left}</span>` });
+      n = document.getElementById("n");
+      requestAnimationFrame(fit);
+    };
+    const close = () => {
+      if (closing) return;
+      closing = true;
+      pill.animate([{ opacity: 1 }, { opacity: 0, transform: "scale(.9)" }], { duration: 250, easing: "ease-in", fill: "forwards" })
+        .finished.then(() => invoke("fit_window", { width: 0, height: 0 }));
+    };
+
     const render = (s) => {
-      if (s.phase !== "working") return;
-      // Due, but waiting for a pause in typing: don't freeze at "in 1".
-      if (s.holding !== holding) {
-        holding = s.holding;
-        document.getElementById("label").textContent = holding ? t("Break when you pause typing") : "";
-        if (!holding) document.getElementById("label").innerHTML = t("Starting break in {n}", { n: '<span id="n">1</span>' });
-        n = document.getElementById("n") || n;
-        const r = pill.getBoundingClientRect();
-        invoke("fit_window", { width: Math.ceil(r.width + 40), height: Math.ceil(r.height + 40) });
-        if (holding) return;
+      if (closing) return;
+      if (s.phase !== "working") {
+        // Previewed from Settings while paused or held: show what the heads-up looks like.
+        if (!mode) { setMode("early"); setClock(pill, 0); n.textContent = mmss(lead); }
+        return;
       }
-      if (holding) return;
+      // Due, but waiting for a pause in typing: don't freeze at "in 1".
+      if (s.holding) return setMode("holding");
       const left = Math.max(1, s.next_break_in);
-      setClock(pill, 1 - Math.min(1, (left - 1) / 5));
+      lastLeft = left;
+      if (left > FINAL) {
+        setMode("early");
+        // the heads-up only stays for a while; the final countdown opens its own pill later
+        if (expired()) return close();
+        setClock(pill, 1 - Math.min(1, left / lead));
+        n.textContent = mmss(left);
+        return;
+      }
+      setMode("final", left);
+      setClock(pill, 1 - Math.min(1, (left - 1) / FINAL));
       const v = String(left);
       if (n.textContent !== v) { n.textContent = v; n.classList.remove("tick"); void n.offsetWidth; n.classList.add("tick"); }
     };
-    render(await invoke("get_state"));
+    const first = await invoke("get_state");
+    render(first);
     listen("state", render);
+    // the heads-up gets its sound; the final countdown stays quiet
+    if (mode === "early" && settings.sound_enabled) playSound("pop", settings.volume * 0.6);
+    // state events come once a second; make sure the heads-up also leaves on time
+    setInterval(() => { if (expired()) close(); }, 500);
     // size the window to the pill, which also shows it (it starts hidden to avoid an empty frame)
-    requestAnimationFrame(() => {
-      const r = pill.getBoundingClientRect();
-      invoke("fit_window", { width: Math.ceil(r.width + 40), height: Math.ceil(r.height + 40) });
-    });
+    requestAnimationFrame(fit);
   </script>
 </body>
 </html>
