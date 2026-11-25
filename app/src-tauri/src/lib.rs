@@ -74,6 +74,55 @@ struct AppState {
     last_link: Mutex<Option<(String, Instant)>>,
     /// Folder holding the log files.
     log_dir: PathBuf,
+    /// macOS: what to restore when a focused break ends (see `remember_before_break`).
+    before_break: Mutex<Option<BeforeBreak>>,
+}
+
+/// A full-screen break makes Yonder the active app (its window needs the keyboard), and on
+/// macOS activating an app brings all its windows forward, Settings included. So before
+/// the break Yonder notes the app you were in and tucks a background Settings window away;
+/// afterwards Settings goes back behind your windows and the keyboard goes back to your app.
+#[derive(Default)]
+struct BeforeBreak {
+    /// Process id of the app that was in front (not Yonder itself).
+    front_app: Option<i32>,
+    /// Settings was open in the background and got hidden for the break.
+    settings_hidden: bool,
+}
+
+fn remember_before_break(app: &AppHandle) {
+    if !cfg!(target_os = "macos") {
+        return;
+    }
+    let front_app = platform::frontmost_app_pid().filter(|pid| *pid as u32 != std::process::id());
+    let mut settings_hidden = false;
+    if let Some(w) = app.get_webview_window("settings") {
+        if w.is_visible().unwrap_or(false) && !w.is_focused().unwrap_or(false) {
+            settings_hidden = w.hide().is_ok();
+        }
+    }
+    let st = state(app);
+    let mut before = st.before_break.lock().unwrap();
+    // A break that starts while another is still closing keeps the first snapshot.
+    if before.is_none() {
+        *before = Some(BeforeBreak { front_app, settings_hidden });
+    }
+}
+
+fn restore_after_break(app: &AppHandle) {
+    let taken = state(app).before_break.lock().unwrap().take();
+    let Some(before) = taken else { return };
+    let handle = app.clone();
+    let _ = app.run_on_main_thread(move || {
+        if before.settings_hidden {
+            if let Some(w) = handle.get_webview_window("settings") {
+                platform::order_back(&w);
+            }
+        }
+        if let Some(pid) = before.front_app {
+            platform::activate_app(pid);
+        }
+    });
 }
 
 fn state(app: &AppHandle) -> tauri::State<'_, AppState> {
@@ -428,6 +477,10 @@ fn start_break_windows(app: &AppHandle) {
     };
     let gentle = state(app).core.lock().unwrap().settings.break_style == "gentle";
     let primary = app.primary_monitor().ok().flatten();
+    // gentle breaks never take focus, so there is nothing to give back afterwards
+    if !gentle {
+        remember_before_break(app);
+    }
 
     if needs_shot {
         if !overlays.is_empty() {
@@ -506,6 +559,7 @@ fn end_break_windows(app: &AppHandle, delay_ms: u64) {
             close_window(&app, &l);
         }
         state(&app).snapshots.lock().unwrap().clear();
+        restore_after_break(&app);
     });
 }
 
@@ -1614,6 +1668,7 @@ pub fn run() {
                 popover_closed: Mutex::new(None),
                 last_link: Mutex::new(None),
                 log_dir,
+                before_break: Mutex::new(None),
             });
 
             let handle = app.handle().clone();
