@@ -1062,14 +1062,14 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
         // Left click opens the popover (right click keeps the menu); Linux hosts keep the menu.
         .show_menu_on_left_click(linux)
         .on_tray_icon_event(|tray, ev| {
-            // A double click (Windows) opens the settings window. Windows reports it as
+            // A double click opens the settings window. Windows reports it as
             // click, double click, click, so the clicks around it must not toggle the popover.
             // The first click of a double click must not open the popover: it would finish
             // loading after Settings opened and take the focus back. So on Windows a single
             // click waits a moment, and any click or double click after it cancels it.
             static LAST_DOUBLE: Mutex<Option<Instant>> = Mutex::new(None);
             static CLICK_SEQ: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-            if let TrayIconEvent::DoubleClick { button: MouseButton::Left, .. } = ev {
+            let double_click = || {
                 *LAST_DOUBLE.lock().unwrap() = Some(Instant::now());
                 CLICK_SEQ.fetch_add(1, Ordering::SeqCst);
                 let app = tray.app_handle().clone();
@@ -1077,6 +1077,9 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
                     close_window(&app, "popover");
                     open_settings(&app);
                 });
+            };
+            if let TrayIconEvent::DoubleClick { button: MouseButton::Left, .. } = ev {
+                double_click();
                 return;
             }
             if let TrayIconEvent::Click { button: MouseButton::Left, button_state: MouseButtonState::Up, rect, .. } = ev {
@@ -1085,6 +1088,19 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
                 }
                 if LAST_DOUBLE.lock().unwrap().map_or(false, |t| t.elapsed() < Duration::from_millis(400)) {
                     return;
+                }
+                // macOS never reports tray double clicks, so two quick clicks in a row count as one.
+                if cfg!(target_os = "macos") {
+                    static LAST_UP: Mutex<Option<Instant>> = Mutex::new(None);
+                    let window = Duration::from_millis(platform::double_click_ms());
+                    let mut last = LAST_UP.lock().unwrap();
+                    if last.map_or(false, |t| t.elapsed() < window) {
+                        *last = None;
+                        drop(last);
+                        double_click();
+                        return;
+                    }
+                    *last = Some(Instant::now());
                 }
                 let seq = CLICK_SEQ.fetch_add(1, Ordering::SeqCst) + 1;
                 let p = rect.position.to_physical::<f64>(1.0);
