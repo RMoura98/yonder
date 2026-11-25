@@ -23,6 +23,15 @@ jobs:
           - platform: ubuntu-22.04
             args: ""
     runs-on: ${{ matrix.platform }}
+    permissions:
+      contents: write
+      # SignPath reads this run's job details and downloads the unsigned artifact with GITHUB_TOKEN.
+      actions: read
+    env:
+      # Windows code signing (see CODE_SIGNING.md) only runs for tag builds of a repo that has the
+      # SIGNPATH_API_TOKEN secret. Forks, pull requests and manual runs build unsigned exactly as before.
+      # (A step's `if:` can't read `secrets`, so the check lives here.)
+      SIGN_WINDOWS: ${{ matrix.platform == 'windows-latest' && startsWith(github.ref, 'refs/tags/') && secrets.SIGNPATH_API_TOKEN != '' }}
     defaults:
       run:
         working-directory: app
@@ -49,6 +58,41 @@ jobs:
 
       - run: npm ci || npm install
 
+      # macOS signing and notarization: inert until the APPLE_* secrets exist. The variables are only
+      # exported when they have values, because tauri treats an empty APPLE_SIGNING_IDENTITY or
+      # APPLE_CERTIFICATE as set (and would override the ad-hoc "-" identity in tauri.conf.json).
+      - name: macOS signing credentials (only when configured)
+        if: matrix.platform == 'macos-latest'
+        shell: bash
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          if [ -z "$APPLE_CERTIFICATE" ] || [ -z "$APPLE_CERTIFICATE_PASSWORD" ] || [ -z "$APPLE_SIGNING_IDENTITY" ]; then
+            echo "No Apple signing secrets: building with the ad-hoc signature as before."
+            exit 0
+          fi
+          {
+            echo "APPLE_CERTIFICATE=$(printf '%s' "$APPLE_CERTIFICATE" | tr -d '\r\n ')"
+            echo "APPLE_CERTIFICATE_PASSWORD=$APPLE_CERTIFICATE_PASSWORD"
+            echo "APPLE_SIGNING_IDENTITY=$APPLE_SIGNING_IDENTITY"
+          } >> "$GITHUB_ENV"
+          echo "Signing with a Developer ID certificate."
+          if [ -n "$APPLE_ID" ] && [ -n "$APPLE_PASSWORD" ] && [ -n "$APPLE_TEAM_ID" ]; then
+            {
+              echo "APPLE_ID=$APPLE_ID"
+              echo "APPLE_PASSWORD=$APPLE_PASSWORD"
+              echo "APPLE_TEAM_ID=$APPLE_TEAM_ID"
+            } >> "$GITHUB_ENV"
+            echo "Notarization enabled."
+          else
+            echo "APPLE_ID / APPLE_PASSWORD / APPLE_TEAM_ID missing: signed but not notarized."
+          fi
+
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -57,10 +101,121 @@ jobs:
           args: ${{ matrix.args }}
           tagName: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}
           releaseName: ${{ startsWith(github.ref, 'refs/tags/') && format('Yonder {0}', github.ref_name) || '' }}
-          releaseBody: "Download the installer for your platform below. Yonder is free and open source — if it helps you, consider [sponsoring](https://github.com/sponsors/RMoura98) ♥"
+          releaseBody: "Download the installer for your platform below. Yonder is free and open source — if it helps you, consider [sponsoring](https://github.com/sponsors/RMoura98) ♥\n\n[Code signing policy](https://github.com/RMoura98/yonder/blob/main/CODE_SIGNING.md)"
           releaseDraft: true
           prerelease: false
 
+      # ---- Windows code signing through SignPath (only when SIGN_WINDOWS is true) -----------------
+      # tauri-action has just put unsigned Windows installers on the draft release. Here:
+      #   1. sign yonder.exe (SignPath request 1),
+      #   2. rebuild the NSIS and MSI installers around the signed exe with `tauri bundle`,
+      #   3. sign both installers (SignPath request 2),
+      #   4. replace the draft-release assets with the signed files.
+      # The portable zip step below then packs the signed yonder.exe, and the checksums job runs after
+      # this whole job, so SHA256SUMS.txt describes the signed files.
+      - name: Prepare yonder.exe for signing
+        id: winsign
+        if: env.SIGN_WINDOWS == 'true'
+        shell: pwsh
+        env:
+          ORG_ID: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+        run: |
+          if (-not $env:ORG_ID) { throw "SIGNPATH_API_TOKEN is set, but the SIGNPATH_ORGANIZATION_ID repository variable is missing." }
+          $version = (Get-Content src-tauri/tauri.conf.json -Raw | ConvertFrom-Json).version
+          "version=$version" >> $env:GITHUB_OUTPUT
+          New-Item -ItemType Directory -Force ../signing/exe | Out-Null
+          Copy-Item src-tauri/target/release/yonder.exe ../signing/exe/
+
+      - name: Upload unsigned yonder.exe
+        id: unsigned-exe
+        if: env.SIGN_WINDOWS == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: yonder-exe-unsigned
+          path: signing/exe/yonder.exe
+          if-no-files-found: error
+
+      - name: Sign yonder.exe (SignPath)
+        if: env.SIGN_WINDOWS == 'true'
+        uses: signpath/github-action-submit-signing-request@a2c5b60d9c75f073142b653c354b632eedce097b # v3.2
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG || 'yonder' }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG || 'release-signing' }}
+          artifact-configuration-slug: ${{ vars.SIGNPATH_EXE_ARTIFACT_CONFIGURATION_SLUG || 'exe' }}
+          github-artifact-id: ${{ steps.unsigned-exe.outputs.artifact-id }}
+          parameters: |
+            version: ${{ toJSON(steps.winsign.outputs.version) }}
+          wait-for-completion: true
+          # Every SignPath Foundation request needs a manual approval; leave time for it.
+          wait-for-completion-timeout-in-seconds: 3600
+          output-artifact-directory: signing/exe-signed
+
+      - name: Rebuild the installers around the signed yonder.exe
+        if: env.SIGN_WINDOWS == 'true'
+        shell: pwsh
+        run: |
+          $version = '${{ steps.winsign.outputs.version }}'
+          $signed = '../signing/exe-signed/yonder.exe'
+          $sig = Get-AuthenticodeSignature $signed
+          if ($sig.Status -ne 'Valid') { throw "yonder.exe from SignPath isn't validly signed: $($sig.Status) $($sig.StatusMessage)" }
+          Copy-Item $signed src-tauri/target/release/yonder.exe -Force
+          # `tauri bundle` reuses the compiled binary. --no-binary-patching keeps it byte-for-byte
+          # (patching would break the signature); only the Tauri updater plugin reads that patch,
+          # and Yonder doesn't use it.
+          npx tauri bundle --bundles nsis,msi --no-binary-patching
+          if ($LASTEXITCODE -ne 0) { throw "tauri bundle failed" }
+          $sig = Get-AuthenticodeSignature src-tauri/target/release/yonder.exe
+          if ($sig.Status -ne 'Valid') { throw "yonder.exe lost its signature while bundling: $($sig.Status)" }
+          New-Item -ItemType Directory -Force ../signing/installers | Out-Null
+          Copy-Item "src-tauri/target/release/bundle/nsis/Yonder_${version}_x64-setup.exe" ../signing/installers/
+          Copy-Item "src-tauri/target/release/bundle/msi/Yonder_${version}_x64_en-US.msi" ../signing/installers/
+
+      - name: Upload unsigned installers
+        id: unsigned-installers
+        if: env.SIGN_WINDOWS == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: yonder-installers-unsigned
+          path: signing/installers/
+          if-no-files-found: error
+
+      - name: Sign the installers (SignPath)
+        if: env.SIGN_WINDOWS == 'true'
+        uses: signpath/github-action-submit-signing-request@a2c5b60d9c75f073142b653c354b632eedce097b # v3.2
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG || 'yonder' }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG || 'release-signing' }}
+          artifact-configuration-slug: ${{ vars.SIGNPATH_INSTALLERS_ARTIFACT_CONFIGURATION_SLUG || 'installers' }}
+          github-artifact-id: ${{ steps.unsigned-installers.outputs.artifact-id }}
+          parameters: |
+            version: ${{ toJSON(steps.winsign.outputs.version) }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 3600
+          output-artifact-directory: signing/installers-signed
+
+      - name: Replace the draft-release installers with the signed ones
+        if: env.SIGN_WINDOWS == 'true'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $version = '${{ steps.winsign.outputs.version }}'
+          $setup = "../signing/installers-signed/Yonder_${version}_x64-setup.exe"
+          $msi = "../signing/installers-signed/Yonder_${version}_x64_en-US.msi"
+          foreach ($f in $setup, $msi) {
+            $sig = Get-AuthenticodeSignature $f
+            if ($sig.Status -ne 'Valid') { throw "$f isn't validly signed: $($sig.Status) $($sig.StatusMessage)" }
+            Write-Host "$f signed by $($sig.SignerCertificate.Subject)"
+          }
+          Copy-Item $setup src-tauri/target/release/bundle/nsis/ -Force
+          Copy-Item $msi src-tauri/target/release/bundle/msi/ -Force
+          gh release upload $env:GITHUB_REF_NAME $setup $msi --clobber
+
+      # Runs after signing, so on signed releases the zip holds the signed yonder.exe.
       - name: Portable Windows zip
         if: matrix.platform == 'windows-latest'
         shell: pwsh
@@ -95,6 +250,8 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
+      # Runs after every build job (including Windows signing) has replaced its assets, so the sums
+      # always describe the files users download.
       - name: Attach SHA256SUMS.txt
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -209,6 +209,11 @@ Thanks to everyone who has helped make Yonder better. Issues and pull requests a
   </picture>
 </a>
 
+## Code signing policy
+
+Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org).
+Who signs what, the team roles and the privacy policy are in [CODE_SIGNING.md](CODE_SIGNING.md).
+
 ## License
 
 [MIT](LICENSE). Icons: [Material Symbols](https://fonts.google.com/icons) (Apache 2.0).
