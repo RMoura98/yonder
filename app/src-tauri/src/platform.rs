@@ -1284,6 +1284,86 @@ pub fn run_hook(cmdline: &str, event: &str, kind: &str, secs: u64) {
         .spawn();
 }
 
+// ------------------------------------------------------ app focus (macOS breaks)
+
+/// Process id of the frontmost app.
+#[cfg(target_os = "macos")]
+pub fn frontmost_app_pid() -> Option<i32> {
+    use objc2::runtime::AnyObject;
+    use objc2::{class, msg_send};
+    // called from worker threads too, which have no autorelease pool of their own
+    objc2::rc::autoreleasepool(|_| unsafe {
+        let workspace: *mut AnyObject = msg_send![class!(NSWorkspace), sharedWorkspace];
+        if workspace.is_null() {
+            return None;
+        }
+        let front: *mut AnyObject = msg_send![workspace, frontmostApplication];
+        if front.is_null() {
+            return None;
+        }
+        let pid: i32 = msg_send![front, processIdentifier];
+        Some(pid)
+    })
+}
+
+#[cfg(not(target_os = "macos"))]
+pub fn frontmost_app_pid() -> Option<i32> {
+    None
+}
+
+/// Whether Yonder is the active app. Call on the main thread.
+#[cfg(target_os = "macos")]
+pub fn yonder_is_active() -> bool {
+    use objc2::runtime::AnyObject;
+    use objc2::{class, msg_send};
+    unsafe {
+        let ns_app: *mut AnyObject = msg_send![class!(NSApplication), sharedApplication];
+        !ns_app.is_null() && msg_send![ns_app, isActive]
+    }
+}
+
+#[cfg(not(target_os = "macos"))]
+pub fn yonder_is_active() -> bool {
+    false
+}
+
+/// Makes the app with this process id active again (only its own front windows come forward).
+/// Call on the main thread.
+#[cfg(target_os = "macos")]
+pub fn activate_app(pid: i32) {
+    use objc2::runtime::AnyObject;
+    use objc2::{class, msg_send};
+    unsafe {
+        let running: *mut AnyObject = msg_send![class!(NSRunningApplication), runningApplicationWithProcessIdentifier: pid];
+        if !running.is_null() {
+            let _: bool = msg_send![running, activateWithOptions: 0usize];
+        }
+    }
+}
+
+#[cfg(not(target_os = "macos"))]
+pub fn activate_app(_pid: i32) {}
+
+/// Puts a window back on screen behind every other window, without activating Yonder.
+/// Call on the main thread.
+#[cfg(target_os = "macos")]
+pub fn order_back(window: &tauri::WebviewWindow) {
+    use objc2::msg_send;
+    use objc2::runtime::AnyObject;
+    if let Ok(ns_window) = window.ns_window() {
+        let ns_window = ns_window as *mut AnyObject;
+        let nil: *mut AnyObject = std::ptr::null_mut();
+        unsafe {
+            let _: () = msg_send![ns_window, orderBack: nil];
+        }
+    }
+}
+
+#[cfg(not(target_os = "macos"))]
+pub fn order_back(window: &tauri::WebviewWindow) {
+    let _ = window.show();
+}
+
 // -------------------------------------------------------------- screenshots
 
 #[cfg(target_os = "macos")]
