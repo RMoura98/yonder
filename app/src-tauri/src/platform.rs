@@ -186,6 +186,13 @@ mod idle_tests {
 /// WNF buffer from `WNF_SHEL_QUIETHOURS_ACTIVE_PROFILE_CHANGED`: a little-endian
 /// integer, non-zero when a Focus / Do not disturb profile is active.
 #[cfg_attr(not(windows), allow(dead_code))]
+/// SHQueryUserNotificationState values that mean Windows' automatic Focus rules
+/// (busy, D3D full screen, presentation), which aren't Do not disturb.
+#[cfg_attr(not(windows), allow(dead_code))]
+fn shell_state_rules_out_dnd(st: i32) -> bool {
+    matches!(st, 2 | 3 | 4)
+}
+
 fn parse_wnf_profile(buf: &[u8]) -> bool {
     buf.iter().take(4).any(|b| *b != 0)
 }
@@ -246,11 +253,11 @@ fn dnd_raw() -> bool {
     // also switch Focus Assist on. Those situations belong to the separate
     // "Fullscreen apps" rule, so while the shell reports BUSY (2), D3D full screen (3)
     // or presentation mode (4), only an explicit quiet-time state counts as DND.
-    if hr == 0 && matches!(st, 2 | 3 | 4) {
+    // Nothing else from it means DND: 5 (QUNS_ACCEPTS_NOTIFICATIONS) is the normal
+    // state, and 6 (QUNS_QUIET_TIME) is the first hour after a new account's first
+    // sign-in. Only the WNF profile below says whether Do not disturb is on.
+    if hr == 0 && shell_state_rules_out_dnd(st) {
         return false;
-    }
-    if hr == 0 && st == 5 {
-        return true;
     }
     // WNF_SHEL_QUIETHOURS_ACTIVE_PROFILE_CHANGED = 0x0D83063EA3BF1C75
     let name: [u32; 2] = [0xA3BF_1C75, 0x0D83_063E];
@@ -1115,6 +1122,10 @@ mod tests {
         assert!(parse_macos_assertions(r#"{"data":[{"storeAssertionRecords":[{"x":1}]}]}"#));
         assert!(!parse_macos_assertions(r#"{"data":[{"storeAssertionRecords":[]}]}"#));
         assert!(!parse_macos_assertions("garbage"));
+        // Windows' automatic Focus rules aren't DND; the normal state (5) and quiet
+        // time (6) leave the decision to the WNF profile.
+        assert!(shell_state_rules_out_dnd(2) && shell_state_rules_out_dnd(3) && shell_state_rules_out_dnd(4));
+        assert!(!shell_state_rules_out_dnd(5) && !shell_state_rules_out_dnd(6));
     }
 
     #[test]
