@@ -1,5 +1,7 @@
 mod cli;
 mod engine;
+mod evening;
+mod gamma;
 mod i18n;
 mod logger;
 mod media;
@@ -42,6 +44,8 @@ struct Paths {
     resume: PathBuf,
     /// Present once Yonder has asked macOS for Screen Recording permission.
     screen_asked: PathBuf,
+    /// Exists while the evening filter has changed the display, so a crash can be cleaned up.
+    evening_marker: PathBuf,
 }
 
 struct TrayItems {
@@ -50,6 +54,8 @@ struct TrayItems {
     skip: MenuItem<Wry>,
     /// "Start/Stop focus session"; the label follows the session state.
     focus: MenuItem<Wry>,
+    /// "Turn on/off evening filter"; the label follows the filter.
+    evening: MenuItem<Wry>,
     pause: Submenu<Wry>,
     resume: MenuItem<Wry>,
     /// "Update available…" entry, inserted at the top only when there is one.
@@ -69,6 +75,7 @@ struct BreakWins {
 struct AppState {
     core: Mutex<Core>,
     paths: Paths,
+    evening: Mutex<evening::Controller>,
     snapshots: Mutex<HashMap<String, String>>,
     /// The break windows currently open, one per monitor.
     break_wins: Mutex<BreakWins>,
@@ -898,6 +905,14 @@ fn run_action(app: &AppHandle, name: &str, arg: Option<i64>) {
         }),
         "stop_focus" => with_core(app, |c| c.stop_focus()),
         "toggle_focus" => with_core(app, |c| c.toggle_focus()),
+        "toggle_evening" => {
+            state(app).evening.lock().unwrap().toggle_manual();
+            evening_tick(app);
+        }
+        "evening_preview" => {
+            state(app).evening.lock().unwrap().start_preview(Instant::now());
+            evening_tick(app);
+        }
         "start_now" => with_core(app, |c| c.start_now()),
         "pause" => with_core(app, |c| c.pause(arg.filter(|a| *a > 0))),
         "pause_tomorrow" => with_core(app, |c| c.pause_until_tomorrow()),
@@ -1258,6 +1273,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     let take = item("take_break", "Take a break now", true)?;
     let skip = item("skip", "Skip next break", true)?;
     let focus = item("toggle_focus", "Start focus session", true)?;
+    let evening = item("toggle_evening", "Turn on evening filter", true)?;
     let p30 = item("pause_30", "For 30 minutes", true)?;
     let p60 = item("pause_60", "For 1 hour", true)?;
     let p120 = item("pause_120", "For 2 hours", true)?;
@@ -1282,7 +1298,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     if linux {
         items.push(&show_status.0);
     }
-    items.extend([&take.0 as &dyn IsMenuItem<Wry>, &skip.0, &focus.0, &pause, &resume.0, &sep2, settings, quit_item]);
+    items.extend([&take.0 as &dyn IsMenuItem<Wry>, &skip.0, &focus.0, &evening.0, &pause, &resume.0, &sep2, settings, quit_item]);
     let menu = Menu::with_items(app, &items)?;
 
     TrayIconBuilder::with_id("main")
@@ -1375,6 +1391,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
         status,
         skip: skip.0,
         focus: focus.0,
+        evening: evening.0,
         pause,
         resume: resume.0,
         update: None,
@@ -1395,6 +1412,8 @@ fn relabel_tray(app: &AppHandle) {
         }
         let _ = t.pause.set_text(i18n::tr(lang, "Pause", &[]));
     }
+    let active = state(app).evening.lock().unwrap().active();
+    relabel_evening(app, active, gamma::support().is_ok());
     let update = state(app).update.lock().unwrap().clone();
     set_tray_update(app, update.as_ref());
 }
@@ -1674,6 +1693,7 @@ fn spawn_ticker(app: AppHandle) {
                 }
                 last_hold = hold.clone();
             }
+            evening_tick(&app);
             let lang = i18n::resolve(&settings.language);
             let fullscreen_only = hold.as_ref().map_or(false, |h| h.1);
             let reason = hold.map(|h| h.0.text(lang));
@@ -1689,6 +1709,124 @@ fn spawn_ticker(app: AppHandle) {
             }
         }
     });
+}
+
+// =================================================================== evening
+
+/// What the evening filter reports to the settings window.
+#[derive(serde::Serialize)]
+struct EveningStatus {
+    /// The display can be filtered here.
+    supported: bool,
+    /// Why not: "wayland", "no-display" or "unsupported".
+    reason: String,
+    /// The filter is on (or fading) right now.
+    active: bool,
+    /// How strong it is right now, 0..=1.
+    strength: f64,
+}
+
+#[tauri::command]
+async fn get_evening_status(app: AppHandle) -> EveningStatus {
+    let (active, strength) = {
+        let st = state(&app);
+        let c = st.evening.lock().unwrap();
+        (c.active(), c.strength())
+    };
+    match gamma::support() {
+        Ok(()) => EveningStatus { supported: true, reason: String::new(), active, strength },
+        Err(r) => EveningStatus { supported: false, reason: r.into(), active: false, strength: 0.0 },
+    }
+}
+
+/// Runs once a second (and right after the tray toggle or Preview): works out what the
+/// display should look like and changes it only when that differs from what is applied.
+fn evening_tick(app: &AppHandle) {
+    use chrono::Timelike;
+    let cfg = state(app).core.lock().unwrap().settings.evening.clone();
+    let now = chrono::Local::now();
+    let now_min = (now.hour() * 60 + now.minute()) as f64 + now.second() as f64 / 60.0;
+    let supported = gamma::support().is_ok();
+    let st = state(app);
+    let mut c = st.evening.lock().unwrap();
+    // Without a way to filter the display the controller stays idle.
+    let step = if supported {
+        c.step(&cfg, now_min, Instant::now(), gamma::MIN_CHANNEL)
+    } else {
+        evening::Step::Nothing
+    };
+    match step {
+        evening::Step::Apply(m) => match gamma::apply(m) {
+            Ok(()) => {
+                // Leave a marker first: if Yonder dies while the filter is on, the next start cleans up.
+                let _ = std::fs::write(&st.paths.evening_marker, b"1");
+                log_debug!("evening filter {:.0}%", c.strength() * 100.0);
+            }
+            Err(e) => {
+                c.apply_failed();
+                static WARNED: AtomicBool = AtomicBool::new(false);
+                if !WARNED.swap(true, Ordering::Relaxed) {
+                    log_warn!("evening filter couldn't be applied: {e}");
+                }
+            }
+        },
+        evening::Step::Reset => {
+            if let Err(e) = gamma::reset() {
+                log_warn!("evening filter couldn't be removed: {e}");
+            }
+            let _ = std::fs::remove_file(&st.paths.evening_marker);
+            log_info!("evening filter off");
+        }
+        evening::Step::Nothing => {}
+    }
+    let active = c.active();
+    drop(c);
+    // keep the tray label and the quick-toggle state in step
+    static LAST: std::sync::atomic::AtomicU8 = std::sync::atomic::AtomicU8::new(0);
+    let want = 1 + u8::from(active) + if supported { 0 } else { 2 };
+    if LAST.swap(want, Ordering::Relaxed) != want {
+        relabel_evening(app, active, supported);
+    }
+}
+
+fn relabel_evening(app: &AppHandle, active: bool, supported: bool) {
+    let lang = ui_lang(app);
+    let key = if active { "Turn off evening filter" } else { "Turn on evening filter" };
+    if let Some(t) = state(app).tray.lock().unwrap().as_ref() {
+        let _ = t.evening.set_text(i18n::tr(lang, key, &[]));
+        let _ = t.evening.set_enabled(supported);
+    }
+}
+
+/// On start: if the filter was left on (a crash, a kill) or is about to be used, put the
+/// display back to normal first so it can never start from a stuck tint.
+fn evening_startup(app: &AppHandle) {
+    let st = state(app);
+    let marker = st.paths.evening_marker.exists();
+    let enabled = st.core.lock().unwrap().settings.evening.enabled;
+    if (marker || enabled) && gamma::support().is_ok() {
+        if marker {
+            log_info!("evening filter was left on by a previous run; resetting the display");
+        }
+        if let Err(e) = gamma::reset() {
+            log_warn!("couldn't reset the display on start: {e}");
+        }
+    }
+    let _ = std::fs::remove_file(&st.paths.evening_marker);
+}
+
+/// On quit: hand the display back untouched.
+fn evening_restore(app: &AppHandle) {
+    let st = state(app);
+    let was_on = st.evening.lock().unwrap().applied().is_some() || st.paths.evening_marker.exists();
+    if was_on {
+        if let Err(e) = gamma::reset() {
+            log_warn!("couldn't restore the display on quit: {e}");
+        }
+        st.evening.lock().unwrap().mark_reset();
+        let _ = std::fs::remove_file(&st.paths.evening_marker);
+        log_info!("evening filter removed on quit");
+    }
 }
 
 // ======================================================================= run
@@ -1782,6 +1920,7 @@ pub fn run() {
                 sounds: data.join("sounds"),
                 resume: data.join("resume.json"),
                 screen_asked: data.join("screen-asked"),
+                evening_marker: data.join("evening-active"),
             };
             let log_dir = app.path().app_log_dir()?;
             logger::init(log_dir.clone());
@@ -1801,6 +1940,7 @@ pub fn run() {
             app.manage(AppState {
                 core: Mutex::new(core),
                 paths,
+                evening: Mutex::new(evening::Controller::default()),
                 snapshots: Mutex::new(HashMap::new()),
                 break_wins: Mutex::new(BreakWins::default()),
                 reminder_queue: Mutex::new(Vec::new()),
@@ -1819,6 +1959,7 @@ pub fn run() {
                 log_warn!("couldn't create the tray icon: {e}");
                 return Err(e.into());
             }
+            evening_startup(&handle);
             register_shortcuts(&handle);
             if first_run && launch {
                 if let Err(e) = handle.autolaunch().enable() {
@@ -1852,6 +1993,7 @@ pub fn run() {
             get_custom_sound,
             remove_custom_sound,
             take_reminders,
+            get_evening_status,
             fit_window,
             open_url,
             platform_name,
@@ -1868,6 +2010,7 @@ pub fn run() {
         .expect("error while building Yonder")
         .run(|app, event| {
             if let tauri::RunEvent::Exit = event {
+                evening_restore(app);
                 save_state(app);
             }
             if let tauri::RunEvent::ExitRequested { api, code, .. } = event {

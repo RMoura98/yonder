@@ -203,6 +203,30 @@ impl Default for Shortcuts {
     }
 }
 
+/// Optional evening screen filter: warms and dims the display on a schedule.
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(default)]
+pub struct Evening {
+    /// Run the schedule. Off by default; the tray toggle works either way.
+    pub enabled: bool,
+    /// Start of the evening, "HH:MM".
+    pub from: String,
+    /// End of the evening (may be after midnight), "HH:MM".
+    pub to: String,
+    /// Minutes the filter takes to fade in after `from` and out after `to`.
+    pub transition_mins: u32,
+    /// Colour temperature at full strength, in kelvin (1900..=6500; 6500 = no tint).
+    pub temperature: u32,
+    /// Extra dimming at full strength, in percent (0..=60).
+    pub dim: u32,
+}
+
+impl Default for Evening {
+    fn default() -> Self {
+        Self { enabled: false, from: "21:00".into(), to: "07:00".into(), transition_mins: 30, temperature: 3400, dim: 10 }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 #[serde(default)]
 pub struct Hooks {
@@ -258,6 +282,7 @@ pub struct Settings {
     pub focus: Focus,
     pub shortcuts: Shortcuts,
     pub hooks: Hooks,
+    pub evening: Evening,
     pub launch_at_login: bool,
     /// system | light | dark
     pub theme: String,
@@ -328,6 +353,7 @@ impl Default for Settings {
             focus: Focus::default(),
             shortcuts: Shortcuts::default(),
             hooks: Hooks::default(),
+            evening: Evening::default(),
             launch_at_login: true,
             theme: "system".into(),
             onboarded: false,
@@ -374,6 +400,17 @@ impl Settings {
         }
         for p in &mut self.planned {
             fix(&mut p.icon, "restaurant");
+        }
+        let e = &mut self.evening;
+        e.temperature = e.temperature.clamp(1900, 6500);
+        e.dim = e.dim.min(60);
+        e.transition_mins = e.transition_mins.min(120);
+        let d = Evening::default();
+        if crate::evening::parse_hhmm(&e.from).is_none() {
+            e.from = d.from;
+        }
+        if crate::evening::parse_hhmm(&e.to).is_none() {
+            e.to = d.to;
         }
     }
 

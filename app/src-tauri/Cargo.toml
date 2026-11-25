@@ -38,7 +38,7 @@ wayland-client = "0.31"
 wayland-protocols = { version = "0.32", features = ["client", "staging"] }
 # Linux screenshots: X11 root capture (pure Rust) and the Wayland portal over D-Bus.
 # xcap is not used here because its Wayland backend needs PipeWire dev packages.
-x11rb = "0.13"
+x11rb = { version = "0.13", features = ["randr"] }
 zbus = "5"
 image = { version = "0.25", default-features = false, features = ["jpeg", "png"] }
 
@@ -50,7 +50,7 @@ core-graphics = "0.25"
 [target.'cfg(windows)'.dependencies]
 winreg = "0.55"
 windows = { version = "0.61", features = ["Media_Control", "Foundation", "Foundation_Collections"] }
-windows-sys = { version = "0.60", features = ["Win32_UI_Input_KeyboardAndMouse", "Win32_System_SystemInformation", "Win32_UI_Shell", "Win32_Foundation", "Win32_UI_WindowsAndMessaging", "Win32_Devices_Display", "Win32_Graphics_Gdi"] }
+windows-sys = { version = "0.60", features = ["Win32_UI_Input_KeyboardAndMouse", "Win32_System_SystemInformation", "Win32_UI_Shell", "Win32_Foundation", "Win32_UI_WindowsAndMessaging", "Win32_Devices_Display", "Win32_Graphics_Gdi", "Win32_UI_ColorSystem"] }
 
 [profile.release]
 codegen-units = 1
