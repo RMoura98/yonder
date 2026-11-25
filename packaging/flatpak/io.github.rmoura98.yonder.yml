@@ -42,8 +42,8 @@ modules:
       - install -Dm644 io.github.rmoura98.yonder.metainfo.xml /app/share/metainfo/io.github.rmoura98.yonder.metainfo.xml
     sources:
       - type: file
-        url: https://github.com/RMoura98/yonder/releases/download/v1.0.8/Yonder_1.0.8_amd64.deb
-        sha256: 57e5d186afb08ec03025e268ca1df8c8cdc8bfb24f1eee2878a16f801040407f
+        url: https://github.com/RMoura98/yonder/releases/download/v1.0.9/Yonder_1.0.9_amd64.deb
+        sha256: 971e32fcb9e22ae36a04e64e4efb6d6b8b2720b3b3d9789b9e84f3e52fc23b7e
         dest-filename: yonder.deb
         only-arches: [x86_64]
         x-checker-data:
