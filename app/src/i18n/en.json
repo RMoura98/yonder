@@ -485,5 +485,13 @@
   "At the latest in {t}.": "At the latest in {t}.",
   "Break in {t} — the hold is over": "Break in {t} — the hold is over",
   "Due": "Due",
-  "break waiting": "break waiting"
+  "break waiting": "break waiting",
+  "Let breaks show your desktop": "Let breaks show your desktop",
+  "The blurred desktop and split screen looks start from a picture of your screen, so macOS asks for Screen Recording permission. The picture is only used for that break and is never saved or sent anywhere.": "The blurred desktop and split screen looks start from a picture of your screen, so macOS asks for Screen Recording permission. The picture is only used for that break and is never saved or sent anywhere.",
+  "After you allow it, macOS offers to quit and reopen Yonder. Setup picks up right here. Rather not? Go back and pick another look.": "After you allow it, macOS offers to quit and reopen Yonder. Setup picks up right here. Rather not? Go back and pick another look.",
+  "After you allow it, macOS offers to quit and reopen Yonder. It comes back to this page.": "After you allow it, macOS offers to quit and reopen Yonder. It comes back to this page.",
+  "Screen recording": "Screen recording",
+  "Allow…": "Allow…",
+  "Allowed. Breaks can show your desktop.": "Allowed. Breaks can show your desktop.",
+  "Not allowed yet. Breaks use a plain background until you allow it.": "Not allowed yet. Breaks use a plain background until you allow it."
 }

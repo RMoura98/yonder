@@ -485,5 +485,13 @@
   "At the latest in {t}.": "遅くとも{t}後に始まります。",
   "Break in {t} — the hold is over": "{t}後に休憩 — 保留は終了しました",
   "Due": "時間",
-  "break waiting": "休憩待ち"
+  "break waiting": "休憩待ち",
+  "Let breaks show your desktop": "休憩画面にデスクトップを表示する",
+  "The blurred desktop and split screen looks start from a picture of your screen, so macOS asks for Screen Recording permission. The picture is only used for that break and is never saved or sent anywhere.": "「ぼかしたデスクトップ」と「分割画面」のスタイルは画面の画像から始まるため、macOS が「画面収録」の許可を求めます。画像はその休憩にだけ使われ、保存も送信も一切されません。",
+  "After you allow it, macOS offers to quit and reopen Yonder. Setup picks up right here. Rather not? Go back and pick another look.": "許可すると、macOS が Yonder の終了と再起動を提案します。セットアップはここから続きます。許可したくない場合は、前に戻って別のスタイルを選んでください。",
+  "After you allow it, macOS offers to quit and reopen Yonder. It comes back to this page.": "許可すると、macOS が Yonder の終了と再起動を提案します。このページに戻ります。",
+  "Screen recording": "画面収録",
+  "Allow…": "許可…",
+  "Allowed. Breaks can show your desktop.": "許可済み。休憩画面にデスクトップを表示できます。",
+  "Not allowed yet. Breaks use a plain background until you allow it.": "まだ許可されていません。許可するまで、休憩はシンプルな背景を使います。"
 }

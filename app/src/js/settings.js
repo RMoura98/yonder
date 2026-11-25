@@ -190,6 +190,34 @@ function refreshVisibility() {
     const v = get(path);
     n.toggleAttribute("data-hidden", !(val === undefined ? !!v : String(v) === val));
   }
+  paintScreenAccess();
+}
+
+// ------------------------------------------------- screen recording (macOS)
+// Blurred-desktop and split-screen breaks start from a screenshot, which macOS only
+// allows with Screen Recording permission. macOS sees a new grant only after Yonder
+// restarts ("Quit & Reopen"), so the screen in use is saved first and restored on launch.
+let screenGranted = true;
+const wantsScreenshot = () =>
+  platform === "macos" && (S.break_style === "split" || (S.break_style === "fullscreen" && S.background === "blur"));
+
+function paintScreenAccess() {
+  const box = $("#screenAccess");
+  if (box) box.hidden = !(wantsScreenshot() && !screenGranted);
+  for (const list of $$(".screen-access")) {
+    const status = screenGranted
+      ? t("Allowed. Breaks can show your desktop.")
+      : t("Not allowed yet. Breaks use a plain background until you allow it.");
+    const end = screenGranted ? `<span class="granted">${icon("check", 20)}</span>` : `<button class="btn" data-screen-ask>${esc(t("Allow…"))}</button>`;
+    list.innerHTML = `<div class="row"><span class="tile" data-tile="violet">${icon("desktop_windows_fill", 17)}</span><label>${esc(t("Screen recording"))}<small>${esc(status)}</small></label>${end}</div>`;
+    const ask = $("[data-screen-ask]", list);
+    if (ask) {
+      ask.onclick = () => {
+        const inSetup = !$("#setup").hidden;
+        invoke("request_screen_access", { page: current, step: inSetup ? setupStep : 0 });
+      };
+    }
+  }
 }
 
 // -------------------------------------------------------------------- nav
@@ -1031,6 +1059,7 @@ function initLanguage() {
 
 // ------------------------------------------------------------ first-run setup
 let setupStep = 1;
+let showSetupStep = () => {};
 const SETUP_MODES = [
   ["balanced", "Balanced", "The classic 20-20-20 rhythm."],
   ["deep_focus", "Deep focus", "Longer stretches, fewer interruptions."],
@@ -1089,6 +1118,7 @@ function initSetup() {
       S.break_style = b.dataset.v;
       paintStyles();
       save();
+      paintNav(); // the screen recording step comes and goes with the look
     })
   );
   paintStyles();
@@ -1100,16 +1130,25 @@ function initSetup() {
     root.hidden = true;
     go("today");
   };
+  // On macOS a look that needs a screenshot adds a step asking for Screen Recording permission
+  // (kept after a grant when setup resumes there, so it can show that it worked).
+  const lastStep = () => (wantsScreenshot() && (!screenGranted || setupStep === 4) ? 4 : 3);
+  const paintNav = () => {
+    const last = lastStep();
+    $("#setupDots").innerHTML = "<i></i>".repeat(last);
+    $$("#setupDots i").forEach((d, i) => d.classList.toggle("on", i === setupStep - 1));
+    $("#setupBack").hidden = setupStep === 1;
+    $("#setupNext").textContent = t(setupStep >= last ? "Get started" : "Next");
+  };
   const show = (n) => {
-    setupStep = n;
-    $$(".setup-step", root).forEach((s) => (s.hidden = Number(s.dataset.step) !== n));
-    $$("#setupDots i").forEach((d, i) => d.classList.toggle("on", i === n - 1));
-    $("#setupBack").hidden = n === 1;
-    $("#setupNext").textContent = t(n === 3 ? "Get started" : "Next");
+    setupStep = Math.min(Math.max(n, 1), 4);
+    $$(".setup-step", root).forEach((s) => (s.hidden = Number(s.dataset.step) !== setupStep));
+    paintNav();
     root.scrollTop = 0;
   };
+  showSetupStep = show;
   $("#setupBack").onclick = () => show(setupStep - 1);
-  $("#setupNext").onclick = () => (setupStep === 3 ? finish() : show(setupStep + 1));
+  $("#setupNext").onclick = () => (setupStep >= lastStep() ? finish() : show(setupStep + 1));
   $("#setupSkip").onclick = finish;
   show(setupStep);
 }
@@ -1166,6 +1205,7 @@ function renderAll() {
 /** One-time startup: load settings, then render; global listeners are attached only here. */
 async function init() {
   [S, platform] = await Promise.all([invoke("get_settings"), invoke("platform_name")]);
+  if (platform === "macos") screenGranted = await invoke("screen_access");
   applyTheme(S.theme);
   await initI18n(S.language);
   renderAll();
@@ -1179,6 +1219,10 @@ async function init() {
     $("#trayIconRow").hidden = false;
   }
   go("today");
+  // Back from a "Quit & Reopen" after a permission request: return to that screen.
+  const resume = await invoke("take_resume");
+  if (resume && !S.onboarded && resume.step) showSetupStep(resume.step);
+  else if (resume && S.onboarded) go(resume.page);
   renderState(await invoke("get_state"));
   refreshToday();
   setInterval(refreshToday, 30000);

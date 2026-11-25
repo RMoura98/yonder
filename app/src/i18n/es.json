@@ -485,5 +485,13 @@
   "At the latest in {t}.": "Como muy tarde en {t}.",
   "Break in {t} — the hold is over": "Pausa en {t} — la espera ha terminado",
   "Due": "Ahora",
-  "break waiting": "pausa en espera"
+  "break waiting": "pausa en espera",
+  "Let breaks show your desktop": "Deja que las pausas muestren tu escritorio",
+  "The blurred desktop and split screen looks start from a picture of your screen, so macOS asks for Screen Recording permission. The picture is only used for that break and is never saved or sent anywhere.": "Los estilos escritorio difuminado y pantalla dividida parten de una imagen de tu pantalla, así que macOS pide permiso de Grabación de pantalla. La imagen solo se usa en esa pausa y nunca se guarda ni se envía a ningún sitio.",
+  "After you allow it, macOS offers to quit and reopen Yonder. Setup picks up right here. Rather not? Go back and pick another look.": "Cuando lo permitas, macOS te ofrecerá salir y volver a abrir Yonder. La configuración seguirá justo aquí. ¿Prefieres que no? Vuelve atrás y elige otro estilo.",
+  "After you allow it, macOS offers to quit and reopen Yonder. It comes back to this page.": "Cuando lo permitas, macOS te ofrecerá salir y volver a abrir Yonder. Volverá a esta página.",
+  "Screen recording": "Grabación de pantalla",
+  "Allow…": "Permitir…",
+  "Allowed. Breaks can show your desktop.": "Permitido. Las pausas pueden mostrar tu escritorio.",
+  "Not allowed yet. Breaks use a plain background until you allow it.": "Aún no permitido. Las pausas usan un fondo simple hasta que lo permitas."
 }

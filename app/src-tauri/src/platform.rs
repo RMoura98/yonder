@@ -1286,6 +1286,41 @@ pub fn run_hook(cmdline: &str, event: &str, kind: &str, secs: u64) {
 
 // -------------------------------------------------------------- screenshots
 
+#[cfg(target_os = "macos")]
+#[link(name = "CoreGraphics", kind = "framework")]
+extern "C" {
+    fn CGPreflightScreenCaptureAccess() -> bool;
+    fn CGRequestScreenCaptureAccess() -> bool;
+}
+
+/// Whether Yonder may capture the screen. Only macOS asks (Screen Recording permission),
+/// and it only notices a new grant after Yonder restarts.
+#[cfg(target_os = "macos")]
+pub fn screen_access() -> bool {
+    unsafe { CGPreflightScreenCaptureAccess() }
+}
+
+#[cfg(not(target_os = "macos"))]
+pub fn screen_access() -> bool {
+    true
+}
+
+/// Asks for Screen Recording permission. macOS shows its own prompt only the first
+/// time; after that it stays silent, so Yonder opens the pane in System Settings.
+#[cfg(target_os = "macos")]
+pub fn request_screen_access(asked_before: bool) {
+    if unsafe { CGRequestScreenCaptureAccess() } || !asked_before {
+        return;
+    }
+    let pane = "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture";
+    if let Err(e) = std::process::Command::new("open").arg(pane).spawn() {
+        crate::logger::warn(&format!("couldn't open System Settings: {e}"));
+    }
+}
+
+#[cfg(not(target_os = "macos"))]
+pub fn request_screen_access(_asked_before: bool) {}
+
 /// A JPEG data URL of the monitor whose top-left corner is closest to (x, y).
 #[cfg(not(target_os = "linux"))]
 pub fn screenshot_near(x: i32, y: i32) -> Option<String> {
