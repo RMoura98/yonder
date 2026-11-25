@@ -36,6 +36,10 @@ struct Paths {
     background: PathBuf,
     /// Folder holding the user's added sounds as data URLs, one file per sound.
     sounds: PathBuf,
+    /// Settings screen to return to after macOS restarts Yonder for a new permission.
+    resume: PathBuf,
+    /// Present once Yonder has asked macOS for Screen Recording permission.
+    screen_asked: PathBuf,
 }
 
 struct TrayItems {
@@ -1244,6 +1248,51 @@ async fn skip_update(app: AppHandle, version: String) {
     let _ = app.emit("update-status", Option::<UpdateInfo>::None);
 }
 
+// ------------------------------------------------------ screen recording permission
+
+/// Where the settings window was when Yonder asked for Screen Recording permission.
+/// macOS then offers to "Quit & Reopen" Yonder, and the window comes back here.
+#[derive(serde::Serialize, serde::Deserialize)]
+struct Resume {
+    page: String,
+    step: u8,
+    at: i64,
+}
+
+/// Whether breaks may photograph the desktop (always true off macOS).
+#[tauri::command]
+async fn screen_access() -> bool {
+    platform::screen_access()
+}
+
+#[tauri::command]
+async fn request_screen_access(app: AppHandle, page: String, step: u8) {
+    let st = state(&app);
+    if let Some(dir) = st.paths.resume.parent() {
+        let _ = std::fs::create_dir_all(dir);
+    }
+    let resume = Resume { page, step, at: engine::now_epoch() };
+    if let Ok(json) = serde_json::to_string(&resume) {
+        if let Err(e) = std::fs::write(&st.paths.resume, json) {
+            log_warn!("couldn't remember the settings screen: {e}");
+        }
+    }
+    let asked_before = st.paths.screen_asked.exists();
+    let _ = std::fs::write(&st.paths.screen_asked, "");
+    log_info!("asking for screen recording permission (asked before: {asked_before})");
+    platform::request_screen_access(asked_before);
+}
+
+/// The screen saved by `request_screen_access`, once, if it is recent.
+#[tauri::command]
+async fn take_resume(app: AppHandle) -> Option<Resume> {
+    let path = &state(&app).paths.resume;
+    let text = std::fs::read_to_string(path).ok()?;
+    let _ = std::fs::remove_file(path);
+    let resume: Resume = serde_json::from_str(&text).ok()?;
+    (engine::now_epoch() - resume.at < 30 * 60).then_some(resume)
+}
+
 #[tauri::command]
 async fn open_logs_folder(app: AppHandle) {
     let dir = state(&app).log_dir.clone();
@@ -1473,6 +1522,8 @@ pub fn run() {
                 state: data.join("state.json"),
                 background: data.join("background.txt"),
                 sounds: data.join("sounds"),
+                resume: data.join("resume.json"),
+                screen_asked: data.join("screen-asked"),
             };
             let log_dir = app.path().app_log_dir()?;
             logger::init(log_dir.clone());
@@ -1548,7 +1599,10 @@ pub fn run() {
             get_update,
             skip_update,
             app_version,
-            open_logs_folder
+            open_logs_folder,
+            screen_access,
+            request_screen_access,
+            take_resume
         ])
         .build(tauri::generate_context!())
         .expect("error while building Yonder")

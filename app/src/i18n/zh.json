@@ -485,5 +485,13 @@
   "At the latest in {t}.": "最迟 {t} 后开始。",
   "Break in {t} — the hold is over": "{t} 后休息 — 等待已结束",
   "Due": "到点",
-  "break waiting": "休息等待中"
+  "break waiting": "休息等待中",
+  "Let breaks show your desktop": "让休息画面显示你的桌面",
+  "The blurred desktop and split screen looks start from a picture of your screen, so macOS asks for Screen Recording permission. The picture is only used for that break and is never saved or sent anywhere.": "模糊桌面和分屏样式需要先截取一张屏幕画面，因此 macOS 会请求“屏幕录制”权限。这张画面只用于当次休息，绝不会被保存或发送到任何地方。",
+  "After you allow it, macOS offers to quit and reopen Yonder. Setup picks up right here. Rather not? Go back and pick another look.": "允许后，macOS 会提示退出并重新打开 Yonder，设置会从这里继续。不想授权？返回上一步选择其他样式。",
+  "After you allow it, macOS offers to quit and reopen Yonder. It comes back to this page.": "允许后，macOS 会提示退出并重新打开 Yonder，并会回到此页面。",
+  "Screen recording": "屏幕录制",
+  "Allow…": "允许…",
+  "Allowed. Breaks can show your desktop.": "已允许。休息画面可以显示你的桌面。",
+  "Not allowed yet. Breaks use a plain background until you allow it.": "尚未允许。在你允许之前，休息画面会使用纯色背景。"
 }

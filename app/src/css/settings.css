@@ -344,3 +344,5 @@ button.on > .pv { outline-color: var(--accent); }
 }
 .focus-line { margin: 4px 0 0; font-weight: 600; font-size: 13px; font-variant-numeric: tabular-nums; color: var(--accent, var(--ink)); }
 .focus-line[hidden] { display: none; }
+.screen-access .granted { display: flex; color: var(--accent); }
+#screenAccess .list { margin-top: 10px; }

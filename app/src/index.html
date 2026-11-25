@@ -251,6 +251,10 @@
           <button data-v="notify"><div class="pv notify"><i></i></div><b>Notification</b><span>Just a desktop notification and a chime</span></button>
         </div>
       </div>
+      <div id="screenAccess" hidden>
+        <div class="list screen-access"></div>
+        <p class="foot">After you allow it, macOS offers to quit and reopen Yonder. It comes back to this page.</p>
+      </div>
       <div data-show="break_style=fullscreen">
         <h3>Background</h3>
         <div class="swatches" id="bgSwatches"></div>
@@ -431,9 +435,16 @@
         </div>
       </div>
 
+      <div class="setup-step" data-step="4" hidden>
+        <h2>Let breaks show your desktop</h2>
+        <p class="lede">The blurred desktop and split screen looks start from a picture of your screen, so macOS asks for Screen Recording permission. The picture is only used for that break and is never saved or sent anywhere.</p>
+        <div class="list setup-list screen-access"></div>
+        <p class="foot">After you allow it, macOS offers to quit and reopen Yonder. Setup picks up right here. Rather not? Go back and pick another look.</p>
+      </div>
+
       <div class="setup-foot">
         <button class="link" id="setupSkip">Skip setup</button>
-        <div class="dots" id="setupDots"><i></i><i></i><i></i></div>
+        <div class="dots" id="setupDots"></div>
         <div class="setup-nav">
           <button class="btn" id="setupBack">Back</button>
           <button class="btn primary" id="setupNext">Next</button>
