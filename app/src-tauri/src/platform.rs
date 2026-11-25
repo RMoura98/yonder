@@ -1409,9 +1409,67 @@ pub fn request_screen_access(asked_before: bool) {
 #[cfg(not(target_os = "macos"))]
 pub fn request_screen_access(_asked_before: bool) {}
 
+/// A monitor rectangle in physical pixels: x, y, width, height.
+pub type MonitorRect = (i32, i32, u32, u32);
+
+#[cfg(any(target_os = "linux", test))]
+fn rgb_to_data_url(rgb: &image::RgbImage) -> Option<String> {
+    use base64::Engine;
+    use image::codecs::jpeg::JpegEncoder;
+    let mut buf = Vec::new();
+    JpegEncoder::new_with_quality(&mut buf, 82).encode_image(rgb).ok()?;
+    Some(format!(
+        "data:image/jpeg;base64,{}",
+        base64::engine::general_purpose::STANDARD.encode(buf)
+    ))
+}
+
+/// Cut one image of the whole desktop into per-monitor JPEG data URLs.
+/// The image may be scaled relative to the monitor rects (fractional scaling
+/// on Wayland), so the rects' bounding box is mapped onto the image.
+#[cfg(any(target_os = "linux", test))]
+fn crop_to_monitors(img: &image::DynamicImage, rects: &[MonitorRect]) -> Vec<Option<String>> {
+    use image::GenericImageView;
+    if rects.is_empty() {
+        return Vec::new();
+    }
+    let min_x = rects.iter().map(|r| r.0).min().unwrap_or(0);
+    let min_y = rects.iter().map(|r| r.1).min().unwrap_or(0);
+    let max_x = rects.iter().map(|r| r.0 + r.2 as i32).max().unwrap_or(1);
+    let max_y = rects.iter().map(|r| r.1 + r.3 as i32).max().unwrap_or(1);
+    let (iw, ih) = img.dimensions();
+    let near = |a: f64| (a - 1.0).abs() < 0.01;
+    let mut sx = iw as f64 / (max_x - min_x).max(1) as f64;
+    let mut sy = ih as f64 / (max_y - min_y).max(1) as f64;
+    if near(sx) {
+        sx = 1.0;
+    }
+    if near(sy) {
+        sy = 1.0;
+    }
+    rects
+        .iter()
+        .map(|&(x, y, w, h)| {
+            let cx = (((x - min_x) as f64 * sx).round() as i64).clamp(0, iw as i64 - 1) as u32;
+            let cy = (((y - min_y) as f64 * sy).round() as i64).clamp(0, ih as i64 - 1) as u32;
+            let cw = ((w as f64 * sx).round() as u32).min(iw - cx).max(1);
+            let ch = ((h as f64 * sy).round() as u32).min(ih - cy).max(1);
+            let part = img.crop_imm(cx, cy, cw, ch).to_rgb8();
+            rgb_to_data_url(&part)
+        })
+        .collect()
+}
+
+/// One JPEG data URL per monitor (None where capturing failed). Called just
+/// before the break windows open; must never block for long.
+#[cfg(not(target_os = "linux"))]
+pub fn screenshots_for(rects: &[MonitorRect]) -> Vec<Option<String>> {
+    rects.iter().map(|r| screenshot_near(r.0, r.1)).collect()
+}
+
 /// A JPEG data URL of the monitor whose top-left corner is closest to (x, y).
 #[cfg(not(target_os = "linux"))]
-pub fn screenshot_near(x: i32, y: i32) -> Option<String> {
+fn screenshot_near(x: i32, y: i32) -> Option<String> {
     use base64::Engine;
     use image::{codecs::jpeg::JpegEncoder, DynamicImage};
 
@@ -1431,7 +1489,201 @@ pub fn screenshot_near(x: i32, y: i32) -> Option<String> {
     ))
 }
 
+/// Linux: the whole desktop is captured once (X11 GetImage on the root window,
+/// or on Wayland the xdg-desktop-portal Screenshot API, then `grim`), then cut
+/// per monitor. Any failure yields None for every monitor and the break falls
+/// back to its backdrop; nothing here may hang a break.
 #[cfg(target_os = "linux")]
-pub fn screenshot_near(_x: i32, _y: i32) -> Option<String> {
-    None
+pub fn screenshots_for(rects: &[MonitorRect]) -> Vec<Option<String>> {
+    let started = std::time::Instant::now();
+    match linux_shot::capture_desktop() {
+        Some(img) => {
+            let out = crop_to_monitors(&img, rects);
+            eprintln!("[yonder] screenshot ok in {} ms", started.elapsed().as_millis());
+            out
+        }
+        None => {
+            eprintln!("[yonder] screenshot unavailable on this session; using the backdrop");
+            vec![None; rects.len()]
+        }
+    }
+}
+
+#[cfg(target_os = "linux")]
+mod linux_shot {
+    use image::{DynamicImage, RgbImage};
+    use std::{
+        collections::HashMap,
+        process::{Command, Stdio},
+        sync::mpsc,
+        time::Duration,
+    };
+
+    /// How long to wait for the Wayland portal. GNOME may show a one-time
+    /// permission dialog; if it is not answered in time the break just goes ahead.
+    const PORTAL_TIMEOUT: Duration = Duration::from_millis(1500);
+
+    pub fn capture_desktop() -> Option<DynamicImage> {
+        let wayland = std::env::var("XDG_SESSION_TYPE")
+            .map(|v| v.eq_ignore_ascii_case("wayland"))
+            .unwrap_or(false)
+            || std::env::var_os("WAYLAND_DISPLAY").is_some();
+        if wayland {
+            // XWayland would only give black or stale pixels, so no X11 attempt here.
+            portal_capture().or_else(grim_capture)
+        } else {
+            x11_capture()
+        }
+    }
+
+    /// Grab the root window with core-protocol GetImage, in strips so no single
+    /// reply is huge. Only the common 32-bpp little-endian BGRX layout is handled.
+    fn x11_capture() -> Option<DynamicImage> {
+        use x11rb::connection::Connection;
+        use x11rb::protocol::xproto::{ConnectionExt, ImageFormat, ImageOrder};
+
+        let (conn, num) = x11rb::connect(None).ok()?;
+        let setup = conn.setup();
+        let screen = &setup.roots[num];
+        if setup.image_byte_order != ImageOrder::LSB_FIRST {
+            return None;
+        }
+        let vis = screen
+            .allowed_depths
+            .iter()
+            .flat_map(|d| d.visuals.iter())
+            .find(|v| v.visual_id == screen.root_visual)?;
+        if vis.red_mask != 0x00ff_0000 || vis.green_mask != 0x0000_ff00 || vis.blue_mask != 0x0000_00ff {
+            return None;
+        }
+        let fmt = setup.pixmap_formats.iter().find(|f| f.depth == screen.root_depth)?;
+        if fmt.bits_per_pixel != 32 {
+            return None;
+        }
+        let (w, h) = (screen.width_in_pixels as usize, screen.height_in_pixels as usize);
+        if w == 0 || h == 0 {
+            return None;
+        }
+        let rows_per = ((4usize << 20) / (w * 4)).clamp(1, h);
+        let mut rgb = Vec::with_capacity(w * h * 3);
+        let mut y = 0usize;
+        while y < h {
+            let n = rows_per.min(h - y);
+            let reply = conn
+                .get_image(ImageFormat::Z_PIXMAP, screen.root, 0, y as i16, w as u16, n as u16, !0)
+                .ok()?
+                .reply()
+                .ok()?;
+            if reply.data.len() < w * n * 4 {
+                return None;
+            }
+            for px in reply.data[..w * n * 4].chunks_exact(4) {
+                rgb.extend_from_slice(&[px[2], px[1], px[0]]);
+            }
+            y += n;
+        }
+        RgbImage::from_raw(w as u32, h as u32, rgb).map(DynamicImage::ImageRgb8)
+    }
+
+    /// org.freedesktop.portal.Screenshot, non-interactive. The result is a
+    /// file URI that we read and delete.
+    fn portal_capture() -> Option<DynamicImage> {
+        let (tx, rx) = mpsc::channel();
+        // A thread so a never-answered request (open permission dialog) can't hang us.
+        std::thread::spawn(move || {
+            let _ = tx.send(portal_request());
+        });
+        let uri = rx.recv_timeout(PORTAL_TIMEOUT).ok()??;
+        let path = uri_to_path(&uri)?;
+        let img = image::open(&path).ok();
+        let _ = std::fs::remove_file(&path);
+        img
+    }
+
+    fn portal_request() -> Option<String> {
+        use zbus::zvariant::{OwnedValue, Value};
+        use zbus::{blocking::Connection, blocking::MessageIterator, message::Type, MatchRule};
+
+        let conn = Connection::session().ok()?;
+        let token = format!("yonder{}", std::process::id());
+        let sender = conn.unique_name()?.as_str().trim_start_matches(':').replace('.', "_");
+        let path = format!("/org/freedesktop/portal/desktop/request/{sender}/{token}");
+        // Subscribe before calling, otherwise a fast Response could be missed.
+        let rule = MatchRule::builder()
+            .msg_type(Type::Signal)
+            .interface("org.freedesktop.portal.Request")
+            .ok()?
+            .member("Response")
+            .ok()?
+            .path(path.as_str())
+            .ok()?
+            .build();
+        let mut responses = MessageIterator::for_match_rule(rule, &conn, Some(4)).ok()?;
+        let mut options: HashMap<&str, Value<'_>> = HashMap::new();
+        options.insert("handle_token", Value::from(token.as_str()));
+        options.insert("interactive", Value::from(false));
+        conn.call_method(
+            Some("org.freedesktop.portal.Desktop"),
+            "/org/freedesktop/portal/desktop",
+            Some("org.freedesktop.portal.Screenshot"),
+            "Screenshot",
+            &("", options),
+        )
+        .ok()?;
+        let msg = responses.next()?.ok()?;
+        let (code, results): (u32, HashMap<String, OwnedValue>) = msg.body().deserialize().ok()?;
+        if code != 0 {
+            return None;
+        }
+        let uri = results.get("uri")?.try_clone().ok()?;
+        String::try_from(uri).ok()
+    }
+
+    /// wlroots compositors (Sway, Hyprland, ...) often lack the portal screenshot.
+    fn grim_capture() -> Option<DynamicImage> {
+        let out = Command::new("grim")
+            .args(["-t", "png", "-"])
+            .stdin(Stdio::null())
+            .stderr(Stdio::null())
+            .output()
+            .ok()?;
+        if !out.status.success() {
+            return None;
+        }
+        image::load_from_memory(&out.stdout).ok()
+    }
+
+    /// `file:///a%20b.png` to `/a b.png`.
+    fn uri_to_path(uri: &str) -> Option<String> {
+        let rest = uri.strip_prefix("file://")?;
+        let bytes = rest.as_bytes();
+        let mut out = Vec::with_capacity(bytes.len());
+        let mut i = 0;
+        while i < bytes.len() {
+            if bytes[i] == b'%' && i + 2 < bytes.len() {
+                let hex = std::str::from_utf8(&bytes[i + 1..i + 3]).ok()?;
+                out.push(u8::from_str_radix(hex, 16).ok()?);
+                i += 3;
+            } else {
+                out.push(bytes[i]);
+                i += 1;
+            }
+        }
+        String::from_utf8(out).ok()
+    }
+}
+
+#[cfg(test)]
+mod shot_tests {
+    use super::*;
+
+    #[test]
+    fn crops_per_monitor_with_scaling() {
+        let img = image::DynamicImage::ImageRgb8(image::RgbImage::new(400, 100));
+        // Two 100x50 monitors side by side, image is 2x the logical size.
+        let out = crop_to_monitors(&img, &[(0, 0, 100, 50), (100, 0, 100, 50)]);
+        assert_eq!(out.len(), 2);
+        assert!(out.iter().all(|o| o.as_deref().map_or(false, |s| s.starts_with("data:image/jpeg"))));
+        assert!(crop_to_monitors(&img, &[]).is_empty());
+    }
 }

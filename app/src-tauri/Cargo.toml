@@ -36,6 +36,11 @@ image = { version = "0.25", default-features = false, features = ["jpeg"] }
 [target.'cfg(target_os = "linux")'.dependencies]
 wayland-client = "0.31"
 wayland-protocols = { version = "0.32", features = ["client", "staging"] }
+# Linux screenshots: X11 root capture (pure Rust) and the Wayland portal over D-Bus.
+# xcap is not used here because its Wayland backend needs PipeWire dev packages.
+x11rb = "0.13"
+zbus = "5"
+image = { version = "0.25", default-features = false, features = ["jpeg", "png"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6"

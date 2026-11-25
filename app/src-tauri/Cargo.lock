@@ -6472,7 +6472,9 @@ dependencies = [
  "windows 0.61.3",
  "windows-sys 0.60.2",
  "winreg 0.55.0",
+ "x11rb",
  "xcap",
+ "zbus 5.19.0",
 ]
 
 [[package]]

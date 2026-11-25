@@ -513,8 +513,12 @@ fn start_break_windows(app: &AppHandle) {
         let st = state(app);
         let mut shots = st.snapshots.lock().unwrap();
         shots.clear();
-        for (i, m) in monitors.iter().enumerate() {
-            if let Some(url) = platform::screenshot_near(m.position().x, m.position().y) {
+        let rects: Vec<platform::MonitorRect> = monitors
+            .iter()
+            .map(|m| (m.position().x, m.position().y, m.size().width, m.size().height))
+            .collect();
+        for (i, url) in platform::screenshots_for(&rects).into_iter().enumerate() {
+            if let Some(url) = url {
                 shots.insert(format!("break-{i}"), url);
             }
         }
