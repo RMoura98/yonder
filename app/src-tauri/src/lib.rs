@@ -265,8 +265,10 @@ fn toggle_popover(app: &AppHandle, anchor: Option<(f64, f64, f64, f64)>) {
         close_window(app, "popover");
         return;
     }
-    // The click that blurred (and so closed) the popover must not reopen it.
-    let recent = state(app).popover_closed.lock().unwrap().map_or(false, |t| t.elapsed() < Duration::from_millis(350));
+    // The click that blurred (and so closed) the popover must not reopen it. Tray clicks wait
+    // up to double_click_ms before toggling (to spot double clicks), so the guard covers that too.
+    let guard = Duration::from_millis(350 + platform::double_click_ms().min(350));
+    let recent = state(app).popover_closed.lock().unwrap().map_or(false, |t| t.elapsed() < guard);
     if !recent {
         show_popover(app, anchor);
     }
