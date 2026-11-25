@@ -92,9 +92,9 @@
     ];
     $("msg").textContent = t(MESSAGES[Math.floor(Math.random() * MESSAGES.length)]);
 
-    const fitTo = (r) => invoke("fit_window", { width: Math.ceil(r.width + 52), height: Math.ceil(r.height + 52), align: "center" });
+    const fitTo = (r) => invoke("fit_window", { width: Math.ceil(r.width + 53), height: Math.ceil(r.height + 53), align: "center" });
     // Layout size, not getBoundingClientRect: that one includes the drop-in scale animation.
-    const box = () => ({ width: card.offsetWidth + 1, height: card.offsetHeight + 1 });
+    const box = () => ({ width: card.offsetWidth, height: card.offsetHeight });
     const fit = () => fitTo(box());
 
     // Expand/collapse by animating the card's real size (FLIP). The window grows
