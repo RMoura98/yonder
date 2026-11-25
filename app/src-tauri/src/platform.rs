@@ -129,6 +129,14 @@ pub fn idle_secs() -> u64 {
         std::env::var("XDG_SESSION_TYPE").ok().as_deref(),
         std::env::var("WAYLAND_DISPLAY").ok().as_deref(),
     );
+    // ext-idle-notify-v1 first on Wayland: it is event driven (no process spawned
+    // per tick), covers KWin and the wlroots family, and is simply `None` on
+    // GNOME (Mutter lacks it), which then falls through to the D-Bus sources.
+    if wayland {
+        if let Some(ms) = crate::wayland_idle::idle_ms() {
+            return ms / 1000;
+        }
+    }
     let candidates: Vec<usize> = (0..ALL.len())
         .filter(|&i| !(wayland && ALL[i] == IdleSource::XPrintIdle))
         .collect();

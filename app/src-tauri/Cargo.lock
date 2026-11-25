@@ -6467,6 +6467,8 @@ dependencies = [
  "tauri-plugin-notification",
  "tauri-plugin-single-instance",
  "ureq",
+ "wayland-client",
+ "wayland-protocols",
  "windows 0.61.3",
  "windows-sys 0.60.2",
  "winreg 0.55.0",

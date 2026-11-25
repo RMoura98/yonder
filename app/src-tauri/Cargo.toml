@@ -33,6 +33,10 @@ sys-locale = "0.3"
 xcap = "0.7"
 image = { version = "0.25", default-features = false, features = ["jpeg"] }
 
+[target.'cfg(target_os = "linux")'.dependencies]
+wayland-client = "0.31"
+wayland-protocols = { version = "0.32", features = ["client", "staging"] }
+
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6"
 core-foundation = "0.10"

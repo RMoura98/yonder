@@ -7,6 +7,7 @@ mod platform;
 mod settings;
 mod stats;
 mod updates;
+mod wayland_idle;
 
 use engine::{Core, Effect, Snapshot};
 use logger::{log_debug, log_info, log_warn};
