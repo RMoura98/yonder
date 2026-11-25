@@ -6454,6 +6454,7 @@ dependencies = [
  "core-foundation",
  "core-graphics",
  "image",
+ "objc2",
  "serde",
  "serde_json",
  "sys-locale",

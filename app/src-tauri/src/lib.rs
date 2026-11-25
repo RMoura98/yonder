@@ -167,6 +167,23 @@ fn show_quietly(window: &WebviewWindow) {
             return;
         }
     }
+    // show() calls makeKeyAndOrderFront, which can pull keyboard focus away from the app
+    // you're typing in; orderFrontRegardless only puts the window on screen, on top.
+    #[cfg(target_os = "macos")]
+    {
+        let w = window.clone();
+        let shown = window.run_on_main_thread(move || {
+            if let Ok(ns_window) = w.ns_window() {
+                let ns_window = ns_window as *mut objc2::runtime::AnyObject;
+                unsafe {
+                    let _: () = objc2::msg_send![ns_window, orderFrontRegardless];
+                }
+            }
+        });
+        if shown.is_ok() {
+            return;
+        }
+    }
     let _ = window.show();
 }
 
