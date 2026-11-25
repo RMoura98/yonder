@@ -52,8 +52,8 @@
     const expired = () => mode === "early" && lastLeft > FINAL + 2 && Date.now() - openedAt > visibleMs;
 
     const fit = () => {
-      const r = pill.getBoundingClientRect();
-      invoke("fit_window", { width: Math.ceil(r.width + 40), height: Math.ceil(r.height + 40) });
+      // layout size, not getBoundingClientRect: that one shrinks with the pop-in scale animation
+      invoke("fit_window", { width: Math.ceil(pill.offsetWidth + 41), height: Math.ceil(pill.offsetHeight + 41) });
     };
     const mmss = (secs) => `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}`;
     const setMode = (m, left) => {
