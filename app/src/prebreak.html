@@ -93,7 +93,9 @@
     $("msg").textContent = t(MESSAGES[Math.floor(Math.random() * MESSAGES.length)]);
 
     const fitTo = (r) => invoke("fit_window", { width: Math.ceil(r.width + 52), height: Math.ceil(r.height + 52), align: "center" });
-    const fit = () => fitTo(card.getBoundingClientRect());
+    // Layout size, not getBoundingClientRect: that one includes the drop-in scale animation.
+    const box = () => ({ width: card.offsetWidth + 1, height: card.offsetHeight + 1 });
+    const fit = () => fitTo(box());
 
     // Expand/collapse by animating the card's real size (FLIP). The window grows
     // before an expansion and shrinks after a collapse, so nothing clips or jumps.
@@ -104,7 +106,7 @@
     let lastW = 0, lastH = 0;
     new ResizeObserver(() => {
       if (anim && anim.playState === "running") return;
-      const r = card.getBoundingClientRect();
+      const r = box();
       if (Math.abs(r.width - lastW) < 1 && Math.abs(r.height - lastH) < 1) return;
       lastW = r.width; lastH = r.height;
       fitTo(r);
@@ -115,7 +117,7 @@
       const cs0 = getComputedStyle(card);
       const from = { width: card.offsetWidth + "px", height: card.offsetHeight + "px", borderRadius: cs0.borderTopLeftRadius };
       card.classList.toggle("mini", on);
-      const r1 = card.getBoundingClientRect();
+      const r1 = box();
       const to = { width: r1.width + "px", height: r1.height + "px", borderRadius: getComputedStyle(card).borderTopLeftRadius };
       const growing = !on;
       if (growing) fitTo(r1);
