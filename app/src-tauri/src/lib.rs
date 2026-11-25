@@ -3,6 +3,7 @@ mod engine;
 mod i18n;
 mod logger;
 mod media;
+mod monitors;
 mod platform;
 mod settings;
 mod stats;
@@ -57,10 +58,20 @@ struct TrayItems {
     labeled: Vec<(MenuItem<Wry>, &'static str)>,
 }
 
+#[derive(Default)]
+struct BreakWins {
+    /// Next number for a window label ("break-N"); labels are never reused within a run.
+    next: usize,
+    /// (label, monitor rectangle, is the primary's window)
+    list: Vec<(String, monitors::Rect, bool)>,
+}
+
 struct AppState {
     core: Mutex<Core>,
     paths: Paths,
     snapshots: Mutex<HashMap<String, String>>,
+    /// The break windows currently open, one per monitor.
+    break_wins: Mutex<BreakWins>,
     reminder_queue: Mutex<Vec<Reminder>>,
     tray: Mutex<Option<TrayItems>>,
     /// (light taskbar, paused) the tray glyph was last drawn for
@@ -170,6 +181,10 @@ fn open_settings(app: &AppHandle) {
         .build();
 }
 
+fn rect_of(m: &tauri::Monitor) -> monitors::Rect {
+    (m.position().x, m.position().y, m.size().width, m.size().height)
+}
+
 fn cursor_monitor(app: &AppHandle) -> Option<tauri::Monitor> {
     let pos = app.cursor_position().ok().map(|p| (p.x, p.y));
     monitor_at(app, pos)
@@ -178,16 +193,10 @@ fn cursor_monitor(app: &AppHandle) -> Option<tauri::Monitor> {
 /// The monitor containing a physical point (the primary one if it is off every screen).
 fn monitor_at(app: &AppHandle, pos: Option<(f64, f64)>) -> Option<tauri::Monitor> {
     let monitors = app.available_monitors().ok()?;
-    if let Some((px, py)) = pos {
-        for m in &monitors {
-            let (mp, ms) = (m.position(), m.size());
-            if px >= mp.x as f64
-                && py >= mp.y as f64
-                && px < (mp.x + ms.width as i32) as f64
-                && py < (mp.y + ms.height as i32) as f64
-            {
-                return Some(m.clone());
-            }
+    if let Some(p) = pos {
+        let rects: Vec<_> = monitors.iter().map(rect_of).collect();
+        if let Some(i) = monitors::index_at(&rects, p) {
+            return Some(monitors[i].clone());
         }
     }
     app.primary_monitor().ok().flatten().or_else(|| monitors.into_iter().next())
@@ -279,16 +288,16 @@ fn strip_title_bar(window: &WebviewWindow, pos: PhysicalPosition<i32>, size: Phy
 fn place_top(app: &AppHandle, win: &WebviewWindow, align_right: bool) {
     let Some(m) = cursor_monitor(app) else { return };
     let scale = m.scale_factor();
-    let size = win.outer_size().unwrap_or(PhysicalSize::new(400, 200));
-    let mp = m.position();
-    let ms = m.size();
-    let top = mp.y + (48.0 * scale) as i32;
-    let x = if align_right {
-        mp.x + ms.width as i32 - size.width as i32 - (20.0 * scale) as i32
-    } else {
-        mp.x + (ms.width as i32 - size.width as i32) / 2
-    };
+    let size = size_on(win, scale, (400, 200));
+    let (x, top) = monitors::top_position(rect_of(&m), scale, size, align_right);
     let _ = win.set_position(PhysicalPosition::new(x, top));
+}
+
+/// The window's physical size once it sits on a monitor with DPI scale `to` (it is
+/// measured on the monitor it is on now, which may have a different scale).
+fn size_on(win: &WebviewWindow, to: f64, fallback: (u32, u32)) -> (u32, u32) {
+    let cur = win.outer_size().map(|s| (s.width, s.height)).unwrap_or(fallback);
+    monitors::rescale(cur, win.scale_factor().unwrap_or(to), to)
 }
 
 /// The heads-up before a break, in the style picked in Settings.
@@ -423,9 +432,9 @@ fn place_popover(app: &AppHandle, win: &WebviewWindow) {
     let Some((ax, ay, aw, ah)) = anchor else { return place_top(app, win, true) };
     let Some(m) = monitor_at(app, Some((ax + aw / 2.0, ay + ah / 2.0))) else { return };
     let scale = m.scale_factor();
-    let size = win.outer_size().unwrap_or(PhysicalSize::new(332, 400));
+    let size = size_on(win, scale, (332, 400));
     let (mp, ms) = (m.position(), m.size());
-    let (w, h) = (size.width as f64, size.height as f64);
+    let (w, h) = (size.0 as f64, size.1 as f64);
     let (mx, my, mw, mh) = (mp.x as f64, mp.y as f64, ms.width as f64, ms.height as f64);
     // the page keeps 16px of shadow room around the card; the card sits 8px off the icon
     let off = 8.0 * scale;
@@ -490,8 +499,9 @@ fn start_break_windows(app: &AppHandle) {
     if state(app).core.lock().unwrap().settings.break_style == "notify" {
         return notify_break(app);
     }
-    let monitors = match app.available_monitors() {
-        Ok(m) => m,
+    let mons = match app.available_monitors() {
+        Ok(m) if !m.is_empty() => m,
+        Ok(_) => return log_warn!("no monitors reported for the break"),
         Err(e) => return log_warn!("couldn't list monitors for the break: {e}"),
     };
     let needs_shot = {
@@ -499,75 +509,171 @@ fn start_break_windows(app: &AppHandle) {
         let s = &st.core.lock().unwrap().settings;
         s.break_style == "split" || (s.break_style != "gentle" && s.background == "blur")
     };
-    let gentle = state(app).core.lock().unwrap().settings.break_style == "gentle";
-    let primary = app.primary_monitor().ok().flatten();
-    // gentle breaks never take focus, so there is nothing to give back afterwards
-    if !gentle {
+    let primary = primary_rect(app, &mons);
+    log_info!(
+        "break on {} monitor(s): {}",
+        mons.len(),
+        mons.iter()
+            .map(|m| {
+                let r = rect_of(m);
+                format!(
+                    "{}x{} at {},{} scale {:.2}{}",
+                    r.2,
+                    r.3,
+                    r.0,
+                    r.1,
+                    m.scale_factor(),
+                    if r == primary { " (primary)" } else { "" }
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("; ")
+    );
+
+    // a fresh break starts from a clean slate (stale windows from a crashed break included)
+    {
+        let st = state(app);
+        let mut bw = st.break_wins.lock().unwrap();
+        for (label, _, _) in bw.list.drain(..) {
+            close_window(app, &label);
+        }
+    }
+
+    // gentle breaks never take focus, so there is nothing to give back afterwards (macOS)
+    if state(app).core.lock().unwrap().settings.break_style != "gentle" {
         remember_before_focus(app);
     }
 
+    let mut shots: Vec<Option<String>> = vec![None; mons.len()];
     if needs_shot {
         if !overlays.is_empty() {
             std::thread::sleep(Duration::from_millis(150));
         }
-        let st = state(app);
-        let mut shots = st.snapshots.lock().unwrap();
-        shots.clear();
-        let rects: Vec<platform::MonitorRect> = monitors
-            .iter()
-            .map(|m| (m.position().x, m.position().y, m.size().width, m.size().height))
-            .collect();
-        for (i, url) in platform::screenshots_for(&rects).into_iter().enumerate() {
-            if let Some(url) = url {
-                shots.insert(format!("break-{i}"), url);
-            }
-        }
+        let wanted: Vec<_> = mons.iter().map(|m| (rect_of(m), m.scale_factor())).collect();
+        shots = platform::screenshots_for(&wanted);
+        state(app).snapshots.lock().unwrap().clear();
     }
 
-    for (i, m) in monitors.iter().enumerate() {
-        let label = format!("break-{i}");
-        if app.get_webview_window(&label).is_some() {
-            continue;
-        }
-        let is_primary = primary
-            .as_ref()
-            .map(|p| p.position() == m.position())
-            .unwrap_or(i == 0);
-        let url = format!("break.html?primary={}", if is_primary { 1 } else { 0 });
-        let Ok(w) = WebviewWindowBuilder::new(app, &label, WebviewUrl::App(url.into()))
-            .focusable(!gentle)
-            .title("Yonder break")
-            .decorations(false)
-            .transparent(true)
-            .always_on_top(true)
-            .skip_taskbar(true)
-            .resizable(false)
-            .shadow(false)
-            .visible_on_all_workspaces(true)
-            .visible(false)
-            .build()
-        else {
-            continue;
-        };
-        let _ = w.set_position(*m.position());
-        let _ = w.set_size(*m.size());
-        // Native fullscreen covers the monitor pixel-exactly (no stray borders), which
-        // keeps the split-screen illusion seamless. macOS fullscreen would open a new
-        // Space with an animation, so there we keep the borderless, monitor-sized window.
-        // Gentle mode is a click-through veil: no fullscreen (keeps the taskbar and the
-        // user's apps undisturbed), never focused, and the mouse passes straight through.
-        if gentle {
-            let _ = w.set_ignore_cursor_events(true);
-            strip_title_bar(&w, *m.position(), *m.size());
-            show_quietly(&w);
-            continue;
-        }
-        #[cfg(not(target_os = "macos"))]
-        let _ = w.set_fullscreen(true);
+    for (m, shot) in mons.iter().zip(shots) {
+        open_break_window(app, m, rect_of(m) == primary, shot);
+    }
+}
+
+/// The primary monitor's rectangle (the first monitor if the OS names none).
+fn primary_rect(app: &AppHandle, mons: &[tauri::Monitor]) -> monitors::Rect {
+    app.primary_monitor()
+        .ok()
+        .flatten()
+        .map(|p| rect_of(&p))
+        .or_else(|| mons.first().map(rect_of))
+        .unwrap_or((0, 0, 0, 0))
+}
+
+/// Opens the break overlay for one monitor. Only the primary one carries the controls
+/// and the sound (`?primary=1`) and takes focus; `shot` is that monitor's own desktop picture.
+fn open_break_window(app: &AppHandle, m: &tauri::Monitor, is_primary: bool, shot: Option<String>) {
+    let gentle = state(app).core.lock().unwrap().settings.break_style == "gentle";
+    let label = {
+        let st = state(app);
+        let mut bw = st.break_wins.lock().unwrap();
+        let label = format!("break-{}", bw.next);
+        bw.next += 1;
+        label
+    };
+    let url = format!("break.html?primary={}", if is_primary { 1 } else { 0 });
+    if let Some(s) = shot {
+        state(app).snapshots.lock().unwrap().insert(label.clone(), s);
+    }
+    let Ok(w) = WebviewWindowBuilder::new(app, &label, WebviewUrl::App(url.into()))
+        .focusable(!gentle)
+        .title("Yonder break")
+        .decorations(false)
+        .transparent(true)
+        .always_on_top(true)
+        .skip_taskbar(true)
+        .resizable(false)
+        .shadow(false)
+        .visible_on_all_workspaces(true)
+        .visible(false)
+        .build()
+    else {
+        log_warn!("couldn't open the break window {label}");
+        state(app).snapshots.lock().unwrap().remove(&label);
+        return;
+    };
+    state(app).break_wins.lock().unwrap().list.push((label, rect_of(m), is_primary));
+    // The window starts on the primary monitor; moving it to a monitor with another
+    // DPI scale can rescale it, so place, size, then place again.
+    let _ = w.set_position(*m.position());
+    let _ = w.set_size(*m.size());
+    let _ = w.set_position(*m.position());
+    // Native fullscreen covers the monitor pixel-exactly (no stray borders), which
+    // keeps the split-screen illusion seamless. macOS fullscreen would open a new
+    // Space with an animation, so there we keep the borderless, monitor-sized window.
+    // Gentle mode is a click-through veil: no fullscreen (keeps the taskbar and the
+    // user's apps undisturbed), never focused, and the mouse passes straight through.
+    if gentle {
+        let _ = w.set_ignore_cursor_events(true);
         strip_title_bar(&w, *m.position(), *m.size());
-        let _ = w.show();
-        if is_primary {
-            let _ = w.set_focus();
+        show_quietly(&w);
+        return;
+    }
+    #[cfg(not(target_os = "macos"))]
+    let _ = w.set_fullscreen(true);
+    strip_title_bar(&w, *m.position(), *m.size());
+    let _ = w.show();
+    if is_primary {
+        let _ = w.set_focus();
+    }
+}
+
+/// Keeps the break overlays in step with the monitors while a break is showing: a
+/// monitor that was unplugged loses its window, a newly attached one gets one (without
+/// a desktop picture: the overlays would be in the shot, so it uses the plain backdrop).
+/// If the primary changed, its window is reopened so the controls follow it.
+fn sync_break_windows(app: &AppHandle) {
+    let Ok(mons) = app.available_monitors() else { return };
+    if mons.is_empty() {
+        return; // mid-reconfiguration; try again next tick
+    }
+    let primary = primary_rect(app, &mons);
+    let now: Vec<monitors::Rect> = mons.iter().map(rect_of).collect();
+    let (have, had_primary): (Vec<monitors::Rect>, Option<monitors::Rect>) = {
+        let st = state(app);
+        let bw = st.break_wins.lock().unwrap();
+        (bw.list.iter().map(|e| e.1).collect(), bw.list.iter().find(|e| e.2).map(|e| e.1))
+    };
+    if have.is_empty() {
+        return; // no overlays (notification style, or the break just ended)
+    }
+    let (gone, added) = monitors::diff(&have, &now);
+    let primary_moved = had_primary != Some(primary) && now.contains(&primary) && have.contains(&primary);
+    if gone.is_empty() && added.is_empty() && !primary_moved {
+        return;
+    }
+    log_info!("monitors changed during the break: {} closed, {} added", gone.len(), added.len());
+    let mut reopen: Vec<monitors::Rect> = added.iter().map(|&i| now[i]).collect();
+    {
+        let st = state(app);
+        let mut bw = st.break_wins.lock().unwrap();
+        let mut keep = Vec::new();
+        for (label, r, was_primary) in bw.list.drain(..) {
+            let stale = !now.contains(&r) || (was_primary != (r == primary));
+            if stale {
+                close_window(app, &label);
+                st.snapshots.lock().unwrap().remove(&label);
+                if now.contains(&r) {
+                    reopen.push(r); // same monitor, new role
+                }
+            } else {
+                keep.push((label, r, was_primary));
+            }
+        }
+        bw.list = keep;
+    }
+    for r in reopen {
+        if let Some(m) = mons.iter().find(|m| rect_of(m) == r) {
+            open_break_window(app, m, r == primary, None);
         }
     }
 }
@@ -587,6 +693,7 @@ fn end_break_windows(app: &AppHandle, delay_ms: u64) {
             close_window(&app, &l);
         }
         state(&app).snapshots.lock().unwrap().clear();
+        state(&app).break_wins.lock().unwrap().list.clear();
         restore_after_focus(&app);
     });
 }
@@ -1093,6 +1200,10 @@ async fn fit_window(window: WebviewWindow, width: f64, height: f64, align: Optio
         "popover" => place_popover(&app, &window),
         _ => place_top(&app, &window, align.as_deref() == Some("right")),
     }
+    if window.label() != "cursor" {
+        // Moving to a monitor with another DPI scale can rescale the window: restate the size.
+        let _ = window.set_size(tauri::LogicalSize::new(width, height));
+    }
     if window.label() == "popover" {
         // the one floating window that takes focus: you just clicked the tray for it
         if !window.is_visible().unwrap_or(true) {
@@ -1570,6 +1681,9 @@ fn spawn_ticker(app: AppHandle) {
                 c.e.smart_fullscreen = fullscreen_only;
                 c.tick(idle, reason)
             });
+            if on_break && frame % 2 == 0 {
+                sync_break_windows(&app);
+            }
             if frame % 60 == 0 {
                 save_state(&app);
             }
@@ -1688,6 +1802,7 @@ pub fn run() {
                 core: Mutex::new(core),
                 paths,
                 snapshots: Mutex::new(HashMap::new()),
+                break_wins: Mutex::new(BreakWins::default()),
                 reminder_queue: Mutex::new(Vec::new()),
                 tray: Mutex::new(None),
                 tray_look: Mutex::new(None),

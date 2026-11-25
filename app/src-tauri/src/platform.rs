@@ -1410,7 +1410,8 @@ pub fn request_screen_access(asked_before: bool) {
 pub fn request_screen_access(_asked_before: bool) {}
 
 /// A monitor rectangle in physical pixels: x, y, width, height.
-pub type MonitorRect = (i32, i32, u32, u32);
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+pub type MonitorRect = crate::monitors::Rect;
 
 #[cfg(any(target_os = "linux", test))]
 fn rgb_to_data_url(rgb: &image::RgbImage) -> Option<String> {
@@ -1460,33 +1461,48 @@ fn crop_to_monitors(img: &image::DynamicImage, rects: &[MonitorRect]) -> Vec<Opt
         .collect()
 }
 
-/// One JPEG data URL per monitor (None where capturing failed). Called just
-/// before the break windows open; must never block for long.
+/// One JPEG data URL per requested monitor, in order (`None` where the capture failed).
+/// Each entry is a monitor's physical rectangle and DPI scale as the window toolkit
+/// reports it; it is matched to a captured display by overlap, never by order, so a
+/// monitor left of / above the primary or at another scale gets its own picture.
 #[cfg(not(target_os = "linux"))]
-pub fn screenshots_for(rects: &[MonitorRect]) -> Vec<Option<String>> {
-    rects.iter().map(|r| screenshot_near(r.0, r.1)).collect()
-}
-
-/// A JPEG data URL of the monitor whose top-left corner is closest to (x, y).
-#[cfg(not(target_os = "linux"))]
-fn screenshot_near(x: i32, y: i32) -> Option<String> {
+pub fn screenshots_for(wanted: &[(crate::monitors::Rect, f64)]) -> Vec<Option<String>> {
     use base64::Engine;
     use image::{codecs::jpeg::JpegEncoder, DynamicImage};
 
-    let monitors = xcap::Monitor::all().ok()?;
-    let mon = monitors.into_iter().min_by_key(|m| {
-        let mx = m.x().unwrap_or(0);
-        let my = m.y().unwrap_or(0);
-        (mx - x).abs() + (my - y).abs()
-    })?;
-    let img = mon.capture_image().ok()?;
-    let rgb = DynamicImage::ImageRgba8(img).to_rgb8();
-    let mut buf = Vec::new();
-    JpegEncoder::new_with_quality(&mut buf, 82).encode_image(&rgb).ok()?;
-    Some(format!(
-        "data:image/jpeg;base64,{}",
-        base64::engine::general_purpose::STANDARD.encode(buf)
-    ))
+    let Ok(displays) = xcap::Monitor::all() else {
+        return vec![None; wanted.len()];
+    };
+    let rects: Vec<crate::monitors::Rect> = displays
+        .iter()
+        .map(|m| (m.x().unwrap_or(0), m.y().unwrap_or(0), m.width().unwrap_or(0), m.height().unwrap_or(0)))
+        .collect();
+    wanted
+        .iter()
+        .map(|(r, scale)| {
+            // xcap reports physical pixels on Windows, but points on macOS (where the
+            // toolkit's physical coordinates are points times that monitor's scale).
+            let want = if cfg!(target_os = "macos") && *scale > 0.0 {
+                (
+                    (r.0 as f64 / scale).round() as i32,
+                    (r.1 as f64 / scale).round() as i32,
+                    (r.2 as f64 / scale).round() as u32,
+                    (r.3 as f64 / scale).round() as u32,
+                )
+            } else {
+                *r
+            };
+            let idx = crate::monitors::best_match(&rects, want)?;
+            let img = displays[idx].capture_image().ok()?;
+            let rgb = DynamicImage::ImageRgba8(img).to_rgb8();
+            let mut buf = Vec::new();
+            JpegEncoder::new_with_quality(&mut buf, 82).encode_image(&rgb).ok()?;
+            Some(format!(
+                "data:image/jpeg;base64,{}",
+                base64::engine::general_purpose::STANDARD.encode(buf)
+            ))
+        })
+        .collect()
 }
 
 /// Linux: the whole desktop is captured once (X11 GetImage on the root window,
@@ -1494,16 +1510,18 @@ fn screenshot_near(x: i32, y: i32) -> Option<String> {
 /// per monitor. Any failure yields None for every monitor and the break falls
 /// back to its backdrop; nothing here may hang a break.
 #[cfg(target_os = "linux")]
-pub fn screenshots_for(rects: &[MonitorRect]) -> Vec<Option<String>> {
+pub fn screenshots_for(wanted: &[(crate::monitors::Rect, f64)]) -> Vec<Option<String>> {
+    let rects: Vec<MonitorRect> = wanted.iter().map(|w| w.0).collect();
+    let rects = &rects[..];
     let started = std::time::Instant::now();
     match linux_shot::capture_desktop() {
         Some(img) => {
             let out = crop_to_monitors(&img, rects);
-            eprintln!("[yonder] screenshot ok in {} ms", started.elapsed().as_millis());
+            crate::logger::info(&format!("screenshot ok in {} ms", started.elapsed().as_millis()));
             out
         }
         None => {
-            eprintln!("[yonder] screenshot unavailable on this session; using the backdrop");
+            crate::logger::info("screenshot unavailable on this session; using the backdrop");
             vec![None; rects.len()]
         }
     }
