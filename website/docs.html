@@ -269,17 +269,8 @@ sudo apt update &amp;&amp; sudo apt install yonder</code></pre>
 
       <section class="doc-section" id="shortcuts">
         <h2>Keyboard shortcuts</h2>
-        <p>Global shortcuts work from any app. Rebind them in <em>Settings → Shortcuts &amp; automation</em>. On macOS, <kbd class="k">Ctrl</kbd> is replaced by <kbd class="k">⌘</kbd>.</p>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Action</th><th>Default</th></tr></thead>
-            <tbody>
-              <tr><td>Take a break now</td><td><kbd class="k">Ctrl</kbd> <kbd class="k">Alt</kbd> <kbd class="k">B</kbd></td></tr>
-              <tr><td>Pause / resume reminders</td><td><kbd class="k">Ctrl</kbd> <kbd class="k">Alt</kbd> <kbd class="k">P</kbd></td></tr>
-              <tr><td>Skip the next break</td><td><kbd class="k">Ctrl</kbd> <kbd class="k">Alt</kbd> <kbd class="k">S</kbd></td></tr>
-            </tbody>
-          </table>
-        </div>
+        <p>Global shortcuts work from any app: <em>Take a break now</em>, <em>Pause / resume</em>, <em>Skip next break</em> and <em>Start / stop focus session</em>. None is set by default, because a global shortcut takes its keys away from every other app. Set the ones you want in <em>Settings → Keyboard Shortcuts</em>: click a shortcut and press a combination. The <strong>×</strong> next to it (or <kbd class="k">Backspace</kbd>) unsets it.</p>
+        <p>Before 1.0.11 they defaulted to <kbd class="k">Ctrl</kbd> <kbd class="k">Alt</kbd> <kbd class="k">B</kbd> / <kbd class="k">P</kbd> / <kbd class="k">S</kbd> (<kbd class="k">⌘</kbd> <kbd class="k">⌥</kbd> on macOS). Updating clears those defaults once; shortcuts you picked yourself stay.</p>
         <p>Inside a break, <kbd class="k">Esc</kbd> skips / ends the break when your <a href="#skip-difficulty">skip difficulty</a> allows it.</p>
         <h3>Automation</h3>
         <p>Under <em>Settings → Shortcuts &amp; automation</em> you can set a shell command (a hook) that runs when a break starts, ends or is skipped. Useful for pausing music, changing your chat status or dimming smart lights. The command receives these environment variables:</p>
