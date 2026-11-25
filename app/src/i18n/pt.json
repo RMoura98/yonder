@@ -487,10 +487,10 @@
   "Due": "Agora",
   "break waiting": "pausa em espera",
   "Let breaks show your desktop": "Deixa as pausas mostrar o teu ambiente de trabalho",
-  "The blurred desktop and split screen looks start from a picture of your screen, so macOS asks for Screen Recording permission. The picture is only used for that break and is never saved or sent anywhere.": "Os estilos ambiente de trabalho desfocado e ecrã dividido partem de uma imagem do teu ecrã, por isso o macOS pede autorização de Gravação de ecrã. A imagem só é usada nessa pausa e nunca é guardada nem enviada para lado nenhum.",
+  "The blurred desktop and split screen looks start from a picture of your screen, so macOS asks for Screen Recording permission. The picture is only used for that break and is never saved or sent anywhere.": "Os estilos ambiente desfocado e ecrã dividido partem de uma imagem do teu ecrã, por isso o macOS pede autorização de Gravação do ecrã. A imagem só é usada nessa pausa e nunca é guardada nem enviada para lado nenhum.",
   "After you allow it, macOS offers to quit and reopen Yonder. Setup picks up right here. Rather not? Go back and pick another look.": "Depois de autorizares, o macOS propõe sair e reabrir o Yonder. A configuração continua aqui mesmo. Preferes não? Volta atrás e escolhe outro estilo.",
   "After you allow it, macOS offers to quit and reopen Yonder. It comes back to this page.": "Depois de autorizares, o macOS propõe sair e reabrir o Yonder. Ele volta a esta página.",
-  "Screen recording": "Gravação de ecrã",
+  "Screen recording": "Gravação do ecrã",
   "Allow…": "Autorizar…",
   "Allowed. Breaks can show your desktop.": "Autorizado. As pausas podem mostrar o teu ambiente de trabalho.",
   "Not allowed yet. Breaks use a plain background until you allow it.": "Ainda não autorizado. As pausas usam um fundo simples até autorizares."

@@ -486,12 +486,12 @@
   "Break in {t} — the hold is over": "Pause in {t} – das Warten ist vorbei",
   "Due": "Fällig",
   "break waiting": "Pause wartet",
-  "Let breaks show your desktop": "Lass Pausen deinen Schreibtisch zeigen",
-  "The blurred desktop and split screen looks start from a picture of your screen, so macOS asks for Screen Recording permission. The picture is only used for that break and is never saved or sent anywhere.": "Die Stile „Verschwommener Schreibtisch“ und „Geteilter Bildschirm“ beginnen mit einem Bild deines Bildschirms, deshalb fragt macOS nach der Berechtigung für Bildschirmaufnahme. Das Bild wird nur für diese Pause verwendet und nie gespeichert oder irgendwohin gesendet.",
+  "Let breaks show your desktop": "Lass Pausen deinen Desktop zeigen",
+  "The blurred desktop and split screen looks start from a picture of your screen, so macOS asks for Screen Recording permission. The picture is only used for that break and is never saved or sent anywhere.": "Die Stile „Unscharfer Desktop“ und „Geteilter Bildschirm“ beginnen mit einem Bild deines Bildschirms, deshalb fragt macOS nach der Berechtigung für Bildschirmaufnahme. Das Bild wird nur für diese Pause verwendet und nie gespeichert oder irgendwohin gesendet.",
   "After you allow it, macOS offers to quit and reopen Yonder. Setup picks up right here. Rather not? Go back and pick another look.": "Sobald du es erlaubst, bietet macOS an, Yonder zu beenden und neu zu öffnen. Die Einrichtung geht genau hier weiter. Lieber nicht? Geh zurück und wähle einen anderen Stil.",
   "After you allow it, macOS offers to quit and reopen Yonder. It comes back to this page.": "Sobald du es erlaubst, bietet macOS an, Yonder zu beenden und neu zu öffnen. Es kehrt zu dieser Seite zurück.",
   "Screen recording": "Bildschirmaufnahme",
   "Allow…": "Erlauben…",
-  "Allowed. Breaks can show your desktop.": "Erlaubt. Pausen können deinen Schreibtisch zeigen.",
+  "Allowed. Breaks can show your desktop.": "Erlaubt. Pausen können deinen Desktop zeigen.",
   "Not allowed yet. Breaks use a plain background until you allow it.": "Noch nicht erlaubt. Pausen nutzen einen einfachen Hintergrund, bis du es erlaubst."
 }

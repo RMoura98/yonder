@@ -487,7 +487,7 @@
   "Due": "Prête",
   "break waiting": "pause en attente",
   "Let breaks show your desktop": "Laissez les pauses montrer votre bureau",
-  "The blurred desktop and split screen looks start from a picture of your screen, so macOS asks for Screen Recording permission. The picture is only used for that break and is never saved or sent anywhere.": "Les styles bureau flouté et écran partagé partent d'une image de votre écran, donc macOS demande l'autorisation d'enregistrement de l'écran. L'image ne sert qu'à cette pause et n'est jamais enregistrée ni envoyée nulle part.",
+  "The blurred desktop and split screen looks start from a picture of your screen, so macOS asks for Screen Recording permission. The picture is only used for that break and is never saved or sent anywhere.": "Les styles bureau flouté et écran scindé partent d'une image de votre écran, donc macOS demande l'autorisation d'enregistrement de l'écran. L'image ne sert qu'à cette pause et n'est jamais enregistrée ni envoyée nulle part.",
   "After you allow it, macOS offers to quit and reopen Yonder. Setup picks up right here. Rather not? Go back and pick another look.": "Une fois autorisé, macOS propose de quitter et rouvrir Yonder. La configuration reprend ici même. Vous préférez ne pas le faire ? Revenez en arrière et choisissez un autre style.",
   "After you allow it, macOS offers to quit and reopen Yonder. It comes back to this page.": "Une fois autorisé, macOS propose de quitter et rouvrir Yonder. Il revient sur cette page.",
   "Screen recording": "Enregistrement de l'écran",

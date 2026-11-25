@@ -1277,20 +1277,31 @@ async fn request_screen_access(app: AppHandle, page: String, step: u8) {
             log_warn!("couldn't remember the settings screen: {e}");
         }
     }
-    let asked_before = st.paths.screen_asked.exists();
+    // macOS shows its own prompt only once, and an earlier break's screenshot may already
+    // have used it up. So only the first ask from setup (a fresh install) relies on the
+    // prompt; every other ask also opens the Screen Recording pane in System Settings.
+    let asked_before = st.paths.screen_asked.exists() || step == 0;
     let _ = std::fs::write(&st.paths.screen_asked, "");
     log_info!("asking for screen recording permission (asked before: {asked_before})");
     platform::request_screen_access(asked_before);
 }
 
-/// The screen saved by `request_screen_access`, once, if it is recent.
+/// When this Yonder process started (epoch seconds).
+static STARTED_AT: std::sync::OnceLock<i64> = std::sync::OnceLock::new();
+
+/// The screen saved by `request_screen_access`, once, and only when Yonder has restarted
+/// since (closing and reopening the settings window alone doesn't count) within 30 minutes.
 #[tauri::command]
 async fn take_resume(app: AppHandle) -> Option<Resume> {
     let path = &state(&app).paths.resume;
     let text = std::fs::read_to_string(path).ok()?;
-    let _ = std::fs::remove_file(path);
     let resume: Resume = serde_json::from_str(&text).ok()?;
-    (engine::now_epoch() - resume.at < 30 * 60).then_some(resume)
+    let started = *STARTED_AT.get()?;
+    if resume.at >= started {
+        return None; // asked in this run: keep it for the relaunch
+    }
+    let _ = std::fs::remove_file(path);
+    (started - resume.at < 30 * 60).then_some(resume)
 }
 
 #[tauri::command]
@@ -1511,6 +1522,7 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, Some(vec!["--background"])))
         .setup(|app| {
+            let _ = STARTED_AT.set(engine::now_epoch());
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
