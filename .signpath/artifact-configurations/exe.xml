@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SignPath artifact configuration "exe" (signing request 1 in .github/workflows/release.yml).
+  SignPath doesn't read this file from the repository: paste it into the SignPath project
+  (Artifact configurations > exe) and keep the two in sync.
+
+  Input: the GitHub artifact "yonder-exe-unsigned", a ZIP with yonder.exe at its root.
+  The metadata restrictions make SignPath refuse anything that isn't Yonder at the version
+  the workflow passes in (SignPath Foundation requires product name and version restrictions).
+-->
+<artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
+  <parameters>
+    <parameter name="version" required="true" />
+  </parameters>
+  <zip-file>
+    <pe-file path="yonder.exe" product-name="Yonder" product-version="${version}" file-version="${version}">
+      <authenticode-sign />
+    </pe-file>
+  </zip-file>
+</artifact-configuration>

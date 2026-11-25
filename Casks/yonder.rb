@@ -18,7 +18,8 @@ cask "yonder" do
 
   # Yonder isn't notarized yet. Clearing the quarantine flag lets macOS open it
   # without the "app is damaged / can't be opened" dialog. Remove this once
-  # releases are signed and notarized.
+  # releases are signed and notarized (the release workflow notarizes once the
+  # APPLE_* secrets are set; see CODE_SIGNING.md).
   postflight do
     system_command "/usr/bin/xattr",
                    args: ["-dr", "com.apple.quarantine", "#{appdir}/Yonder.app"],
