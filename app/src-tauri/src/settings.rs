@@ -235,6 +235,8 @@ pub struct Settings {
     pub prebreak_enabled: bool,
     pub prebreak_secs: u32,
     pub prebreak_visible_secs: u32,
+    /// cursor (a small countdown next to the mouse) | card (heads-up card with snooze buttons)
+    pub prebreak_style: String,
 
     pub messages: Vec<String>,
     /// fullscreen | split | gentle | notify
@@ -302,6 +304,7 @@ impl Default for Settings {
             prebreak_enabled: true,
             prebreak_secs: 60,
             prebreak_visible_secs: 10,
+            prebreak_style: "cursor".into(),
             messages: vec![
                 "Look at something at least 20 feet away.".into(),
                 "Let your eyes go soft. Breathe out slowly.".into(),

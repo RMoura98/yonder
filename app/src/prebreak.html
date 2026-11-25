@@ -12,7 +12,8 @@
     :root { --e: cubic-bezier(.22,.8,.2,1); --fg: #F1F6F5; --fg-2: rgba(241,246,245,.62); --edge: rgba(255,255,255,.11); }
     /* Always a dark glass card: it sits over any wallpaper and reads like part of the OS. */
     .card {
-      margin: 26px; padding: 16px 18px 16px 16px; width: max-content; min-width: 360px; max-width: 500px; box-sizing: border-box;
+      /* flex: none, or the card shrinks to the window and the window is then fitted to it, clipping the buttons */
+      flex: none; margin: 26px; padding: 16px 18px 16px 16px; width: max-content; min-width: 360px; max-width: 500px; box-sizing: border-box;
       color: var(--fg);
       background:
         radial-gradient(120% 140% at 0% 0%, rgba(255,255,255,.07), transparent 55%),

@@ -493,5 +493,10 @@
   "Screen recording": "Grabación de pantalla",
   "Allow…": "Permitir…",
   "Allowed. Breaks can show your desktop.": "Permitido. Las pausas pueden mostrar tu escritorio.",
-  "Not allowed yet. Breaks use a plain background until you allow it.": "Aún no permitido. Las pausas usan un fondo simple hasta que lo permitas."
+  "Not allowed yet. Breaks use a plain background until you allow it.": "Aún no permitido. Las pausas usan un fondo simple hasta que lo permitas.",
+  "Break in {t}": "Pausa en {t}",
+  "Small text next to the cursor": "Texto pequeño junto al cursor",
+  "Card with snooze buttons": "Tarjeta con botones para posponer",
+  "Show it for": "Mostrar durante",
+  "Then it fades away. Snooze or skip from Yonder's icon.": "Luego desaparece. Pospón u omite desde el icono de Yonder."
 }

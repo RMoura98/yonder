@@ -219,6 +219,16 @@ fn place_top(app: &AppHandle, win: &WebviewWindow, align_right: bool) {
     let _ = win.set_position(PhysicalPosition::new(x, top));
 }
 
+/// The heads-up before a break, in the style picked in Settings.
+fn show_heads_up(app: &AppHandle) {
+    let card = state(app).core.lock().unwrap().settings.prebreak_style == "card";
+    if card {
+        show_prebreak(app);
+    } else {
+        show_cursor_pill(app);
+    }
+}
+
 fn show_prebreak(app: &AppHandle) {
     if app.get_webview_window("prebreak").is_some() {
         return;
@@ -229,7 +239,8 @@ fn show_prebreak(app: &AppHandle) {
     }
 }
 
-/// A tiny "Starting break in N" pill that trails the mouse for the last seconds.
+/// A tiny countdown pill that trails the mouse: the "cursor" heads-up style, and in
+/// every style the last seconds before a break.
 fn show_cursor_pill(app: &AppHandle) {
     if app.get_webview_window("cursor").is_some() {
         return;
@@ -494,7 +505,7 @@ fn apply(app: &AppHandle, fx: Vec<Effect>) {
         match f {
             Effect::ShowPrebreak => {
                 log_debug!("heads-up shown");
-                show_prebreak(app)
+                show_heads_up(app)
             }
             Effect::HidePrebreak => {
                 close_window(app, "prebreak");
@@ -703,7 +714,7 @@ fn run_action(app: &AppHandle, name: &str, arg: Option<i64>) {
             vec![]
         }),
         "lock" => platform::lock_screen(),
-        "test_prebreak" => show_prebreak(app),
+        "test_prebreak" => show_heads_up(app),
         "test_reminder" => {
             let r = state(app).core.lock().unwrap().settings.wellness.posture.clone();
             show_reminders(app, vec![r]);
