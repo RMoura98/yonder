@@ -1187,8 +1187,15 @@ pub fn double_click_ms() -> u64 {
     if ms == 0 { 500 } else { ms }
 }
 
+/// macOS sends no tray double clicks, so Yonder spots two clicks within this window itself.
+/// Kept short: a single click waits this long before the popover opens.
+#[cfg(target_os = "macos")]
+pub fn double_click_ms() -> u64 {
+    300
+}
+
 /// No tray double clicks here, so a single click needn't wait.
-#[cfg(not(windows))]
+#[cfg(not(any(windows, target_os = "macos")))]
 pub fn double_click_ms() -> u64 {
     0
 }
