@@ -122,8 +122,7 @@ fn restore_after_focus(app: &AppHandle) {
             }
         }
         // only if Yonder still has the keyboard: don't yank you out of an app you just picked
-        let yonder_in_front = platform::frontmost_app_pid().map_or(false, |pid| pid as u32 == std::process::id());
-        if let (Some(pid), true) = (before.front_app, yonder_in_front) {
+        if let (Some(pid), true) = (before.front_app, platform::yonder_is_active()) {
             platform::activate_app(pid);
         }
     });
@@ -381,6 +380,7 @@ fn show_popover(app: &AppHandle, anchor: Option<(f64, f64, f64, f64)>) {
         .visible(false)
         .build()
     else {
+        restore_after_focus(app);
         return;
     };
     // Close when it loses focus (a click anywhere else). Ignore a blur that arrives
@@ -395,10 +395,20 @@ fn show_popover(app: &AppHandle, anchor: Option<(f64, f64, f64, f64)>) {
         }
         tauri::WindowEvent::Destroyed => {
             *state(&handle).popover_closed.lock().unwrap() = Some(Instant::now());
-            // a break started from the popover gives focus back when it ends instead
-            if state(&handle).core.lock().unwrap().e.brk.is_none() {
-                restore_after_focus(&handle);
-            }
+            // A full-screen break started from the popover gives focus back when it ends
+            // instead. The button's action can land just after the close, so wait a moment.
+            let h = handle.clone();
+            std::thread::spawn(move || {
+                std::thread::sleep(Duration::from_millis(300));
+                let focused_break = {
+                    let st = state(&h);
+                    let c = st.core.lock().unwrap();
+                    c.e.brk.is_some() && !matches!(c.settings.break_style.as_str(), "gentle" | "notify")
+                };
+                if !focused_break {
+                    restore_after_focus(&h);
+                }
+            });
         }
         _ => {}
     });

@@ -1311,6 +1311,22 @@ pub fn frontmost_app_pid() -> Option<i32> {
     None
 }
 
+/// Whether Yonder is the active app. Call on the main thread.
+#[cfg(target_os = "macos")]
+pub fn yonder_is_active() -> bool {
+    use objc2::runtime::AnyObject;
+    use objc2::{class, msg_send};
+    unsafe {
+        let ns_app: *mut AnyObject = msg_send![class!(NSApplication), sharedApplication];
+        !ns_app.is_null() && msg_send![ns_app, isActive]
+    }
+}
+
+#[cfg(not(target_os = "macos"))]
+pub fn yonder_is_active() -> bool {
+    false
+}
+
 /// Makes the app with this process id active again (only its own front windows come forward).
 /// Call on the main thread.
 #[cfg(target_os = "macos")]
