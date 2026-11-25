@@ -9,7 +9,7 @@ A tiny, open-source break reminder for Windows, macOS and Linux.<br/>
 <sub>A free alternative to LookAway, Stretchly, Time Out and BreakTimer.</sub></p>
 
 <p align="center">
-  <img src="media/hero.gif" width="900" alt="A heads-up card counts down, a small countdown follows the cursor, then the desktop blurs into Yonder's break screen and sharpens back." />
+  <img src="media/hero.gif" width="900" alt="A small Break in 0:14 countdown follows the cursor and counts down the last seconds, then the desktop blurs into Yonder's break screen and sharpens back." />
 </p>
 
 ---
@@ -24,12 +24,13 @@ desktop into a calm break screen, and stays out of the way while you're in a cal
 - **Break screens you'll like.** Blurred desktop (edge to edge, even over a borderless game), split-screen (your desktop parts to reveal a texture), animated Aurora / Nebula / Ripple, gradients or your own image, **Gentle** (the screen just dims and clicks pass through, so a call or a game keeps going), or **Notification only** (a desktop notification and a chime, no window). Rolling countdown and your own messages.
 - **Guided exercises (optional).** Long breaks can walk you through a calm routine sized to the break: slow blinks, a dot to follow, near and far focus, neck and shoulder stretches, palming. Off by default, respects reduced motion. Exercise ideas from Workrave and Safe Eyes.
 - **Your own sounds.** Fifteen built-in synthesized sounds, or add any MP3, WAV, OGG or M4A file and use it for breaks or for each reminder.
-- **Heads-up, never a surprise.** A frosted heads-up card before each break (start now, +1m, +5m, +15m), and a countdown that follows your cursor for the last five seconds.
+- **Heads-up, never a surprise.** A small "Break in 0:54" next to your cursor before each break (it never takes the keyboard), or the frosted heads-up card with start now, +1m, +5m and +15m; the last five seconds always count down next to the cursor.
 - **Waits for the right moment.** Won't start while you type; pauses for calls, screen sharing and recording, fullscreen apps, Do Not Disturb / Focus and the focus apps you choose, but never holds a break for more than an hour (you pick the limit); time away from the computer counts as a break. For games and other fullscreen apps you choose: wait, a quiet notification instead, show the break anyway, or skip it.
-- **Tray popover.** Click the tray icon for a small card with a live countdown ring, today's screen time, breaks and score, and quick actions (take a break, pause, skip, settings). Double-click opens Settings (Windows). Right-click keeps the classic menu; on Linux, where many panels don't report tray clicks, the menu has a *Show status* entry instead.
+- **Tray popover.** Click the tray icon for a small card with a live countdown ring, today's screen time, breaks and score, and quick actions (take a break, pause, skip, settings). Double-click opens Settings. Right-click keeps the classic menu; on Linux, where many panels don't report tray clicks, the menu has a *Show status* entry instead.
+- **Evening filter (optional).** Warms and dims your screen on a schedule (say 21:00 to 07:00), fading in and out over half an hour, with your own colour temperature and dimming. Off by default; your screen is always restored when Yonder quits. Windows, macOS and Linux on X11.
 - **Countdown in the tray.** On Windows, optionally draw the minutes left right into the tray icon; on macOS and some Linux panels the countdown sits next to the icon (or hide it for an icon-only tray).
 - **Pauses your music.** Optionally pauses music and video when a break starts and resumes only what it paused (system media controls on Windows, Music/Spotify on macOS, playerctl on Linux).
-- **Set up in three steps.** The first time you open Yonder: language, rhythm and break style. Skip it if you like.
+- **Set up in three steps.** The first time you open Yonder: language, rhythm and break style (on macOS, plus Screen Recording when your break look needs it). Skip it if you like.
 - **Posture & blink reminders.** Small liquid-glass widgets that appear, animate and disappear. Up to five custom reminders with their own icon, interval and sound.
 - **Focus sessions.** An optional Pomodoro mode (25 min focus, 5 min break, a long break after the fourth period, all adjustable) started from the tray or the Today page. It runs alongside your eye breaks and merges the two: an eye break that would land within a few minutes of a focus break is folded into it, so you are never interrupted twice in a row.
 - **Stats that motivate.** Today, this week vs last week, current and best streaks, a year heatmap of the days you took your breaks, and export to CSV, Markdown or JSON.
@@ -42,6 +43,7 @@ desktop into a calm break screen, and stays out of the way while you're in a cal
 - **Back up your settings.** Export everything (settings, custom sounds, break background) to one file from Settings → About and import it on another computer.
 - **Private by design.** No account, no telemetry. Settings and stats stay on your machine; the only network request is an optional update check against GitHub Releases (toggle in Settings → About).
 - **Update notifications.** A tray entry and a banner in Settings when a new version is out, with Homebrew instructions on macOS. Skip a version or turn checks off anytime.
+- **Multiple monitors.** Every screen gets its own break overlay with its own blurred desktop, monitors plugged in or out mid-break are handled, and the heads-up shows up on the screen you're using, even with mixed display scaling.
 - **Lightweight.** Rust core + the system webview (Tauri 2). A few MB to download, near-zero CPU between breaks; windows only exist while they're on screen.
 
 <table>
@@ -59,6 +61,9 @@ desktop into a calm break screen, and stays out of the way while you're in a cal
   </tr>
   <tr>
     <td colspan="2"><img src="media/exercises.gif" alt="A long break with guided exercises: a blinking eye, a dot to follow from side to side, then near and far focus." /><br/><sub><b>Guided exercises</b> (optional) during long breaks: blink, follow the dot, near and far, stretches.</sub></td>
+  </tr>
+  <tr>
+    <td colspan="2"><img src="media/evening.gif" alt="The Evening filter page: dragging the colour temperature from neutral to warm, and the whole screen warms and dims." /><br/><sub><b>Evening filter</b> (optional): a warmer, dimmer screen on your schedule.</sub></td>
   </tr>
   <tr>
     <td colspan="2"><img src="media/stats.gif" alt="The Stats page: this week compared with last week, current and best streaks, then a year heatmap and the export buttons." /><br/><sub><b>Stats</b>: weekly summary, streaks, a year heatmap and CSV / Markdown export.</sub></td>
@@ -123,7 +128,7 @@ it's a great choice. Yonder is for everyone else: **every desktop, older Macs, f
 | Windows | **Yes** (10, 11) | Announced as coming soon |
 | Linux | **Yes** (.AppImage, .deb, .rpm) | No |
 | macOS | **10.15 Catalina and newer** | 13 Ventura and newer |
-| Split-screen break | Windows and macOS 10.15+ | macOS 26 Tahoe and newer |
+| Split-screen break | Windows, macOS 10.15+ and Linux | macOS 26 Tahoe and newer |
 | Your own sounds, images, gradients, messages | Yes | Yes |
 | Custom reminders | Up to 5 | Up to 5 |
 | Automation | `yonder://` links and command-line options, shell commands on break start/end, global hotkeys, on every OS | Shortcuts, AppleScript, Siri, Focus Filters |
@@ -147,13 +152,14 @@ see an optometrist or ophthalmologist.
 | Feature | Windows | macOS | Linux |
 |---|---|---|---|
 | Breaks, reminders, stats, shortcuts | ✓ | ✓ | ✓ |
-| Blurred desktop & split-screen | ✓ | ✓ (needs Screen Recording permission) | — |
+| Blurred desktop & split-screen | ✓ | ✓ (needs Screen Recording permission) | X11; GNOME and KDE on Wayland (through the screenshot portal, may ask once); Sway/Hyprland with `grim` |
+| Evening filter (warm & dim) | ✓ | ✓ | X11 (on Wayland use GNOME Night Light or KDE Night Color) |
 | Meeting detection | mic/camera in use | mic/camera in use (any app, no permission prompt) + Zoom meeting helper | mic recording (PulseAudio/PipeWire) |
 | Screen sharing & recording | known recorders (OBS...), mirrored display | known recorders (OBS...), mirrored display | known recorders, PipeWire screencast |
 | Fullscreen detection | ✓ | ✓ | — |
 | Do Not Disturb / Focus | ✓ | best effort (needs Full Disk Access) | GNOME, KDE |
 | Focus apps (by process name) | ✓ | ✓ | ✓ |
-| Idle detection (away counts as a break) | ✓ | ✓ | X11 (`xprintidle`), GNOME and KDE Plasma on Wayland; not yet Sway/Hyprland |
+| Idle detection (away counts as a break) | ✓ | ✓ | X11 (`xprintidle`); on Wayland GNOME, KDE Plasma, and Sway, Hyprland, river, Wayfire and niri (`ext-idle-notify`) |
 | Countdown next to tray icon | — (tooltip) | ✓ | panel-dependent |
 
 ## Build from source
