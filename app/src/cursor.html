@@ -47,6 +47,9 @@
     let mode = ""; // early | final | holding
     let n = null;
     let closing = false;
+    let lastLeft = Infinity;
+    // Past its time, the heads-up leaves, unless the final countdown is about to take over.
+    const expired = () => mode === "early" && lastLeft > FINAL + 2 && Date.now() - openedAt > visibleMs;
 
     const fit = () => {
       const r = pill.getBoundingClientRect();
@@ -70,14 +73,20 @@
     };
 
     const render = (s) => {
-      if (s.phase !== "working" || closing) return;
+      if (closing) return;
+      if (s.phase !== "working") {
+        // Previewed from Settings while paused or held: show what the heads-up looks like.
+        if (!mode) { setMode("early"); setClock(pill, 0); n.textContent = mmss(lead); }
+        return;
+      }
       // Due, but waiting for a pause in typing: don't freeze at "in 1".
       if (s.holding) return setMode("holding");
       const left = Math.max(1, s.next_break_in);
+      lastLeft = left;
       if (left > FINAL) {
         setMode("early");
         // the heads-up only stays for a while; the final countdown opens its own pill later
-        if (Date.now() - openedAt > visibleMs) return close();
+        if (expired()) return close();
         setClock(pill, 1 - Math.min(1, left / lead));
         n.textContent = mmss(left);
         return;
@@ -93,7 +102,7 @@
     // the heads-up gets its sound; the final countdown stays quiet
     if (mode === "early" && settings.sound_enabled) playSound("pop", settings.volume * 0.6);
     // state events come once a second; make sure the heads-up also leaves on time
-    setInterval(() => { if (mode === "early" && Date.now() - openedAt > visibleMs) close(); }, 500);
+    setInterval(() => { if (expired()) close(); }, 500);
     // size the window to the pill, which also shows it (it starts hidden to avoid an empty frame)
     requestAnimationFrame(fit);
   </script>

@@ -391,6 +391,12 @@ fn notify_break(app: &AppHandle) {
 }
 
 fn start_break_windows(app: &AppHandle) {
+    // The heads-up card and the cursor countdown go away when a break starts, and must be
+    // gone from the screen before we photograph the desktop.
+    let overlays: Vec<&str> = ["prebreak", "cursor"].into_iter().filter(|l| app.get_webview_window(l).is_some()).collect();
+    for label in &overlays {
+        close_window(app, label);
+    }
     if state(app).core.lock().unwrap().settings.break_style == "notify" {
         return notify_break(app);
     }
@@ -407,9 +413,7 @@ fn start_break_windows(app: &AppHandle) {
     let primary = app.primary_monitor().ok().flatten();
 
     if needs_shot {
-        // Make sure the heads-up toast is gone before we photograph the desktop.
-        if app.get_webview_window("prebreak").is_some() {
-            close_window(app, "prebreak");
+        if !overlays.is_empty() {
             std::thread::sleep(Duration::from_millis(150));
         }
         let st = state(app);
@@ -519,7 +523,7 @@ fn apply(app: &AppHandle, fx: Vec<Effect>) {
                         log_info!("break started: {} ({}s, style {})", b.kind, b.total_secs, c.settings.break_style);
                     }
                 }
-                close_window(app, "cursor");
+                // (start_break_windows closes the cursor countdown before its screenshot)
                 if state(app).core.lock().unwrap().settings.pause_media {
                     media::pause_playing();
                 }
