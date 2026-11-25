@@ -74,23 +74,24 @@ struct AppState {
     last_link: Mutex<Option<(String, Instant)>>,
     /// Folder holding the log files.
     log_dir: PathBuf,
-    /// macOS: what to restore when a focused break ends (see `remember_before_break`).
-    before_break: Mutex<Option<BeforeBreak>>,
+    /// macOS: what to restore when a focused break or the popover ends (see `remember_before_focus`).
+    before_focus: Mutex<Option<BeforeFocus>>,
 }
 
-/// A full-screen break makes Yonder the active app (its window needs the keyboard), and on
-/// macOS activating an app brings all its windows forward, Settings included. So before
-/// the break Yonder notes the app you were in and tucks a background Settings window away;
-/// afterwards Settings goes back behind your windows and the keyboard goes back to your app.
+/// A full-screen break and the tray popover make Yonder the active app (they need the
+/// keyboard), and on macOS activating an app brings all its windows forward, Settings
+/// included. So before taking focus Yonder notes the app you were in and tucks a background
+/// Settings window away; afterwards Settings goes back behind your windows and the keyboard
+/// goes back to your app. Opening Settings on purpose cancels all of that.
 #[derive(Default)]
-struct BeforeBreak {
+struct BeforeFocus {
     /// Process id of the app that was in front (not Yonder itself).
     front_app: Option<i32>,
     /// Settings was open in the background and got hidden for the break.
     settings_hidden: bool,
 }
 
-fn remember_before_break(app: &AppHandle) {
+fn remember_before_focus(app: &AppHandle) {
     if !cfg!(target_os = "macos") {
         return;
     }
@@ -102,15 +103,16 @@ fn remember_before_break(app: &AppHandle) {
         }
     }
     let st = state(app);
-    let mut before = st.before_break.lock().unwrap();
-    // A break that starts while another is still closing keeps the first snapshot.
-    if before.is_none() {
-        *before = Some(BeforeBreak { front_app, settings_hidden });
+    let mut before = st.before_focus.lock().unwrap();
+    // A break started from the popover (or while another is closing) keeps the first snapshot.
+    match before.as_mut() {
+        None => *before = Some(BeforeFocus { front_app, settings_hidden }),
+        Some(b) => b.settings_hidden |= settings_hidden,
     }
 }
 
-fn restore_after_break(app: &AppHandle) {
-    let taken = state(app).before_break.lock().unwrap().take();
+fn restore_after_focus(app: &AppHandle) {
+    let taken = state(app).before_focus.lock().unwrap().take();
     let Some(before) = taken else { return };
     let handle = app.clone();
     let _ = app.run_on_main_thread(move || {
@@ -119,7 +121,9 @@ fn restore_after_break(app: &AppHandle) {
                 platform::order_back(&w);
             }
         }
-        if let Some(pid) = before.front_app {
+        // only if Yonder still has the keyboard: don't yank you out of an app you just picked
+        let yonder_in_front = platform::frontmost_app_pid().map_or(false, |pid| pid as u32 == std::process::id());
+        if let (Some(pid), true) = (before.front_app, yonder_in_front) {
             platform::activate_app(pid);
         }
     });
@@ -132,6 +136,8 @@ fn state(app: &AppHandle) -> tauri::State<'_, AppState> {
 // ================================================================== windows
 
 fn open_settings(app: &AppHandle) {
+    // asked for on purpose: don't hide it or hand the keyboard elsewhere after a break or the popover
+    state(app).before_focus.lock().unwrap().take();
     if let Some(w) = app.get_webview_window("settings") {
         let _ = w.unminimize();
         let _ = w.show();
@@ -360,6 +366,7 @@ fn show_popover(app: &AppHandle, anchor: Option<(f64, f64, f64, f64)>) {
         let _ = w.set_focus();
         return;
     }
+    remember_before_focus(app);
     let anchor = anchor.or_else(|| app.cursor_position().ok().map(|p| (p.x, p.y, 0.0, 0.0)));
     *state(app).popover_anchor.lock().unwrap() = anchor;
     let Ok(w) = WebviewWindowBuilder::new(app, "popover", WebviewUrl::App("popover.html".into()))
@@ -386,7 +393,13 @@ fn show_popover(app: &AppHandle, anchor: Option<(f64, f64, f64, f64)>) {
             let h = handle.clone();
             std::thread::spawn(move || close_window(&h, "popover"));
         }
-        tauri::WindowEvent::Destroyed => *state(&handle).popover_closed.lock().unwrap() = Some(Instant::now()),
+        tauri::WindowEvent::Destroyed => {
+            *state(&handle).popover_closed.lock().unwrap() = Some(Instant::now());
+            // a break started from the popover gives focus back when it ends instead
+            if state(&handle).core.lock().unwrap().e.brk.is_none() {
+                restore_after_focus(&handle);
+            }
+        }
         _ => {}
     });
     // shown (and focused) by the page via fit_window once it has laid out
@@ -479,7 +492,7 @@ fn start_break_windows(app: &AppHandle) {
     let primary = app.primary_monitor().ok().flatten();
     // gentle breaks never take focus, so there is nothing to give back afterwards
     if !gentle {
-        remember_before_break(app);
+        remember_before_focus(app);
     }
 
     if needs_shot {
@@ -559,7 +572,7 @@ fn end_break_windows(app: &AppHandle, delay_ms: u64) {
             close_window(&app, &l);
         }
         state(&app).snapshots.lock().unwrap().clear();
-        restore_after_break(&app);
+        restore_after_focus(&app);
     });
 }
 
@@ -1668,7 +1681,7 @@ pub fn run() {
                 popover_closed: Mutex::new(None),
                 last_link: Mutex::new(None),
                 log_dir,
-                before_break: Mutex::new(None),
+                before_focus: Mutex::new(None),
             });
 
             let handle = app.handle().clone();

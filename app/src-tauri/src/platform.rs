@@ -1291,7 +1291,8 @@ pub fn run_hook(cmdline: &str, event: &str, kind: &str, secs: u64) {
 pub fn frontmost_app_pid() -> Option<i32> {
     use objc2::runtime::AnyObject;
     use objc2::{class, msg_send};
-    unsafe {
+    // called from worker threads too, which have no autorelease pool of their own
+    objc2::rc::autoreleasepool(|_| unsafe {
         let workspace: *mut AnyObject = msg_send![class!(NSWorkspace), sharedWorkspace];
         if workspace.is_null() {
             return None;
@@ -1302,7 +1303,7 @@ pub fn frontmost_app_pid() -> Option<i32> {
         }
         let pid: i32 = msg_send![front, processIdentifier];
         Some(pid)
-    }
+    })
 }
 
 #[cfg(not(target_os = "macos"))]
