@@ -812,6 +812,49 @@ fn smart_pause_holds_wellness_reminders_until_it_ends() {
     assert_eq!(shown_reminders(&tick_n(&mut c, 1, 0)), 1);
     assert_eq!(shown_reminders(&tick_n(&mut c, 5, 0)), 0);
 }
+fn shown_ids(fx: &[Effect]) -> Vec<String> {
+    fx.iter()
+        .filter_map(|e| match e {
+            Effect::ShowReminders(l) => Some(l.iter().map(|r| r.id.clone()).collect::<Vec<_>>()),
+            _ => None,
+        })
+        .flatten()
+        .collect()
+}
+
+#[test]
+fn reminders_due_together_show_the_one_that_waited_longest() {
+    let mut s = test_settings();
+    s.work_mins = 120;
+    s.wellness.posture.enabled = true;
+    s.wellness.posture.interval_mins = 2;
+    s.wellness.blink.enabled = true;
+    s.wellness.blink.interval_mins = 1;
+    let mut c = core(s);
+    // minute 1: blink alone
+    assert_eq!(shown_ids(&tick_n(&mut c, 60, 0)), ["blink"]);
+    // minute 2: both due; blink showed a minute ago, so only posture appears
+    assert_eq!(shown_ids(&tick_n(&mut c, 60, 0)), ["posture"]);
+    // minute 3: blink alone again, then minute 4 is posture's turn once more
+    assert_eq!(shown_ids(&tick_n(&mut c, 60, 0)), ["blink"]);
+    assert_eq!(shown_ids(&tick_n(&mut c, 60, 0)), ["posture"]);
+}
+
+#[test]
+fn sticky_reminders_are_never_skipped() {
+    let mut s = test_settings();
+    s.work_mins = 120;
+    s.wellness.posture.enabled = true;
+    s.wellness.posture.interval_mins = 1;
+    s.wellness.blink.enabled = true;
+    s.wellness.blink.interval_mins = 1;
+    s.wellness.blink.sticky = true;
+    let mut c = core(s);
+    let mut ids = shown_ids(&tick_n(&mut c, 60, 0));
+    ids.sort();
+    assert_eq!(ids, ["blink", "posture"]);
+}
+
 // ---- what happens when a break is due behind a fullscreen app
 
 fn fs_core(action: &str) -> Core {

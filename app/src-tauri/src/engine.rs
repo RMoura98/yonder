@@ -128,6 +128,10 @@ pub struct Engine {
     planned_fired: HashSet<String>,
     reminder_elapsed: HashMap<String, u64>,
     pending_reminders: Vec<Reminder>,
+    /// Counts reminders shown; `reminder_shown_at[id]` is the count when `id` last showed
+    /// (missing: never), so the smallest one has waited longest.
+    reminder_seq: u64,
+    reminder_shown_at: HashMap<String, u64>,
     msg_index: usize,
     stats_dirty_secs: u32,
 }
@@ -661,7 +665,19 @@ impl Core {
         // reminders too; they stay pending (at most one per kind) and show once it ends.
         let held = self.e.smart_reason.is_some() && !self.e.hold_overdue;
         if !on_break && !held && !self.e.pending_reminders.is_empty() {
-            let list = std::mem::take(&mut self.e.pending_reminders);
+            let mut list = std::mem::take(&mut self.e.pending_reminders);
+            // Reminders due together don't pile up: of the ones that just come and go,
+            // only the one that has waited longest since it last showed appears; the
+            // others are skipped until their next turn. Sticky ones (ticked off with
+            // Done) always show.
+            let shown_at = |r: &Reminder| self.e.reminder_shown_at.get(&r.id).copied().unwrap_or(0);
+            if let Some(keep) = list.iter().filter(|r| !r.sticky).min_by_key(|r| shown_at(r)).map(|r| r.id.clone()) {
+                list.retain(|r| r.sticky || r.id == keep);
+            }
+            for r in &list {
+                self.e.reminder_seq += 1;
+                self.e.reminder_shown_at.insert(r.id.clone(), self.e.reminder_seq);
+            }
             self.stats.today().reminders_shown += list.len() as u32;
             if self.settings.wellness.combine {
                 fx.push(Effect::ShowReminders(list));
