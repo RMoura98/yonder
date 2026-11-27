@@ -531,5 +531,17 @@
   "That stylesheet is too large (max 256 KB).": "该样式表太大（最大 256 KB）。",
   "That stylesheet is empty.": "该样式表是空的。",
   "That doesn't look like a CSS file.": "这看起来不是 CSS 文件。",
-  "Themes can't load other files. Use data: URLs for images and fonts.": "主题不能加载其他文件。图片和字体请使用 data: URL。"
+  "Themes can't load other files. Use data: URLs for images and fonts.": "主题不能加载其他文件。图片和字体请使用 data: URL。",
+  "Warm compress": "热敷眼睛",
+  "A warm compress over closed eyes can ease dryness.": "闭眼热敷一会儿，可以缓解干涩。",
+  "Eye drops": "滴眼液",
+  "If you use lubricating drops. Preservative-free ones are gentler.": "如果你在用人工泪液。不含防腐剂的更温和。",
+  "Glare & airflow check": "检查眩光和气流",
+  "Cut reflections on the screen, and keep fans and AC off your face.": "减少屏幕反光，别让风扇或空调对着脸吹。",
+  "A few sips is enough.": "喝几口就好。",
+  "Stand up & stretch": "起身伸展",
+  "Get up, roll your shoulders, walk for a minute.": "站起来，转转肩膀，走一分钟。",
+  "Blank reminder": "空白提醒",
+  "Write your own": "自己写一个",
+  "Already added": "已添加"
 }

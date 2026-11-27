@@ -531,5 +531,17 @@
   "That stylesheet is too large (max 256 KB).": "Dieses Stylesheet ist zu groß (max. 256 KB).",
   "That stylesheet is empty.": "Dieses Stylesheet ist leer.",
   "That doesn't look like a CSS file.": "Das sieht nicht nach einer CSS-Datei aus.",
-  "Themes can't load other files. Use data: URLs for images and fonts.": "Designs können keine anderen Dateien laden. Nutze data:-URLs für Bilder und Schriften."
+  "Themes can't load other files. Use data: URLs for images and fonts.": "Designs können keine anderen Dateien laden. Nutze data:-URLs für Bilder und Schriften.",
+  "Warm compress": "Warme Kompresse",
+  "A warm compress over closed eyes can ease dryness.": "Eine warme Kompresse auf den geschlossenen Augen kann Trockenheit lindern.",
+  "Eye drops": "Augentropfen",
+  "If you use lubricating drops. Preservative-free ones are gentler.": "Falls du befeuchtende Tropfen nimmst. Ohne Konservierungsstoffe sind sie sanfter.",
+  "Glare & airflow check": "Blendung und Luftzug prüfen",
+  "Cut reflections on the screen, and keep fans and AC off your face.": "Vermeide Spiegelungen auf dem Bildschirm und Ventilatoren oder Klimaanlage im Gesicht.",
+  "A few sips is enough.": "Ein paar Schlucke reichen.",
+  "Stand up & stretch": "Aufstehen und dehnen",
+  "Get up, roll your shoulders, walk for a minute.": "Steh auf, kreise die Schultern, geh eine Minute.",
+  "Blank reminder": "Leere Erinnerung",
+  "Write your own": "Eigene schreiben",
+  "Already added": "Bereits hinzugefügt"
 }

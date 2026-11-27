@@ -87,7 +87,7 @@ function iconPicker(current, onPick) {
   btn.addEventListener("click", (e) => {
     e.stopPropagation();
     const open = $(".icon-pop", wrap);
-    $$(".icon-pop").forEach((p) => p.remove());
+    closePopovers();
     if (open) return;
     const pop = el(`<div class="icon-pop" role="listbox"></div>`);
     for (const n of PICKABLE) {
@@ -105,7 +105,19 @@ function iconPicker(current, onPick) {
   });
   return wrap;
 }
-document.addEventListener("click", () => $$(".icon-pop").forEach((p) => p.remove()));
+/** Closes the icon picker and the Create new menu (only one is ever open). */
+function closePopovers() {
+  $$(".icon-pop, .preset-pop").forEach((p) => p.remove());
+  $("#addReminder")?.setAttribute("aria-expanded", "false");
+}
+document.addEventListener("click", closePopovers);
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && $(".icon-pop, .preset-pop")) {
+    const fromMenu = !!$(".preset-pop");
+    closePopovers();
+    if (fromMenu) $("#addReminder")?.focus();
+  }
+});
 
 // ------------------------------------------------------------------ focus
 /** Fills the focus length pickers; must run before bindAll() selects their values. */
@@ -622,17 +634,53 @@ function initWellness() {
     $("#customCount").textContent = t("{n} of 5", { n: S.wellness.custom.length });
     $("#addReminder").disabled = S.wellness.custom.length >= 5;
   };
-  $("#addReminder").onclick = () => {
+  const add = (preset) => {
     if (S.wellness.custom.length >= 5) return;
-    S.wellness.custom.push({
-      id: "c_" + uid(), enabled: true, title: "Drink water", body: "", icon: "water_drop",
-      interval_mins: 45, size: "medium", sound: "drop", sticky: false,
-    });
+    S.wellness.custom.push({ id: "c_" + uid(), enabled: true, size: "medium", sticky: false, ...preset });
     renderCustom();
     save();
   };
+  // "Create new" offers presets (comfort tips, not medical advice) and a blank reminder.
+  const addBtn = $("#addReminder");
+  addBtn.setAttribute("aria-expanded", "false");
+  addBtn.onclick = (e) => {
+    e.stopPropagation();
+    const wrap = $(".add-pick");
+    const open = $(".preset-pop", wrap);
+    closePopovers();
+    if (open) return;
+    const pop = el(`<div class="preset-pop" role="menu"></div>`);
+    pop.addEventListener("click", (ev) => ev.stopPropagation()); // gaps and the divider don't close it
+    addBtn.setAttribute("aria-expanded", "true");
+    const have = new Set(S.wellness.custom.map((r) => r.title));
+    const item = (ic, title, sub, onPick, disabled = false) => {
+      const b = el(`<button type="button" role="menuitem" ${disabled ? `disabled title="${esc(t("Already added"))}"` : ""}>
+        <span class="ic">${icon(ic, 18)}</span><span class="tx">${esc(title)}<small>${esc(sub)}</small></span></button>`);
+      b.onclick = () => { closePopovers(); onPick(); };
+      pop.appendChild(b);
+    };
+    for (const p of REMINDER_PRESETS) {
+      item(p.icon, tr(p.title), tr(p.body), () => add({ ...p }), have.has(p.title));
+    }
+    pop.appendChild(el("<hr>"));
+    // starts switched off, so an untitled card never pops up; the switch is right there
+    item("add", t("Blank reminder"), t("Write your own"), () =>
+      add({ enabled: false, title: "", body: "", icon: "notifications", interval_mins: 45, sound: "chime" }));
+    wrap.appendChild(pop);
+    pop.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    pop.querySelector("button")?.focus({ preventScroll: true });
+  };
   renderCustom();
 }
+
+/** One-click custom reminders. Titles and bodies are English keys, shown through tr(). */
+const REMINDER_PRESETS = [
+  { title: "Warm compress", body: "A warm compress over closed eyes can ease dryness.", icon: "bedtime", interval_mins: 480, sound: "soft" },
+  { title: "Eye drops", body: "If you use lubricating drops. Preservative-free ones are gentler.", icon: "medication", interval_mins: 180, sound: "drop" },
+  { title: "Glare & airflow check", body: "Cut reflections on the screen, and keep fans and AC off your face.", icon: "wb_sunny", interval_mins: 120, sound: "chime" },
+  { title: "Drink water", body: "A few sips is enough.", icon: "water_drop", interval_mins: 45, sound: "drop" },
+  { title: "Stand up & stretch", body: "Get up, roll your shoulders, walk for a minute.", icon: "sports_gymnastics", interval_mins: 60, sound: "marimba" },
+];
 
 // ------------------------------------------------------------------ smart
 function initEvening() {
