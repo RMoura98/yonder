@@ -38,6 +38,8 @@ struct Paths {
     /// Countdown snapshot, restored after a quick restart.
     state: PathBuf,
     background: PathBuf,
+    /// The user's break screen stylesheet.
+    break_css: PathBuf,
     /// Folder holding the user's added sounds as data URLs, one file per sound.
     sounds: PathBuf,
     /// Settings screen to return to after macOS restarts Yonder for a new permission.
@@ -1070,6 +1072,42 @@ async fn get_background(app: AppHandle) -> Option<String> {
     std::fs::read_to_string(&state(&app).paths.background).ok()
 }
 
+// --------------------------------------------------------- break screen theme
+
+/// Stores the user's stylesheet for the break screen. Returns the name Settings shows.
+#[tauri::command]
+async fn save_break_css(app: AppHandle, name: String, css: String) -> Result<String, String> {
+    let st = state(&app);
+    settings::write_break_css(&st.paths.break_css, &css)?;
+    let name = settings::css_display_name(&name);
+    let mut core = st.core.lock().unwrap();
+    core.settings.break_css = name.clone();
+    core.settings.save(&st.paths.settings);
+    log_info!("break screen stylesheet set ({} bytes)", css.len());
+    Ok(name)
+}
+
+/// The stylesheet the break screen should use, if any.
+#[tauri::command]
+async fn get_break_css(app: AppHandle) -> Option<String> {
+    let st = state(&app);
+    if st.core.lock().unwrap().settings.break_css.is_empty() {
+        return None;
+    }
+    std::fs::read_to_string(&st.paths.break_css).ok()
+}
+
+/// Goes back to the built-in look.
+#[tauri::command]
+async fn clear_break_css(app: AppHandle) {
+    let st = state(&app);
+    settings::remove_break_css(&st.paths.break_css);
+    let mut core = st.core.lock().unwrap();
+    core.settings.break_css.clear();
+    core.settings.save(&st.paths.settings);
+    log_info!("break screen stylesheet removed");
+}
+
 // ---------------------------------------------------------- backup / restore
 
 /// Settings plus the user's own sounds and background, as one JSON document.
@@ -1078,6 +1116,7 @@ async fn export_settings(app: AppHandle) -> Result<String, String> {
     let st = state(&app);
     let settings = st.core.lock().unwrap().settings.clone();
     let background = if settings.has_image { std::fs::read_to_string(&st.paths.background).ok() } else { None };
+    let css = if settings.break_css.is_empty() { None } else { std::fs::read_to_string(&st.paths.break_css).ok() };
     let sounds = settings
         .custom_sounds
         .iter()
@@ -1092,6 +1131,7 @@ async fn export_settings(app: AppHandle) -> Result<String, String> {
         settings,
         background,
         sounds,
+        css,
     };
     serde_json::to_string_pretty(&backup).map_err(|e| e.to_string())
 }
@@ -1104,6 +1144,7 @@ async fn check_backup(text: String) -> Result<serde_json::Value, String> {
         "app_version": b.app_version,
         "sounds": b.sounds.len(),
         "image": b.background.is_some(),
+        "css": b.css.is_some(),
     }))
 }
 
@@ -1120,6 +1161,10 @@ async fn import_settings(app: AppHandle, text: String) -> Result<Settings, Strin
         None => {
             let _ = std::fs::remove_file(&st.paths.background);
         }
+    }
+    match &b.css {
+        Some(css) => settings::write_break_css(&st.paths.break_css, css)?,
+        None => settings::remove_break_css(&st.paths.break_css),
     }
     // The backup's sound library replaces ours.
     if let Ok(dir) = std::fs::read_dir(&st.paths.sounds) {
@@ -1917,6 +1962,7 @@ pub fn run() {
                 stats: data.join("stats.json"),
                 state: data.join("state.json"),
                 background: data.join("background.txt"),
+                break_css: data.join("break-theme.css"),
                 sounds: data.join("sounds"),
                 resume: data.join("resume.json"),
                 screen_asked: data.join("screen-asked"),
@@ -1989,6 +2035,9 @@ pub fn run() {
             import_settings,
             save_background,
             get_background,
+            save_break_css,
+            get_break_css,
+            clear_break_css,
             add_custom_sound,
             get_custom_sound,
             remove_custom_sound,

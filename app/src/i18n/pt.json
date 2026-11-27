@@ -518,5 +518,17 @@
   "The evening filter isn't available on this system.": "O filtro noturno não está disponível neste sistema.",
   "Previewing the filter for a few seconds": "A mostrar o filtro durante alguns segundos",
   "Turn on evening filter": "Ativar filtro noturno",
-  "Turn off evening filter": "Desativar filtro noturno"
+  "Turn off evening filter": "Desativar filtro noturno",
+  "Custom CSS": "CSS personalizado",
+  "Break screen theme": "Tema do ecrã de pausa",
+  "Restyle the break screen with your own stylesheet.": "Muda o aspeto do ecrã de pausa com a tua própria folha de estilos.",
+  "Using {name}": "A usar {name}",
+  "Reset": "Repor",
+  "Custom CSS…": "CSS personalizado…",
+  "A theme can't hide the Skip and End buttons: if it does, Yonder uses the built-in look for that break. Class names and a sample theme are in the <a href=\"https://rmoura98.github.io/yonder/docs.html#custom-css\">docs</a>.": "Um tema não pode esconder os botões Saltar e Terminar: se o fizer, o Yonder usa o aspeto original nessa pausa. Os nomes das classes e um tema de exemplo estão na <a href=\"https://rmoura98.github.io/yonder/docs.html#custom-css\">documentação</a>.",
+  "Theme saved": "Tema guardado",
+  "Theme removed": "Tema removido",
+  "That stylesheet is too large (max 256 KB).": "Essa folha de estilos é demasiado grande (máx. 256 KB).",
+  "That stylesheet is empty.": "Essa folha de estilos está vazia.",
+  "That doesn't look like a CSS file.": "Isso não parece um ficheiro CSS."
 }

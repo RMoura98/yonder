@@ -518,5 +518,17 @@
   "The evening filter isn't available on this system.": "此系统不支持夜间滤镜。",
   "Previewing the filter for a few seconds": "正在预览滤镜几秒钟",
   "Turn on evening filter": "开启夜间滤镜",
-  "Turn off evening filter": "关闭夜间滤镜"
+  "Turn off evening filter": "关闭夜间滤镜",
+  "Custom CSS": "自定义 CSS",
+  "Break screen theme": "休息画面主题",
+  "Restyle the break screen with your own stylesheet.": "用你自己的样式表改变休息画面的外观。",
+  "Using {name}": "正在使用 {name}",
+  "Reset": "重置",
+  "Custom CSS…": "自定义 CSS…",
+  "A theme can't hide the Skip and End buttons: if it does, Yonder uses the built-in look for that break. Class names and a sample theme are in the <a href=\"https://rmoura98.github.io/yonder/docs.html#custom-css\">docs</a>.": "主题无法隐藏“跳过”和“结束”按钮：如果隐藏了，Yonder 会在这次休息中使用默认外观。类名和示例主题见<a href=\"https://rmoura98.github.io/yonder/docs.html#custom-css\">文档</a>。",
+  "Theme saved": "主题已保存",
+  "Theme removed": "主题已移除",
+  "That stylesheet is too large (max 256 KB).": "该样式表太大（最大 256 KB）。",
+  "That stylesheet is empty.": "该样式表是空的。",
+  "That doesn't look like a CSS file.": "这看起来不是 CSS 文件。"
 }

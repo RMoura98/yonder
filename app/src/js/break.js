@@ -59,6 +59,7 @@ async function init() {
   ready = true;
   hydrateIcons();
   if (!primary) document.body.classList.add("secondary");
+  await applyCustomCss();
   tickClock();
   setInterval(tickClock, 10000);
 
@@ -90,6 +91,64 @@ async function init() {
   document.body.classList.remove("loading");
   requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.add("open")));
   if (primary && settings.sound_enabled) playSound(settings.sound, settings.volume * 0.8);
+  if (userCss) setTimeout(watchCustomCss, 2500); // once the controls have faded in
+}
+
+// ------------------------------------------------------- custom CSS theme
+// The user's stylesheet (Settings → Break Screen → Custom CSS) goes in last, followed by
+// a guard that keeps the Skip / End / Lock buttons shown and clickable. Esc is handled in
+// JS below, so no stylesheet can take it away. If a theme still hides or covers the
+// buttons (higher-specificity !important rules, an overlay, opacity 0...), it is
+// removed for the rest of this break.
+const GUARD_CSS = `
+body:not(.secondary):not(.gentle) #foot { display: flex !important; visibility: visible !important; pointer-events: auto !important; z-index: 2147483647 !important; }
+body:not(.secondary):not(.gentle) #foot .actions { display: flex !important; visibility: visible !important; pointer-events: auto !important; }
+body:not(.secondary):not(.gentle) #foot .pill:not([hidden]) { display: inline-flex !important; visibility: visible !important; pointer-events: auto !important; }`;
+let userCss = null;
+let cssWatch = null;
+
+async function applyCustomCss() {
+  if (!settings.break_css) return;
+  let css = null;
+  try { css = await invoke("get_break_css"); } catch {}
+  if (!css) return;
+  userCss = [Object.assign(document.createElement("style"), { id: "custom-css", textContent: css }),
+    Object.assign(document.createElement("style"), { id: "custom-css-guard", textContent: GUARD_CSS })];
+  document.head.append(...userCss);
+}
+
+/** True when every shown button can be seen and clicked. */
+function controlsUsable() {
+  for (const b of document.querySelectorAll("#foot .pill")) {
+    if (b.hidden) continue;
+    const cs = getComputedStyle(b);
+    if (cs.display === "none" || cs.visibility !== "visible") return false;
+    const r = b.getBoundingClientRect();
+    if (r.width < 24 || r.height < 16) return false;
+    const x = r.left + r.width / 2, y = r.top + r.height / 2;
+    if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) return false;
+    const hit = document.elementFromPoint(x, y);
+    if (!hit || !b.contains(hit)) return false;
+    let opacity = 1;
+    for (let n = b; n && n.nodeType === 1; n = n.parentElement) opacity *= parseFloat(getComputedStyle(n).opacity) || 0;
+    if (opacity < 0.2) return false;
+  }
+  return true;
+}
+
+function watchCustomCss() {
+  // only the primary display has buttons; gentle breaks have none (skip from the tray)
+  if (!userCss || !primary || settings.break_style === "gentle") return;
+  const check = () => {
+    if (ended || !document.body.classList.contains("open")) return;
+    if (controlsUsable()) return;
+    console.warn("custom CSS hid the break controls; using the built-in look");
+    userCss.forEach((s) => s.remove());
+    userCss = null;
+    clearInterval(cssWatch);
+  };
+  check();
+  cssWatch = setInterval(check, 1000);
 }
 
 async function setupBackdrop() {
@@ -159,6 +218,7 @@ function render(s) {
 function finish(delay) {
   if (ended) return;
   ended = true;
+  clearInterval(cssWatch);
   document.body.classList.remove("open");
   document.body.classList.add("closing");
   if (primary && settings?.sound_enabled && delay > 1000) playSound("soft", settings.volume * 0.7);

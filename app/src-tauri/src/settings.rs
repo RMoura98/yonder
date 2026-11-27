@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(default)]
@@ -260,6 +260,9 @@ pub struct Settings {
     pub background: String,
     pub gradient: String,
     pub has_image: bool,
+    /// File name of the user's break screen stylesheet (stored as `break-theme.css`
+    /// in the app data folder); empty when there is none.
+    pub break_css: String,
     pub texture: String,
     pub sound_enabled: bool,
     pub sound: String,
@@ -336,6 +339,7 @@ impl Default for Settings {
             background: "blur".into(),
             gradient: "dusk".into(),
             has_image: false,
+            break_css: String::new(),
             texture: "linen".into(),
             sound_enabled: true,
             sound: "chime".into(),
@@ -445,6 +449,49 @@ impl Settings {
     }
 }
 
+// ------------------------------------------------------- break screen theme
+
+/// Largest stylesheet accepted for the break screen.
+pub const CSS_MAX_BYTES: usize = 256 * 1024;
+
+/// Checks a user stylesheet and returns it cleaned up (no BOM). Errors are English
+/// keys translated by the UI.
+pub fn validate_css(text: &str) -> Result<String, String> {
+    if text.len() > CSS_MAX_BYTES {
+        return Err("That stylesheet is too large (max 256 KB).".into());
+    }
+    let css = text.strip_prefix('\u{feff}').unwrap_or(text);
+    if css.trim().is_empty() {
+        return Err("That stylesheet is empty.".into());
+    }
+    // an HTML page or a binary file picked by mistake
+    let start = css.trim_start();
+    if css.contains('\0') || (start.starts_with('<') && !start.starts_with("<!--")) {
+        return Err("That doesn't look like a CSS file.".into());
+    }
+    Ok(css.to_string())
+}
+
+/// The name shown in Settings for a stored stylesheet.
+pub fn css_display_name(name: &str) -> String {
+    let n: String = name.trim().chars().filter(|c| !c.is_control()).take(60).collect();
+    if n.is_empty() { "theme.css".into() } else { n }
+}
+
+/// Validates a stylesheet and stores it at `path`.
+pub fn write_break_css(path: &Path, text: &str) -> Result<(), String> {
+    let css = validate_css(text)?;
+    if let Some(dir) = path.parent() {
+        let _ = std::fs::create_dir_all(dir);
+    }
+    std::fs::write(path, css).map_err(|e| e.to_string())
+}
+
+/// Forgets the stored stylesheet, if any.
+pub fn remove_break_css(path: &Path) {
+    let _ = std::fs::remove_file(path);
+}
+
 // ------------------------------------------------------------ backup / restore
 
 /// Format version of an exported `.yonder.json` file.
@@ -475,6 +522,8 @@ pub struct Backup {
     /// The custom break background, as a data URL.
     pub background: Option<String>,
     pub sounds: Vec<BackupSound>,
+    /// The break screen stylesheet, if one is set.
+    pub css: Option<String>,
 }
 
 /// Parses and sanitises a backup. Errors are English keys translated by the UI.
@@ -532,6 +581,8 @@ impl Backup {
         if !s.has_image && s.background == "image" {
             s.background = "blur".into();
         }
+        self.css = self.css.as_deref().and_then(|c| validate_css(c).ok());
+        s.break_css = if self.css.is_some() { css_display_name(&s.break_css) } else { String::new() };
         // they already went through setup, and a skipped update means nothing on another machine
         s.onboarded = true;
         s.skipped_update = String::new();
@@ -626,5 +677,59 @@ mod tests {
         let b = parse_backup(&backup_json(r#","background":"image""#, top)).unwrap();
         assert!(b.settings.has_image);
         assert_eq!(b.settings.background, "image");
+    }
+
+    #[test]
+    fn css_is_size_limited_and_must_look_like_css() {
+        assert_eq!(validate_css("\u{feff}.title { color: red }").unwrap(), ".title { color: red }");
+        assert!(validate_css("<!-- --> .sub { opacity: 1 }").is_ok());
+        assert!(validate_css("").is_err());
+        assert!(validate_css("  \n ").is_err());
+        assert!(validate_css("<html><script>alert(1)</script>").is_err());
+        assert!(validate_css("a\0b").is_err());
+        let big = format!(".pill{{}}{}", " ".repeat(CSS_MAX_BYTES));
+        assert!(validate_css(&big).is_err());
+        let just_fits = format!(".pill{{}}{}", " ".repeat(CSS_MAX_BYTES - 8));
+        assert!(validate_css(&just_fits).is_ok());
+    }
+
+    #[test]
+    fn css_display_names_are_trimmed_and_never_empty() {
+        assert_eq!(css_display_name("  ocean.css "), "ocean.css");
+        assert_eq!(css_display_name(""), "theme.css");
+        assert_eq!(css_display_name("a\nb"), "ab");
+        assert_eq!(css_display_name(&"x".repeat(100)).len(), 60);
+    }
+
+    #[test]
+    fn break_css_can_be_stored_and_reset() {
+        let dir = std::env::temp_dir().join(format!("yonder-css-test-{}", std::process::id()));
+        let path = dir.join("break-theme.css");
+        assert!(write_break_css(&path, "").is_err());
+        assert!(!path.exists());
+        write_break_css(&path, ".time { color: gold }").unwrap();
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), ".time { color: gold }");
+        remove_break_css(&path);
+        assert!(!path.exists());
+        remove_break_css(&path); // resetting twice is fine
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn backup_css_is_validated_and_keeps_the_setting_consistent() {
+        let b = parse_backup(&backup_json(r#","break_css":"ocean.css""#, r#","css":".title{color:red}""#)).unwrap();
+        assert_eq!(b.css.as_deref(), Some(".title{color:red}"));
+        assert_eq!(b.settings.break_css, "ocean.css");
+        // a name without a stylesheet is dropped
+        let b = parse_backup(&backup_json(r#","break_css":"ocean.css""#, "")).unwrap();
+        assert!(b.css.is_none());
+        assert_eq!(b.settings.break_css, "");
+        // so is a stylesheet that fails validation
+        let b = parse_backup(&backup_json(r#","break_css":"x.css""#, r#","css":"<html>""#)).unwrap();
+        assert!(b.css.is_none());
+        assert_eq!(b.settings.break_css, "");
+        // a stylesheet without a name gets a default one
+        let b = parse_backup(&backup_json("", r#","css":".sub{}""#)).unwrap();
+        assert_eq!(b.settings.break_css, "theme.css");
     }
 }
