@@ -59,6 +59,7 @@ async function init() {
   ready = true;
   hydrateIcons();
   if (!primary) document.body.classList.add("secondary");
+  await applyCustomCss();
   tickClock();
   setInterval(tickClock, 10000);
 
@@ -90,6 +91,100 @@ async function init() {
   document.body.classList.remove("loading");
   requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.add("open")));
   if (primary && settings.sound_enabled) playSound(settings.sound, settings.volume * 0.8);
+  if (userCss) cssWatchStart = setTimeout(watchCustomCss, 2500); // once the controls have faded in
+}
+
+// ------------------------------------------------------- custom CSS theme
+// The user's stylesheet (Settings → Break Screen → Custom CSS) goes in last, followed by
+// a guard that keeps the Skip / End / Lock buttons shown and clickable. Esc is handled in
+// JS below, so no stylesheet can take it away. If a theme still hides or covers the
+// buttons (higher-specificity !important rules, an overlay, opacity 0...), it is
+// removed for the rest of this break.
+// #foot stays fixed (its built-in position) on the top layer, so nothing in the page can be
+// stacked over it; the built-in CSS doesn't use pseudo-elements on html/body/#content/#foot,
+// so overlays drawn with them are switched off.
+const G = "body:not(.secondary):not(.gentle)";
+const GUARD_CSS = `
+html:root, html:root > body { filter: none !important; clip-path: none !important; -webkit-mask: none !important; mask: none !important; }
+html::before, html::after, body::before, body::after, #content::before, #content::after,
+#foot::before, #foot::after, #foot .actions::before, #foot .actions::after,
+#foot .pill::after, #foot .pill:not(.hold-fill)::before { content: none !important; display: none !important; }
+${G} #foot { display: flex !important; position: fixed !important; z-index: 2147483647 !important; }
+${G} #foot, ${G} #foot .actions, ${G} #foot .pill:not([hidden]) {
+  visibility: visible !important; pointer-events: auto !important; content-visibility: visible !important;
+  filter: none !important; clip-path: none !important; -webkit-mask: none !important; mask: none !important; mix-blend-mode: normal !important; }
+${G} #foot .actions { display: flex !important; }
+body.open${G.slice(4)} #foot, body.open${G.slice(4)} #foot .actions { opacity: 1 !important; }
+${G} #foot .pill:not([hidden]) { display: inline-flex !important; }
+${G} #foot .pill .ic, ${G} #foot .pill .lbl { visibility: visible !important; opacity: 1 !important; filter: none !important; }
+${G} #foot .pill.hold-fill::before { background: rgba(255, 255, 255, .42) !important; }`;
+let userCss = null;
+let cssWatch = null;
+let cssWatchStart = null;
+
+async function applyCustomCss() {
+  if (!settings.break_css) return;
+  let css = null;
+  try { css = await invoke("get_break_css"); } catch {}
+  if (!css) return;
+  userCss = [Object.assign(document.createElement("style"), { id: "custom-css", textContent: css }),
+    Object.assign(document.createElement("style"), { id: "custom-css-guard", textContent: GUARD_CSS })];
+  document.head.append(...userCss);
+}
+
+/** Alpha of a computed CSS color ("rgb(...)", "rgba(...)", "transparent"...). */
+function alphaOf(color) {
+  if (!color || color === "transparent") return 0;
+  const m = color.match(/rgba?\(([^)]+)\)/);
+  if (!m) return 1; // a format we don't parse: assume visible
+  const parts = m[1].split(/[\s,/]+/).filter(Boolean);
+  return parts.length > 3 ? parseFloat(parts[3]) : 1;
+}
+
+/** True when every shown button can be seen and clicked. */
+function controlsUsable() {
+  for (const b of document.querySelectorAll("#foot .pill")) {
+    if (b.hidden) continue;
+    const cs = getComputedStyle(b);
+    if (cs.display === "none" || cs.visibility !== "visible") return false;
+    const r = b.getBoundingClientRect();
+    if (r.width < 12 || r.height < 12) return false;
+    const x = r.left + r.width / 2, y = r.top + r.height / 2;
+    if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) return false;
+    // null means "can't tell" (e.g. mid-layout); overlap by the hint or exercise card is built in
+    const hit = document.elementFromPoint(x, y);
+    if (hit && !b.contains(hit) && !hit.closest("#foot, .ex")) return false;
+    let opacity = 1;
+    for (let n = b; n && n.nodeType === 1; n = n.parentElement) {
+      const s = getComputedStyle(n);
+      opacity *= parseFloat(s.opacity) || 0;
+      // filter: opacity(...) fades just like opacity does (the guard removes it, but a
+      // more specific !important rule could put it back)
+      for (const m of s.filter.matchAll(/opacity\(\s*([\d.]+)(%?)\s*\)/g)) opacity *= parseFloat(m[1]) / (m[2] ? 100 : 1);
+    }
+    if (opacity < 0.2) return false;
+    // invisible ink: transparent text (and icon, which uses currentColor) on a clear button
+    const ink = Math.min(alphaOf(cs.color), alphaOf(cs.webkitTextFillColor || cs.color));
+    if (ink < 0.3 && alphaOf(cs.backgroundColor) < 0.1 && (alphaOf(cs.borderTopColor) < 0.1 || parseFloat(cs.borderTopWidth) === 0)) return false;
+  }
+  return true;
+}
+
+function watchCustomCss() {
+  // only the primary display has buttons; gentle breaks have none (skip from the tray)
+  if (ended || !userCss || !primary || settings.break_style === "gentle") return;
+  let failures = 0;
+  const check = () => {
+    if (ended || !document.body.classList.contains("open")) return;
+    if (controlsUsable()) return void (failures = 0);
+    if (++failures < 3) return; // a few in a row, so a passing transition doesn't count
+    console.warn("custom CSS hid the break controls; using the built-in look");
+    userCss.forEach((s) => s.remove());
+    userCss = null;
+    clearInterval(cssWatch);
+  };
+  check();
+  cssWatch = setInterval(check, 1000);
 }
 
 async function setupBackdrop() {
@@ -159,6 +254,8 @@ function render(s) {
 function finish(delay) {
   if (ended) return;
   ended = true;
+  clearTimeout(cssWatchStart);
+  clearInterval(cssWatch);
   document.body.classList.remove("open");
   document.body.classList.add("closing");
   if (primary && settings?.sound_enabled && delay > 1000) playSound("soft", settings.volume * 0.7);

@@ -27,7 +27,7 @@ const settings = {
     "Stand up and stretch — your back will thank you.",
     "Sip some water.",
   ],
-  break_style: "fullscreen", background: "blur", gradient: "dusk", has_image: false, texture: "linen",
+  break_style: "fullscreen", background: "blur", gradient: "dusk", has_image: false, break_css: "", texture: "linen",
   sound_enabled: true, sound: "chime", volume: 0.6, idle_reset_mins: 5,
   smart: { enabled: true, meetings: true, fullscreen: true, fullscreen_action: "wait", apps: ["obs64", "POWERPNT"], cooldown_secs: 60, max_hold_mins: 60, dnd: false, screen_share: false },
   office_hours: { enabled: true, days: days7.slice(), start: "09:00", end: "18:00" },
@@ -105,7 +105,7 @@ const cursorEl = document.getElementById("cursor");
 let cursor = { x: 700, y: 520 };
 
 const TEASER = (window.TEASER = {
-  settings, shot: null, done: false,
+  settings, shot: null, css: null, done: false,
   on(ev, cb, win) { listeners.push({ ev, cb, win }); },
   emit(ev, payload) {
     for (const l of listeners.slice()) {
@@ -121,6 +121,9 @@ const TEASER = (window.TEASER = {
       case "get_stats": return stats;
       case "get_screenshot": return TEASER.shot;
       case "get_background": return null;
+      case "get_break_css": return settings.break_css ? TEASER.css : null;
+      case "save_break_css": TEASER.css = args.css; return (settings.break_css = args.name || "theme.css");
+      case "clear_break_css": TEASER.css = null; settings.break_css = ""; return null;
       case "take_reminders": return queue.splice(0);
       case "platform_name": return "windows";
       case "app_version": return APP_VERSION;

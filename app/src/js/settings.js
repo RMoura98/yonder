@@ -437,6 +437,35 @@ document.addEventListener("change", async (e) => {
   }
 }, true);
 
+/** Settings → Break Screen → Custom CSS: pick a stylesheet for the break screen, or reset it. */
+function initCustomCss() {
+  const paintCss = () => {
+    $("#cssNote").textContent = S.break_css ? t("Using {name}", { name: S.break_css }) : t("Restyle the break screen with your own stylesheet.");
+    $("#cssReset").hidden = !S.break_css;
+  };
+  $("#cssPick").onclick = () => $("#cssInput").click();
+  $("#cssInput").onchange = async (e) => {
+    const f = e.target.files[0];
+    e.target.value = "";
+    if (!f) return;
+    if (f.size > 256 * 1024) return toast(t("That stylesheet is too large (max 256 KB)."));
+    try {
+      S.break_css = await invoke("save_break_css", { name: f.name, css: await f.text() });
+      paintCss();
+      toast(t("Theme saved"));
+    } catch (err) {
+      toast(t(String(err)));
+    }
+  };
+  $("#cssReset").onclick = async () => {
+    await invoke("clear_break_css");
+    S.break_css = "";
+    paintCss();
+    toast(t("Theme removed"));
+  };
+  paintCss();
+}
+
 function initScreen() {
   // style cards
   const paintStyle = () => $$("#styleCards button").forEach((b) => b.classList.toggle("on", b.dataset.v === S.break_style));
@@ -506,6 +535,7 @@ function initScreen() {
     r.readAsDataURL(f);
   });
   paint();
+  initCustomCss();
 
   // textures
   const tb = $("#texSwatches");
