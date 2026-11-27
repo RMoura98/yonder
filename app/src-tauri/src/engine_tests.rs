@@ -963,3 +963,64 @@ fn settings_without_fullscreen_action_default_to_wait() {
     let s: Settings = serde_json::from_str(r#"{"smart":{"fullscreen":true}}"#).unwrap();
     assert_eq!(s.smart.fullscreen_action, "wait");
 }
+
+// ------------------------------------------------------------- haptics
+
+fn haptics(fx: &[Effect], cue: Haptic) -> usize {
+    count(fx, |e| matches!(e, Effect::Haptic(h) if *h == cue))
+}
+
+#[test]
+fn haptic_ticks_on_the_last_three_seconds_only() {
+    assert!(!haptic_tick_due(0));
+    assert!(haptic_tick_due(1));
+    assert!(haptic_tick_due(2));
+    assert!(haptic_tick_due(3));
+    assert!(!haptic_tick_due(4));
+    assert!(!haptic_tick_due(20));
+}
+
+#[test]
+fn haptics_are_off_by_default() {
+    assert!(!Settings::default().haptics);
+    let mut c = core(test_settings());
+    let fx = tick_n(&mut c, 80, 0);
+    assert_eq!(ends(&fx), 1);
+    assert_eq!(count(&fx, |e| matches!(e, Effect::Haptic(_))), 0);
+}
+
+#[test]
+fn haptics_follow_the_break() {
+    let mut s = test_settings();
+    s.haptics = true;
+    let mut c = core(s);
+    let fx = tick_n(&mut c, 60, 0);
+    assert_eq!(starts(&fx), 1);
+    assert_eq!(haptics(&fx, Haptic::Start), 1);
+    // 20 s break: nothing until 3 s are left
+    let fx = tick_n(&mut c, 16, 0);
+    assert_eq!(count(&fx, |e| matches!(e, Effect::Haptic(_))), 0);
+    // remaining 3, 2, 1: one tick each
+    for left in [3u64, 2, 1] {
+        let fx = tick_n(&mut c, 1, 0);
+        assert_eq!(c.e.brk.as_ref().unwrap().remaining(), left);
+        assert_eq!(haptics(&fx, Haptic::Tick), 1);
+    }
+    // the end gets its own cue, not a fourth tick
+    let fx = tick_n(&mut c, 1, 0);
+    assert_eq!(ends(&fx), 1);
+    assert_eq!(haptics(&fx, Haptic::End), 1);
+    assert_eq!(haptics(&fx, Haptic::Tick), 0);
+}
+
+#[test]
+fn skipping_a_break_still_pulses_the_end() {
+    let mut s = test_settings();
+    s.haptics = true;
+    let mut c = core(s);
+    tick_n(&mut c, 60, 0);
+    tick_n(&mut c, 10, 0); // past the balanced skip delay
+    let fx = c.skip_or_end_break();
+    assert_eq!(ends(&fx), 1);
+    assert_eq!(haptics(&fx, Haptic::End), 1);
+}

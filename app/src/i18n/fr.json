@@ -518,5 +518,8 @@
   "The evening filter isn't available on this system.": "Le filtre du soir n'est pas disponible sur ce système.",
   "Previewing the filter for a few seconds": "Aperçu du filtre pendant quelques secondes",
   "Turn on evening filter": "Activer le filtre du soir",
-  "Turn off evening filter": "Désactiver le filtre du soir"
+  "Turn off evening filter": "Désactiver le filtre du soir",
+  "Trackpad": "Trackpad",
+  "Haptic taps during breaks": "Retours haptiques pendant les pauses",
+  "A soft tap when a break starts, a tick on each of the last 3 seconds and a double pulse when it ends. Needs a Force Touch trackpad.": "Un léger tapotement au début d’une pause, un tic à chacune des 3 dernières secondes et une double pulsation à la fin. Nécessite un trackpad Force Touch."
 }

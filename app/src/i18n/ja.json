@@ -518,5 +518,8 @@
   "The evening filter isn't available on this system.": "このシステムでは夜間フィルターを使えません。",
   "Previewing the filter for a few seconds": "フィルターを数秒間プレビューしています",
   "Turn on evening filter": "夜間フィルターをオンにする",
-  "Turn off evening filter": "夜間フィルターをオフにする"
+  "Turn off evening filter": "夜間フィルターをオフにする",
+  "Trackpad": "トラックパッド",
+  "Haptic taps during breaks": "休憩中の触覚フィードバック",
+  "A soft tap when a break starts, a tick on each of the last 3 seconds and a double pulse when it ends. Needs a Force Touch trackpad.": "休憩の開始時にやさしいタップ、終了前の 3 秒間は 1 秒ごとにティック、終了時にダブルパルス。感圧タッチトラックパッドが必要です。"
 }

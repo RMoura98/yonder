@@ -2,6 +2,7 @@ mod cli;
 mod engine;
 mod evening;
 mod gamma;
+mod haptics;
 mod i18n;
 mod logger;
 mod media;
@@ -754,6 +755,7 @@ fn apply(app: &AppHandle, fx: Vec<Effect>) {
                 let body = break_notice_body(lang, &kind, secs);
                 let _ = app.notification().builder().title("Yonder").body(body).show();
             }
+            Effect::Haptic(cue) => haptics::play(app, cue),
             Effect::Lock => platform::lock_screen(),
             Effect::Hook { cmd, event, kind, secs } => platform::run_hook(&cmd, event, &kind, secs),
             Effect::SaveStats => {

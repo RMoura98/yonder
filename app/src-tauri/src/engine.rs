@@ -29,6 +29,29 @@ pub enum Effect {
     SaveStats,
     /// A break came due behind a fullscreen app: tell the user quietly, show no window.
     NotifyDue { kind: String, secs: u64 },
+    /// A trackpad tap (macOS Force Touch); only emitted when the setting is on.
+    Haptic(Haptic),
+}
+
+/// The haptic cues that accompany a break.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Haptic {
+    /// A soft tap as the break starts.
+    Start,
+    /// A tick on each of the last few seconds.
+    Tick,
+    /// A gentle double pulse as the break ends.
+    End,
+}
+
+/// Seconds before the end of a break that get a countdown tick each.
+pub const HAPTIC_TICK_SECS: u64 = 3;
+
+/// Whether a break with `remaining` seconds left should tick (3, 2, 1, never 0:
+/// the end has its own pulse). Breaks shorter than the tick window still tick
+/// only on the seconds they actually have left.
+pub fn haptic_tick_due(remaining: u64) -> bool {
+    (1..=HAPTIC_TICK_SECS).contains(&remaining)
 }
 
 #[derive(Serialize, Clone, Debug)]
@@ -472,8 +495,11 @@ impl Core {
         // Breaks always run down, whatever else happens.
         if let Some(b) = &mut self.e.brk {
             b.elapsed_secs += 1;
-            if b.remaining() == 0 {
+            let remaining = b.remaining();
+            if remaining == 0 {
                 self.finish_break(true, &mut fx);
+            } else if self.settings.haptics && haptic_tick_due(remaining) {
+                fx.push(Effect::Haptic(Haptic::Tick));
             }
             self.tick_reminders(false, &mut fx);
             return fx;
@@ -814,6 +840,9 @@ impl Core {
         self.e.typing_wait = 0;
         self.reset_hold();
         fx.push(Effect::StartBreak);
+        if self.settings.haptics {
+            fx.push(Effect::Haptic(Haptic::Start));
+        }
         if self.settings.lock_on_break {
             fx.push(Effect::Lock);
         }
@@ -854,6 +883,9 @@ impl Core {
             self.e.reminder_elapsed.clear();
         }
         fx.push(Effect::EndBreak { delay_ms: if taken { 1500 } else { 950 } });
+        if self.settings.haptics {
+            fx.push(Effect::Haptic(Haptic::End));
+        }
         fx.push(Effect::SaveStats);
         fx.push(Effect::Hook {
             cmd: self.settings.hooks.on_break_end.clone(),
