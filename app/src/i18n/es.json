@@ -127,7 +127,7 @@
   "Create new": "Crear nuevo",
   "Timing": "Tiempos",
   "Combine reminders that are due together": "Juntar recordatorios que coinciden",
-  "Shown at once, with one sound.": "Se muestran juntos, con un solo sonido.",
+  "One after another, with one sound.": "Uno tras otro, con un solo sonido.",
   "Reset reminder timers after a break": "Reiniciar los recordatorios tras una pausa",
   "Otherwise they keep counting through breaks.": "Si no, siguen contando durante las pausas.",
   "Ripple when a reminder appears": "Onda al aparecer un recordatorio",

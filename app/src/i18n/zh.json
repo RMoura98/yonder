@@ -127,7 +127,7 @@
   "Create new": "新建",
   "Timing": "时机",
   "Combine reminders that are due together": "合并同时到期的提醒",
-  "Shown at once, with one sound.": "一并显示，只响一次提示音。",
+  "One after another, with one sound.": "依次显示，只响一次提示音。",
   "Reset reminder timers after a break": "休息后重置提醒计时",
   "Otherwise they keep counting through breaks.": "否则休息期间提醒也会继续计时。",
   "Ripple when a reminder appears": "提醒出现时显示涟漪",

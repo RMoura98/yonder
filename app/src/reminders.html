@@ -84,11 +84,12 @@
     const run = (el, frames, ms, opts = {}) =>
       el.animate(frames, { duration: reduce ? 1 : ms, fill: "forwards", easing: "linear", ...opts }).finished;
 
-    let active = []; // {r, el}
+    let active = []; // {r, el}: at most one plays at a time
+    let queue = []; // {r, sound}: due reminders waiting for the current one to finish
     let folded = [];
 
     const fit = () => requestAnimationFrame(() => {
-      if (!active.length && !folded.length) return invoke("fit_window", { width: 0, height: 0 });
+      if (!active.length && !queue.length && !folded.length) return invoke("fit_window", { width: 0, height: 0 });
       const r = wrap.getBoundingClientRect();
       invoke("fit_window", { width: Math.ceil(r.width), height: Math.ceil(r.height) });
     });
@@ -194,6 +195,7 @@
       item.el.remove();
       active = active.filter((a) => a !== item);
       if (!active.some((a) => a.r.sticky) && folded.length) show(folded.splice(0), true);
+      next();
       renderStack();
       fit();
     }
@@ -217,20 +219,25 @@
         fit();
         return;
       }
-      if (!quiet && settings.sound_enabled) {
-        const s = list.find((r) => r.sound && r.sound !== "none");
-        if (s) playSound(s.sound, settings.volume);
-      }
-      for (const r of list) {
-        const isWidget = r.id === "posture" || r.id === "blink";
-        const el = isWidget ? widget(r) : card(r);
-        const item = { r, el };
-        wrap.appendChild(el);
-        active.push(item);
-        isWidget ? playWidget(item) : playCard(item);
-      }
+      // Reminders due together play one after another, never at the same time.
+      // The group's one sound plays when its first reminder appears.
+      const s = !quiet && settings.sound_enabled ? list.find((r) => r.sound && r.sound !== "none")?.sound : null;
+      queue.push(...list.map((r, i) => ({ r, sound: i === 0 ? s : null })));
+      next();
       renderStack();
       fit();
+    }
+
+    function next() {
+      if (active.length || !queue.length) return;
+      const { r, sound } = queue.shift();
+      if (sound) playSound(sound, settings.volume);
+      const isWidget = r.id === "posture" || r.id === "blink";
+      const el = isWidget ? widget(r) : card(r);
+      const item = { r, el };
+      wrap.appendChild(el);
+      active.push(item);
+      isWidget ? playWidget(item) : playCard(item);
     }
 
     async function pull() {

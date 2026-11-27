@@ -127,7 +127,7 @@
   "Create new": "新規作成",
   "Timing": "タイミング",
   "Combine reminders that are due together": "同時に届くリマインダーをまとめる",
-  "Shown at once, with one sound.": "まとめて表示し、音は1回だけ鳴らします。",
+  "One after another, with one sound.": "順番に表示し、音は1回だけ鳴らします。",
   "Reset reminder timers after a break": "休憩後にリマインダーのタイマーをリセット",
   "Otherwise they keep counting through breaks.": "オフの場合、休憩中もカウントが続きます。",
   "Ripple when a reminder appears": "リマインダー表示時に波紋を出す",
