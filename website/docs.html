@@ -66,6 +66,7 @@
           <li><a href="#wellness">Wellness &amp; custom reminders</a></li>
           <li><a href="#evening-filter">Evening filter</a></li>
           <li><a href="#break-styles">Break screen styles</a></li>
+          <li><a href="#custom-css">Custom CSS themes</a></li>
           <li><a href="#shortcuts">Keyboard shortcuts</a></li>
           <li><a href="#scripting">Scripting &amp; automation</a></li>
           <li><a href="#stats">Stats</a></li>
@@ -268,6 +269,74 @@ sudo apt update &amp;&amp; sudo apt install yonder</code></pre>
         <p>Exercises appear on the full screen and split screen styles. Gentle and Notification breaks never show them. With reduced motion enabled, the illustrations are still pictures with the instruction. The exercise ideas come from the exercise lists of <a href="https://github.com/rcaelers/workrave">Workrave</a> and <a href="https://github.com/slgobinath/SafeEyes">Safe Eyes</a> (and break ideas from <a href="https://github.com/hovancik/stretchly">Stretchly</a>); the wording and illustrations are Yonder's own. They are general wellness suggestions, not medical advice: skip anything that hurts.</p>
       </section>
 
+      <section class="doc-section" id="custom-css">
+        <h2>Custom CSS themes</h2>
+        <p>You can restyle the break screen with your own stylesheet. Open <em>Settings → Break screen → Custom CSS</em>, click <strong>Custom CSS…</strong> and pick a <code>.css</code> file (up to 256 KB). Yonder keeps its own copy, <code>break-theme.css</code> in the app data folder, so after editing your file pick it again. <strong>Reset</strong> goes back to the built-in look. The theme is included in <a href="#restarts">settings backups</a>. Use <em>Preview a break</em> at the top of the page to try it.</p>
+        <p>Your stylesheet is loaded after Yonder's own, so a rule with the same selector wins. The backdrop's gradient and image are set as inline styles: use <code>!important</code> to replace them.</p>
+        <p>A theme can't load other files: <code>@import</code>, and any <code>url(...)</code> that isn't a <code>data:</code> URL, are refused. Embed images and fonts as <code>data:</code> URLs instead. That way the break screen never contacts a server, even with a theme from someone else's backup.</p>
+        <h3>Sample theme</h3>
+        <p>A warm, quiet night theme. Save it as <code>night.css</code> and pick it in Settings.</p>
+<pre><code>/* Night: a warm, quiet break screen for Yonder */
+
+/* a plain dark backdrop instead of the animation, gradient or image */
+#backdrop { background: #14110f !important; }
+#canvas, #image { display: none !important; }
+
+/* a darker, warmer frosted desktop */
+body.open #blur { filter: blur(60px) brightness(.55) sepia(.35); }
+
+#content { color: #f6e7cf; text-shadow: none; }
+.kind { color: #e7a65a; opacity: 1; }
+.title { font-family: Georgia, "Times New Roman", serif; font-weight: 400; letter-spacing: 0; }
+.sub { font-style: italic; }
+.progress { width: 160px; background: rgba(246, 231, 207, .15); }
+.progress i { background: #e7a65a; }
+.time { font-size: 72px; font-weight: 300; color: #e7a65a; }
+
+.pill {
+  background: transparent; border-color: rgba(231, 166, 90, .5);
+  color: #f6e7cf; box-shadow: none; backdrop-filter: none;
+}
+.pill:hover { background: rgba(231, 166, 90, .18); }</code></pre>
+        <h3>Class names</h3>
+        <p>These names are kept stable between versions. Anything else in the page may change.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Selector</th><th>What it is</th></tr></thead>
+            <tbody>
+              <tr><td><code>body.open</code>, <code>body.closing</code></td><td>Set while the break is showing and while it fades out. Entrance and exit transitions hang off these.</td></tr>
+              <tr><td><code>body.split</code>, <code>body.gentle</code></td><td>The split screen and gentle styles. Full screen has neither.</td></tr>
+              <tr><td><code>body.secondary</code></td><td>A display other than the primary one. It shows the countdown but no buttons.</td></tr>
+              <tr><td><code>body.has-ex</code></td><td>Guided exercises are shown in this break.</td></tr>
+              <tr><td><code>#backdrop</code>, <code>#canvas</code>, <code>#image</code></td><td>The full screen backdrop: its animation canvas and your background image.</td></tr>
+              <tr><td><code>#blur</code>, <code>#blur::after</code></td><td>The blurred desktop and the tint over it.</td></tr>
+              <tr><td><code>#split .half</code> (<code>.top</code>, <code>.bottom</code>), <code>#texture</code></td><td>The two halves of the desktop in split screen, and the texture behind them.</td></tr>
+              <tr><td><code>#veil</code></td><td>The dimming layer of the gentle style.</td></tr>
+              <tr><td><code>#clock</code></td><td>The time of day at the top.</td></tr>
+              <tr><td><code>#content</code></td><td>The centered column holding everything below.</td></tr>
+              <tr><td><code>.kind</code></td><td>The small label above the message ("Short break").</td></tr>
+              <tr><td><code>.title</code></td><td>The break message.</td></tr>
+              <tr><td><code>.sub</code></td><td>The line under the message.</td></tr>
+              <tr><td><code>.ex</code></td><td>The guided exercise card.</td></tr>
+              <tr><td><code>.progress</code>, <code>.progress i</code></td><td>The progress line and its fill.</td></tr>
+              <tr><td><code>.time</code> (<code>.col</code>, <code>.reel</code>, <code>.sep</code>)</td><td>The countdown. Each digit is a <code>.reel</code> rolling inside a <code>.col</code>; <code>.sep</code> is the colon.</td></tr>
+              <tr><td><code>#foot</code>, <code>.actions</code></td><td>The bottom area and the row of buttons.</td></tr>
+              <tr><td><code>.pill</code> (<code>#skip</code>, <code>#end</code>, <code>#lock</code>)</td><td>The buttons. Inside: <code>.ic</code> (icon) and <code>.lbl</code> (label). <code>.hold-fill</code> and <code>.holding</code> are set while Firm skip is held.</td></tr>
+              <tr><td><code>.hint</code>, <code>kbd</code></td><td>The hint under the buttons and its key caps.</td></tr>
+              <tr><td><code>.stagger</code></td><td>Elements that fade in one after another when the break opens.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Staying in control</h3>
+        <p>A theme can change how the buttons look and where they sit, but not take them away:</p>
+        <ul>
+          <li><kbd class="k">Esc</kbd> is handled by Yonder itself, not by the page's styles, so it works the same with any theme (as your <a href="#skip-difficulty">skip difficulty</a> allows).</li>
+          <li>A guard stylesheet loaded after yours keeps <code>#foot</code>, <code>.actions</code> and the shown buttons displayed, visible and clickable on the primary display. <code>#foot</code> stays fixed on top of everything else, <code>#foot</code> and <code>.actions</code> stay flex containers, and filters, masks and clip paths on them (and on <code>html</code> and <code>body</code>) are removed. <code>::before</code> and <code>::after</code> on <code>html</code>, <code>body</code>, <code>#content</code>, <code>#foot</code> and <code>.actions</code> are switched off, so they can't be used as overlays.</li>
+          <li>If the buttons are still hidden, covered, off screen, nearly transparent or drawn in transparent ink for a few seconds in a row once the break has opened, Yonder drops the theme for the rest of that break.</li>
+        </ul>
+        <p>These checks catch mistakes, not every possible trick. A theme could still make the buttons hard to read without hiding them, for example dark text on a dark button. If that happens, press <kbd class="k">Esc</kbd> or use the tray menu, then reset the theme in Settings.</p>
+      </section>
+
       <section class="doc-section" id="shortcuts">
         <h2>Keyboard shortcuts</h2>
         <p>Global shortcuts work from any app: <em>Take a break now</em>, <em>Pause / resume</em>, <em>Skip next break</em> and <em>Start / stop focus session</em>. None is set by default, because a global shortcut takes its keys away from every other app. Set the ones you want in <em>Settings → Keyboard Shortcuts</em>: click a shortcut and press a combination. The <strong>×</strong> next to it (or <kbd class="k">Backspace</kbd>) unsets it.</p>
@@ -362,7 +431,7 @@ xdg-open "yonder://break/5"
         <h3>Restarting Yonder</h3>
         <p>Yonder saves a small snapshot of your countdown (time worked, snoozes, the short-break count, a pause and the reminder timers) about once a minute and when you quit. If you restart it within 10 minutes, for an update or a crash, the countdown carries on from where it was; the time it was closed counts as time away, so if that was as long as your <em>reset after being idle</em> setting it counts as a natural break and the countdown starts again. An older snapshot is ignored, and a break that was in progress is never resumed. The snapshot is <code>state.json</code> in the app data folder, next to <code>stats.json</code>.</p>
         <h3>Back up and restore settings</h3>
-        <p>Open <em>Settings → About → Backup</em>. <strong>Export settings…</strong> downloads a <code>.yonder.json</code> file with all your settings, your custom sounds and your break background image. <strong>Import settings…</strong> reads such a file, checks it, and after a second click replaces your current settings. Stats are not included. Importing on a new computer restores everything, but note that a backup made by a newer Yonder can't be read by an older one.</p>
+        <p>Open <em>Settings → About → Backup</em>. <strong>Export settings…</strong> downloads a <code>.yonder.json</code> file with all your settings, your custom sounds, your break background image and your <a href="#custom-css">custom CSS theme</a>. <strong>Import settings…</strong> reads such a file, checks it, and after a second click replaces your current settings. Stats are not included. Importing on a new computer restores everything, but note that a backup made by a newer Yonder can't be read by an older one.</p>
       </section>
 
       <section class="doc-section" id="logs">

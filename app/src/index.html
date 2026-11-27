@@ -299,6 +299,14 @@
         </div>
         <p class="foot">Shown on the full screen and split screen styles, for long, planned and focus breaks. Gentle and Notification breaks stay exercise-free.</p>
       </div>
+      <div>
+        <h3>Custom CSS</h3>
+        <div class="list">
+          <div class="row"><label>Break screen theme<small id="cssNote">Restyle the break screen with your own stylesheet.</small></label><div class="inline"><button class="btn ghost" id="cssReset" hidden>Reset</button><button class="btn" id="cssPick">Custom CSS…</button></div></div>
+        </div>
+        <input type="file" id="cssInput" accept=".css,text/css" hidden />
+        <p class="foot" data-i18n-html>A theme can't hide the Skip and End buttons: if it does, Yonder uses the built-in look for that break. Class names and a sample theme are in the <a href="https://rmoura98.github.io/yonder/docs.html#custom-css">docs</a>.</p>
+      </div>
       <h3>Messages <small>One is shown per break, in rotation</small></h3>
       <div class="list" id="msgList"></div>
       <div class="add-row"><input type="text" id="msgNew" placeholder="Add a message, e.g. “Unclench your jaw.”" maxlength="140" /><button class="btn" id="msgAdd">Add</button></div>

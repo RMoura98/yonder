@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(default)]
@@ -260,6 +260,9 @@ pub struct Settings {
     pub background: String,
     pub gradient: String,
     pub has_image: bool,
+    /// File name of the user's break screen stylesheet (stored as `break-theme.css`
+    /// in the app data folder); empty when there is none.
+    pub break_css: String,
     pub texture: String,
     pub sound_enabled: bool,
     pub sound: String,
@@ -336,6 +339,7 @@ impl Default for Settings {
             background: "blur".into(),
             gradient: "dusk".into(),
             has_image: false,
+            break_css: String::new(),
             texture: "linen".into(),
             sound_enabled: true,
             sound: "chime".into(),
@@ -445,6 +449,137 @@ impl Settings {
     }
 }
 
+// ------------------------------------------------------- break screen theme
+
+/// Largest stylesheet accepted for the break screen.
+pub const CSS_MAX_BYTES: usize = 256 * 1024;
+
+/// Checks a user stylesheet and returns it cleaned up (no BOM). Errors are English
+/// keys translated by the UI.
+pub fn validate_css(text: &str) -> Result<String, String> {
+    if text.len() > CSS_MAX_BYTES {
+        return Err("That stylesheet is too large (max 256 KB).".into());
+    }
+    let css = text.strip_prefix('\u{feff}').unwrap_or(text);
+    if css.trim().is_empty() {
+        return Err("That stylesheet is empty.".into());
+    }
+    // an HTML page or a binary file picked by mistake
+    let start = css.trim_start();
+    if css.contains('\0') || (start.starts_with('<') && !start.starts_with("<!--")) {
+        return Err("That doesn't look like a CSS file.".into());
+    }
+    if css_loads_other_files(css) {
+        return Err("Themes can't load other files. Use data: URLs for images and fonts.".into());
+    }
+    Ok(css.to_string())
+}
+
+/// True when a stylesheet would fetch something: an `@import`, a `url(...)` that
+/// isn't a `data:` URL, or a quoted remote address (as in `image-set("https://…")`).
+/// The break window then never contacts a server, even with a theme from a shared
+/// backup. Comments are skipped and CSS escapes decoded first, so `u\72l(` and
+/// `@\69mport` are caught too. Errs on the side of rejecting.
+fn css_loads_other_files(css: &str) -> bool {
+    let chars: Vec<char> = css.chars().collect();
+    let mut i = 0;
+    // Decodes one escape starting after the backslash at `chars[i]`; returns the char.
+    let escape = |i: &mut usize| -> Option<char> {
+        let start = *i;
+        let mut hex = String::new();
+        while *i < chars.len() && hex.len() < 6 && chars[*i].is_ascii_hexdigit() {
+            hex.push(chars[*i]);
+            *i += 1;
+        }
+        if !hex.is_empty() {
+            if *i < chars.len() && chars[*i].is_whitespace() {
+                *i += 1;
+            }
+            return Some(u32::from_str_radix(&hex, 16).ok().and_then(char::from_u32).unwrap_or('\u{fffd}'));
+        }
+        if start < chars.len() {
+            *i += 1;
+            if chars[start] == '\n' {
+                return None; // line continuation inside a string
+            }
+            return Some(chars[start]);
+        }
+        None
+    };
+    let mut out = String::new(); // comments removed, escapes decoded, strings with quotes dropped
+    let mut strings = Vec::new();
+    while i < chars.len() {
+        let c = chars[i];
+        if c == '/' && chars.get(i + 1) == Some(&'*') {
+            i += 2;
+            while i < chars.len() && !(chars[i] == '*' && chars.get(i + 1) == Some(&'/')) {
+                i += 1;
+            }
+            i += 2;
+        } else if c == '"' || c == '\'' {
+            i += 1;
+            let mut s = String::new();
+            while i < chars.len() && chars[i] != c && chars[i] != '\n' {
+                if chars[i] == '\\' {
+                    i += 1;
+                    if let Some(d) = escape(&mut i) {
+                        s.push(d);
+                    }
+                } else {
+                    s.push(chars[i]);
+                    i += 1;
+                }
+            }
+            i += 1;
+            out.push('"');
+            out.extend(s.chars().filter(|&d| d != '"' && d != '\''));
+            out.push('"');
+            strings.push(s.trim().to_lowercase());
+        } else if c == '\\' {
+            i += 1;
+            if let Some(d) = escape(&mut i) {
+                out.push(d);
+            }
+        } else {
+            out.push(c);
+            i += 1;
+        }
+    }
+    let out = out.to_lowercase();
+    if out.contains("@import") {
+        return true;
+    }
+    let mut rest = out.as_str();
+    while let Some(p) = rest.find("url(") {
+        let arg = rest[p + 4..].trim_start().trim_start_matches('"').trim_start();
+        if !arg.starts_with("data:") {
+            return true;
+        }
+        rest = &rest[p + 4..];
+    }
+    strings.iter().any(|s| !s.starts_with("data:") && (s.contains("://") || s.starts_with("//")))
+}
+
+/// The name shown in Settings for a stored stylesheet.
+pub fn css_display_name(name: &str) -> String {
+    let n: String = name.trim().chars().filter(|c| !c.is_control()).take(60).collect();
+    if n.is_empty() { "theme.css".into() } else { n }
+}
+
+/// Validates a stylesheet and stores it at `path`.
+pub fn write_break_css(path: &Path, text: &str) -> Result<(), String> {
+    let css = validate_css(text)?;
+    if let Some(dir) = path.parent() {
+        let _ = std::fs::create_dir_all(dir);
+    }
+    std::fs::write(path, css).map_err(|e| e.to_string())
+}
+
+/// Forgets the stored stylesheet, if any.
+pub fn remove_break_css(path: &Path) {
+    let _ = std::fs::remove_file(path);
+}
+
 // ------------------------------------------------------------ backup / restore
 
 /// Format version of an exported `.yonder.json` file.
@@ -475,6 +610,8 @@ pub struct Backup {
     /// The custom break background, as a data URL.
     pub background: Option<String>,
     pub sounds: Vec<BackupSound>,
+    /// The break screen stylesheet, if one is set.
+    pub css: Option<String>,
 }
 
 /// Parses and sanitises a backup. Errors are English keys translated by the UI.
@@ -532,6 +669,8 @@ impl Backup {
         if !s.has_image && s.background == "image" {
             s.background = "blur".into();
         }
+        self.css = self.css.as_deref().and_then(|c| validate_css(c).ok());
+        s.break_css = if self.css.is_some() { css_display_name(&s.break_css) } else { String::new() };
         // they already went through setup, and a skipped update means nothing on another machine
         s.onboarded = true;
         s.skipped_update = String::new();
@@ -626,5 +765,95 @@ mod tests {
         let b = parse_backup(&backup_json(r#","background":"image""#, top)).unwrap();
         assert!(b.settings.has_image);
         assert_eq!(b.settings.background, "image");
+    }
+
+    #[test]
+    fn css_is_size_limited_and_must_look_like_css() {
+        assert_eq!(validate_css("\u{feff}.title { color: red }").unwrap(), ".title { color: red }");
+        assert!(validate_css("<!-- --> .sub { opacity: 1 }").is_ok());
+        assert!(validate_css("").is_err());
+        assert!(validate_css("  \n ").is_err());
+        assert!(validate_css("<html><script>alert(1)</script>").is_err());
+        assert!(validate_css("a\0b").is_err());
+        let big = format!(".pill{{}}{}", " ".repeat(CSS_MAX_BYTES));
+        assert!(validate_css(&big).is_err());
+        let just_fits = format!(".pill{{}}{}", " ".repeat(CSS_MAX_BYTES - 8));
+        assert!(validate_css(&just_fits).is_ok());
+    }
+
+    #[test]
+    fn css_that_loads_other_files_is_rejected() {
+        let bad = [
+            "@import 'https://example.com/a.css';",
+            "@IMPORT url(theme2.css);",
+            "@\\69mport 'x.css';",
+            ".a{background:url(http://example.com/a.png)}",
+            ".a{background:URL( 'https://example.com/a.png' )}",
+            ".a{background:url(\"//example.com/a.png\")}",
+            ".a{background:url(foo.png)}",
+            ".a{background:u\\72l(http://example.com/a.png)}",
+            ".a{background:u\\000072 l(http://example.com/a.png)}",
+            "@font-face{font-family:x;src:url(https://example.com/f.woff2)}",
+            ".a{background-image:image-set(\"https://example.com/a.png\" 1x)}",
+            // a "comment" inside a string doesn't hide what follows
+            ".a{content:\"/*\"} .b{background:url(http://example.com/x)} .c{content:\"*/\"}",
+        ];
+        for css in bad {
+            assert!(validate_css(css).is_err(), "should reject: {css}");
+        }
+        let good = [
+            "/* url(http://example.com/a.png) and @import in a comment */ .a{color:red}",
+            ".a{background:url(data:image/png;base64,AAAA)}",
+            ".a{background:url( \"DATA:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'/>\" )}",
+            "@font-face{font-family:x;src:url('data:font/woff2;base64,AAAA')}",
+            ".a::before{content:\"\\2022\"}",
+        ];
+        for css in good {
+            assert!(validate_css(css).is_ok(), "should accept: {css}");
+        }
+        // import revalidates: a backup carrying such a theme loses it
+        let b = parse_backup(&backup_json(r#","break_css":"x.css""#, r#","css":"@import 'https://example.com/x.css';""#)).unwrap();
+        assert!(b.css.is_none());
+        assert_eq!(b.settings.break_css, "");
+    }
+
+    #[test]
+    fn css_display_names_are_trimmed_and_never_empty() {
+        assert_eq!(css_display_name("  ocean.css "), "ocean.css");
+        assert_eq!(css_display_name(""), "theme.css");
+        assert_eq!(css_display_name("a\nb"), "ab");
+        assert_eq!(css_display_name(&"x".repeat(100)).len(), 60);
+    }
+
+    #[test]
+    fn break_css_can_be_stored_and_reset() {
+        let dir = std::env::temp_dir().join(format!("yonder-css-test-{}", std::process::id()));
+        let path = dir.join("break-theme.css");
+        assert!(write_break_css(&path, "").is_err());
+        assert!(!path.exists());
+        write_break_css(&path, ".time { color: gold }").unwrap();
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), ".time { color: gold }");
+        remove_break_css(&path);
+        assert!(!path.exists());
+        remove_break_css(&path); // resetting twice is fine
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn backup_css_is_validated_and_keeps_the_setting_consistent() {
+        let b = parse_backup(&backup_json(r#","break_css":"ocean.css""#, r#","css":".title{color:red}""#)).unwrap();
+        assert_eq!(b.css.as_deref(), Some(".title{color:red}"));
+        assert_eq!(b.settings.break_css, "ocean.css");
+        // a name without a stylesheet is dropped
+        let b = parse_backup(&backup_json(r#","break_css":"ocean.css""#, "")).unwrap();
+        assert!(b.css.is_none());
+        assert_eq!(b.settings.break_css, "");
+        // so is a stylesheet that fails validation
+        let b = parse_backup(&backup_json(r#","break_css":"x.css""#, r#","css":"<html>""#)).unwrap();
+        assert!(b.css.is_none());
+        assert_eq!(b.settings.break_css, "");
+        // a stylesheet without a name gets a default one
+        let b = parse_backup(&backup_json("", r#","css":".sub{}""#)).unwrap();
+        assert_eq!(b.settings.break_css, "theme.css");
     }
 }
