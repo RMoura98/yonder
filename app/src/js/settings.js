@@ -87,7 +87,7 @@ function iconPicker(current, onPick) {
   btn.addEventListener("click", (e) => {
     e.stopPropagation();
     const open = $(".icon-pop", wrap);
-    $$(".icon-pop").forEach((p) => p.remove());
+    closePopovers();
     if (open) return;
     const pop = el(`<div class="icon-pop" role="listbox"></div>`);
     for (const n of PICKABLE) {
@@ -105,7 +105,19 @@ function iconPicker(current, onPick) {
   });
   return wrap;
 }
-document.addEventListener("click", () => $$(".icon-pop").forEach((p) => p.remove()));
+/** Closes the icon picker and the Create new menu (only one is ever open). */
+function closePopovers() {
+  $$(".icon-pop, .preset-pop").forEach((p) => p.remove());
+  $("#addReminder")?.setAttribute("aria-expanded", "false");
+}
+document.addEventListener("click", closePopovers);
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && $(".icon-pop, .preset-pop")) {
+    const fromMenu = !!$(".preset-pop");
+    closePopovers();
+    if (fromMenu) $("#addReminder")?.focus();
+  }
+});
 
 // ------------------------------------------------------------------ focus
 /** Fills the focus length pickers; must run before bindAll() selects their values. */
@@ -599,31 +611,37 @@ function initWellness() {
     save();
   };
   // "Create new" offers presets (comfort tips, not medical advice) and a blank reminder.
-  $("#addReminder").onclick = (e) => {
+  const addBtn = $("#addReminder");
+  addBtn.setAttribute("aria-expanded", "false");
+  addBtn.onclick = (e) => {
     e.stopPropagation();
     const wrap = $(".add-pick");
     const open = $(".preset-pop", wrap);
-    $$(".preset-pop").forEach((p) => p.remove());
+    closePopovers();
     if (open) return;
     const pop = el(`<div class="preset-pop" role="menu"></div>`);
+    pop.addEventListener("click", (ev) => ev.stopPropagation()); // gaps and the divider don't close it
+    addBtn.setAttribute("aria-expanded", "true");
     const have = new Set(S.wellness.custom.map((r) => r.title));
     const item = (ic, title, sub, onPick, disabled = false) => {
       const b = el(`<button type="button" role="menuitem" ${disabled ? `disabled title="${esc(t("Already added"))}"` : ""}>
         <span class="ic">${icon(ic, 18)}</span><span class="tx">${esc(title)}<small>${esc(sub)}</small></span></button>`);
-      b.onclick = (ev) => { ev.stopPropagation(); pop.remove(); onPick(); };
+      b.onclick = () => { closePopovers(); onPick(); };
       pop.appendChild(b);
     };
     for (const p of REMINDER_PRESETS) {
       item(p.icon, tr(p.title), tr(p.body), () => add({ ...p }), have.has(p.title));
     }
     pop.appendChild(el("<hr>"));
+    // starts switched off, so an untitled card never pops up; the switch is right there
     item("add", t("Blank reminder"), t("Write your own"), () =>
-      add({ title: "", body: "", icon: "notifications", interval_mins: 45, sound: "chime" }));
+      add({ enabled: false, title: "", body: "", icon: "notifications", interval_mins: 45, sound: "chime" }));
     wrap.appendChild(pop);
+    pop.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    pop.querySelector("button")?.focus({ preventScroll: true });
   };
   renderCustom();
 }
-document.addEventListener("click", () => $$(".preset-pop").forEach((p) => p.remove()));
 
 /** One-click custom reminders. Titles and bodies are English keys, shown through tr(). */
 const REMINDER_PRESETS = [
