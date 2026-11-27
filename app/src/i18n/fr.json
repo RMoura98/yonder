@@ -530,5 +530,6 @@
   "Theme removed": "Thème supprimé",
   "That stylesheet is too large (max 256 KB).": "Cette feuille de style est trop volumineuse (256 Ko max).",
   "That stylesheet is empty.": "Cette feuille de style est vide.",
-  "That doesn't look like a CSS file.": "Ce fichier ne ressemble pas à du CSS."
+  "That doesn't look like a CSS file.": "Ce fichier ne ressemble pas à du CSS.",
+  "Themes can't load other files. Use data: URLs for images and fonts.": "Les thèmes ne peuvent pas charger d'autres fichiers. Utilisez des URL data: pour les images et les polices."
 }

@@ -469,7 +469,95 @@ pub fn validate_css(text: &str) -> Result<String, String> {
     if css.contains('\0') || (start.starts_with('<') && !start.starts_with("<!--")) {
         return Err("That doesn't look like a CSS file.".into());
     }
+    if css_loads_other_files(css) {
+        return Err("Themes can't load other files. Use data: URLs for images and fonts.".into());
+    }
     Ok(css.to_string())
+}
+
+/// True when a stylesheet would fetch something: an `@import`, a `url(...)` that
+/// isn't a `data:` URL, or a quoted remote address (as in `image-set("https://…")`).
+/// The break window then never contacts a server, even with a theme from a shared
+/// backup. Comments are skipped and CSS escapes decoded first, so `u\72l(` and
+/// `@\69mport` are caught too. Errs on the side of rejecting.
+fn css_loads_other_files(css: &str) -> bool {
+    let chars: Vec<char> = css.chars().collect();
+    let mut i = 0;
+    // Decodes one escape starting after the backslash at `chars[i]`; returns the char.
+    let escape = |i: &mut usize| -> Option<char> {
+        let start = *i;
+        let mut hex = String::new();
+        while *i < chars.len() && hex.len() < 6 && chars[*i].is_ascii_hexdigit() {
+            hex.push(chars[*i]);
+            *i += 1;
+        }
+        if !hex.is_empty() {
+            if *i < chars.len() && chars[*i].is_whitespace() {
+                *i += 1;
+            }
+            return Some(u32::from_str_radix(&hex, 16).ok().and_then(char::from_u32).unwrap_or('\u{fffd}'));
+        }
+        if start < chars.len() {
+            *i += 1;
+            if chars[start] == '\n' {
+                return None; // line continuation inside a string
+            }
+            return Some(chars[start]);
+        }
+        None
+    };
+    let mut out = String::new(); // comments removed, escapes decoded, strings with quotes dropped
+    let mut strings = Vec::new();
+    while i < chars.len() {
+        let c = chars[i];
+        if c == '/' && chars.get(i + 1) == Some(&'*') {
+            i += 2;
+            while i < chars.len() && !(chars[i] == '*' && chars.get(i + 1) == Some(&'/')) {
+                i += 1;
+            }
+            i += 2;
+        } else if c == '"' || c == '\'' {
+            i += 1;
+            let mut s = String::new();
+            while i < chars.len() && chars[i] != c && chars[i] != '\n' {
+                if chars[i] == '\\' {
+                    i += 1;
+                    if let Some(d) = escape(&mut i) {
+                        s.push(d);
+                    }
+                } else {
+                    s.push(chars[i]);
+                    i += 1;
+                }
+            }
+            i += 1;
+            out.push('"');
+            out.extend(s.chars().filter(|&d| d != '"' && d != '\''));
+            out.push('"');
+            strings.push(s.trim().to_lowercase());
+        } else if c == '\\' {
+            i += 1;
+            if let Some(d) = escape(&mut i) {
+                out.push(d);
+            }
+        } else {
+            out.push(c);
+            i += 1;
+        }
+    }
+    let out = out.to_lowercase();
+    if out.contains("@import") {
+        return true;
+    }
+    let mut rest = out.as_str();
+    while let Some(p) = rest.find("url(") {
+        let arg = rest[p + 4..].trim_start().trim_start_matches('"').trim_start();
+        if !arg.starts_with("data:") {
+            return true;
+        }
+        rest = &rest[p + 4..];
+    }
+    strings.iter().any(|s| !s.starts_with("data:") && (s.contains("://") || s.starts_with("//")))
 }
 
 /// The name shown in Settings for a stored stylesheet.
@@ -691,6 +779,42 @@ mod tests {
         assert!(validate_css(&big).is_err());
         let just_fits = format!(".pill{{}}{}", " ".repeat(CSS_MAX_BYTES - 8));
         assert!(validate_css(&just_fits).is_ok());
+    }
+
+    #[test]
+    fn css_that_loads_other_files_is_rejected() {
+        let bad = [
+            "@import 'https://example.com/a.css';",
+            "@IMPORT url(theme2.css);",
+            "@\\69mport 'x.css';",
+            ".a{background:url(http://example.com/a.png)}",
+            ".a{background:URL( 'https://example.com/a.png' )}",
+            ".a{background:url(\"//example.com/a.png\")}",
+            ".a{background:url(foo.png)}",
+            ".a{background:u\\72l(http://example.com/a.png)}",
+            ".a{background:u\\000072 l(http://example.com/a.png)}",
+            "@font-face{font-family:x;src:url(https://example.com/f.woff2)}",
+            ".a{background-image:image-set(\"https://example.com/a.png\" 1x)}",
+            // a "comment" inside a string doesn't hide what follows
+            ".a{content:\"/*\"} .b{background:url(http://example.com/x)} .c{content:\"*/\"}",
+        ];
+        for css in bad {
+            assert!(validate_css(css).is_err(), "should reject: {css}");
+        }
+        let good = [
+            "/* url(http://example.com/a.png) and @import in a comment */ .a{color:red}",
+            ".a{background:url(data:image/png;base64,AAAA)}",
+            ".a{background:url( \"DATA:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'/>\" )}",
+            "@font-face{font-family:x;src:url('data:font/woff2;base64,AAAA')}",
+            ".a::before{content:\"\\2022\"}",
+        ];
+        for css in good {
+            assert!(validate_css(css).is_ok(), "should accept: {css}");
+        }
+        // import revalidates: a backup carrying such a theme loses it
+        let b = parse_backup(&backup_json(r#","break_css":"x.css""#, r#","css":"@import 'https://example.com/x.css';""#)).unwrap();
+        assert!(b.css.is_none());
+        assert_eq!(b.settings.break_css, "");
     }
 
     #[test]

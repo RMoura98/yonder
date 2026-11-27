@@ -530,5 +530,6 @@
   "Theme removed": "テーマを削除しました",
   "That stylesheet is too large (max 256 KB).": "スタイルシートが大きすぎます（最大 256 KB）。",
   "That stylesheet is empty.": "スタイルシートが空です。",
-  "That doesn't look like a CSS file.": "CSS ファイルではないようです。"
+  "That doesn't look like a CSS file.": "CSS ファイルではないようです。",
+  "Themes can't load other files. Use data: URLs for images and fonts.": "テーマから他のファイルは読み込めません。画像やフォントには data: URL を使ってください。"
 }

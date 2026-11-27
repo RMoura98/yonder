@@ -530,5 +530,6 @@
   "Theme removed": "主题已移除",
   "That stylesheet is too large (max 256 KB).": "该样式表太大（最大 256 KB）。",
   "That stylesheet is empty.": "该样式表是空的。",
-  "That doesn't look like a CSS file.": "这看起来不是 CSS 文件。"
+  "That doesn't look like a CSS file.": "这看起来不是 CSS 文件。",
+  "Themes can't load other files. Use data: URLs for images and fonts.": "主题不能加载其他文件。图片和字体请使用 data: URL。"
 }

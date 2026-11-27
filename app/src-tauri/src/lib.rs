@@ -1162,8 +1162,17 @@ async fn import_settings(app: AppHandle, text: String) -> Result<Settings, Strin
             let _ = std::fs::remove_file(&st.paths.background);
         }
     }
+    // The theme is optional: if it can't be written, carry on without it rather than
+    // leave a half-applied import behind.
+    let mut b = b;
     match &b.css {
-        Some(css) => settings::write_break_css(&st.paths.break_css, css)?,
+        Some(css) => {
+            if let Err(e) = settings::write_break_css(&st.paths.break_css, css) {
+                log_warn!("couldn't restore the break screen stylesheet ({e}); importing without it");
+                settings::remove_break_css(&st.paths.break_css);
+                b.settings.break_css.clear();
+            }
+        }
         None => settings::remove_break_css(&st.paths.break_css),
     }
     // The backup's sound library replaces ours.

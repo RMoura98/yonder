@@ -272,6 +272,7 @@ sudo apt update &amp;&amp; sudo apt install yonder</code></pre>
         <h2>Custom CSS themes</h2>
         <p>You can restyle the break screen with your own stylesheet. Open <em>Settings → Break screen → Custom CSS</em>, click <strong>Custom CSS…</strong> and pick a <code>.css</code> file (up to 256 KB). Yonder keeps its own copy, <code>break-theme.css</code> in the app data folder, so after editing your file pick it again. <strong>Reset</strong> goes back to the built-in look. The theme is included in <a href="#restarts">settings backups</a>. Use <em>Preview a break</em> at the top of the page to try it.</p>
         <p>Your stylesheet is loaded after Yonder's own, so a rule with the same selector wins. The backdrop's gradient and image are set as inline styles: use <code>!important</code> to replace them.</p>
+        <p>A theme can't load other files: <code>@import</code>, and any <code>url(...)</code> that isn't a <code>data:</code> URL, are refused. Embed images and fonts as <code>data:</code> URLs instead. That way the break screen never contacts a server, even with a theme from someone else's backup.</p>
         <h3>Sample theme</h3>
         <p>A warm, quiet night theme. Save it as <code>night.css</code> and pick it in Settings.</p>
 <pre><code>/* Night: a warm, quiet break screen for Yonder */
@@ -329,9 +330,10 @@ body.open #blur { filter: blur(60px) brightness(.55) sepia(.35); }
         <p>A theme can change how the buttons look and where they sit, but not take them away:</p>
         <ul>
           <li><kbd class="k">Esc</kbd> is handled by Yonder itself, not by the page's styles, so it works the same with any theme (as your <a href="#skip-difficulty">skip difficulty</a> allows).</li>
-          <li>A guard stylesheet loaded after yours keeps <code>#foot</code>, <code>.actions</code> and the shown buttons displayed, visible and clickable on the primary display. <code>#foot</code> and <code>.actions</code> stay flex containers.</li>
-          <li>If the buttons are still hidden, covered, off screen or nearly transparent once the break has opened, Yonder drops the theme for the rest of that break.</li>
+          <li>A guard stylesheet loaded after yours keeps <code>#foot</code>, <code>.actions</code> and the shown buttons displayed, visible and clickable on the primary display. <code>#foot</code> stays fixed on top of everything else, <code>#foot</code> and <code>.actions</code> stay flex containers, and filters, masks and clip paths on them (and on <code>html</code> and <code>body</code>) are removed. <code>::before</code> and <code>::after</code> on <code>html</code>, <code>body</code>, <code>#content</code>, <code>#foot</code> and <code>.actions</code> are switched off, so they can't be used as overlays.</li>
+          <li>If the buttons are still hidden, covered, off screen, nearly transparent or drawn in transparent ink for a few seconds in a row once the break has opened, Yonder drops the theme for the rest of that break.</li>
         </ul>
+        <p>These checks catch mistakes, not every possible trick. A theme could still make the buttons hard to read without hiding them, for example dark text on a dark button. If that happens, press <kbd class="k">Esc</kbd> or use the tray menu, then reset the theme in Settings.</p>
       </section>
 
       <section class="doc-section" id="shortcuts">
