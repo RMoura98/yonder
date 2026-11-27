@@ -20,11 +20,11 @@ const SITE_MEDIA = join(ROOT, "website", "assets", "media");
 const OUT = join(HERE, "out");
 const FFMPEG = process.env.FFMPEG || "ffmpeg";
 
-// scene -> poster time (s), GIF width and fps
+// scene -> poster time (s), GIF width and fps, optional max length (s, default 16)
 const SCENES = {
   hero: { poster: 9.6, gifw: 900, fps: 15 },
   reminders: { poster: 2.9, gifw: 960, fps: 18 },
-  settings: { poster: 3.4, gifw: 960, fps: 18 },
+  settings: { poster: 3.4, gifw: 960, fps: 18, max: 26 },
   split: { poster: 4.0, gifw: 960, fps: 18 },
   gentle: { poster: 4.5, gifw: 960, fps: 18 },
   setup: { poster: 5.0, gifw: 960, fps: 18 },
@@ -57,7 +57,7 @@ try {
     const frames = join(OUT, "frames", scene);
     rmSync(frames, { recursive: true, force: true });
     console.log(`\n● recording ${scene}`);
-    run(process.execPath, [join(HERE, "record.mjs"), scene, frames, "16", "4"]);
+    run(process.execPath, [join(HERE, "record.mjs"), scene, frames, String(SCENES[scene]?.max ?? 16), "4"]);
     run(process.execPath, [join(HERE, "retime.mjs"), frames]);
 
     if (scene === "settingsLight") {

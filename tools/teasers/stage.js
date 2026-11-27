@@ -389,6 +389,15 @@ const SCENES = {
     await sleep(600);
     await clickIn(f, '#styleCards button[data-v="fullscreen"]', 450);
     await sleep(450);
+    // Wellness: Create new offers presets; add one
+    await clickIn(f, '#nav a[data-page="wellness"]', 600);
+    await sleep(500);
+    f.contentDocument.querySelector("#addReminder").scrollIntoView({ block: "start", behavior: "smooth" });
+    await sleep(650);
+    await clickIn(f, "#addReminder", 550);
+    await sleep(900); // the menu opens and scrolls into view
+    await clickIn(f, ".preset-pop button:nth-child(2)", 600);
+    await sleep(900);
     await clickIn(f, '#nav a[data-page="today"]', 600);
     await moveCursor(700, 520, 650);
     await sleep(500);
