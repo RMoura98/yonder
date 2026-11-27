@@ -521,5 +521,5 @@
   "Turn off evening filter": "Turn off evening filter",
   "Trackpad": "Trackpad",
   "Haptic taps during breaks": "Haptic taps during breaks",
-  "A soft tap when a break starts, a tick on each of the last 3 seconds and a double pulse when it ends. Needs a Force Touch trackpad.": "A soft tap when a break starts, a tick on each of the last 3 seconds and a double pulse when it ends. Needs a Force Touch trackpad."
+  "A soft tap when a break starts, a tick on its last 3 seconds and a double pulse at the end. Felt while your finger rests on the trackpad.": "A soft tap when a break starts, a tick on its last 3 seconds and a double pulse at the end. Felt while your finger rests on the trackpad."
 }

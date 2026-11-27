@@ -521,5 +521,5 @@
   "Turn off evening filter": "关闭夜间滤镜",
   "Trackpad": "触控板",
   "Haptic taps during breaks": "休息时的触觉反馈",
-  "A soft tap when a break starts, a tick on each of the last 3 seconds and a double pulse when it ends. Needs a Force Touch trackpad.": "休息开始时轻触一下，结束前最后 3 秒每秒轻敲一下，结束时两次轻微脉冲。需要支持力度触控的触控板。"
+  "A soft tap when a break starts, a tick on its last 3 seconds and a double pulse at the end. Felt while your finger rests on the trackpad.": "休息开始时轻触一下，最后 3 秒每秒轻敲一下，结束时两次轻微脉冲。手指放在触控板上时才能感觉到。"
 }
