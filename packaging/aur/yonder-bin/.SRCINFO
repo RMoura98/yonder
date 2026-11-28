@@ -1,6 +1,6 @@
 pkgbase = yonder-bin
 	pkgdesc = Free, open-source break reminder: 20-20-20 breaks, posture and blink reminders
-	pkgver = 1.0.11
+	pkgver = 1.0.12
 	pkgrel = 1
 	url = https://rmoura98.github.io/yonder/
 	arch = x86_64
@@ -16,9 +16,9 @@ pkgbase = yonder-bin
 	conflicts = yonder
 	options = !strip
 	options = !debug
-	source = LICENSE::https://raw.githubusercontent.com/RMoura98/yonder/v1.0.11/LICENSE
+	source = LICENSE::https://raw.githubusercontent.com/RMoura98/yonder/v1.0.12/LICENSE
 	sha256sums = b6e666b0bdeae772a73732a5d411aeff155aeea945654a8e80f17303e57f825b
-	source_x86_64 = https://github.com/RMoura98/yonder/releases/download/v1.0.11/Yonder_1.0.11_amd64.deb
-	sha256sums_x86_64 = 6c6c38386765010a780626b94e0468acabebbbcdd655c27f6e5d53dc54a51268
+	source_x86_64 = https://github.com/RMoura98/yonder/releases/download/v1.0.12/Yonder_1.0.12_amd64.deb
+	sha256sums_x86_64 = 3b28b6503b8178f130d5278b0898fc76926d416f26efb206709243cd20a36a7f
 
 pkgname = yonder-bin
