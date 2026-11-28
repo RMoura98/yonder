@@ -543,5 +543,8 @@
   "Get up, roll your shoulders, walk for a minute.": "站起来，转转肩膀，走一分钟。",
   "Blank reminder": "空白提醒",
   "Write your own": "自己写一个",
-  "Already added": "已添加"
+  "Already added": "已添加",
+  "Trackpad": "触控板",
+  "Haptic taps during breaks": "休息时的触觉反馈",
+  "A soft tap when a break starts, a tick on its last 3 seconds and a double pulse at the end. Felt while your finger rests on the trackpad.": "休息开始时轻触一下，最后 3 秒每秒轻敲一下，结束时两次轻微脉冲。手指放在触控板上时才能感觉到。"
 }

@@ -267,6 +267,8 @@ pub struct Settings {
     pub sound_enabled: bool,
     pub sound: String,
     pub volume: f32,
+    /// Force Touch trackpad taps during breaks (macOS only; ignored elsewhere).
+    pub haptics: bool,
 
     pub idle_reset_mins: u32,
     pub smart: SmartPause,
@@ -344,6 +346,7 @@ impl Default for Settings {
             sound_enabled: true,
             sound: "chime".into(),
             volume: 0.6,
+            haptics: false,
             idle_reset_mins: 5,
             smart: SmartPause::default(),
             office_hours: OfficeHours::default(),

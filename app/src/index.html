@@ -338,6 +338,12 @@
         <div class="row" data-show="sound_enabled"><label>Break starts</label><div class="inline"><button class="btn ghost icon-only" id="soundTest" title="Preview"><i data-icon="play_arrow_fill" data-size="18"></i></button><span class="stepper"><select data-bind="sound" id="soundSel"></select></span></div></div>
         <div class="row" data-show="sound_enabled"><label>Volume</label><input type="range" min="0" max="1" step="0.05" data-bind="volume" data-type="number" /></div>
       </div>
+      <div id="hapticsBox" hidden>
+        <h3>Trackpad</h3>
+        <div class="list">
+          <div class="row"><label>Haptic taps during breaks<small>A soft tap when a break starts, a tick on its last 3 seconds and a double pulse at the end. Felt while your finger rests on the trackpad.</small></label><input type="checkbox" class="switch" data-bind="haptics" /></div>
+        </div>
+      </div>
       <h3>Your sounds</h3>
       <div class="list" id="customSoundList"></div>
       <button class="btn" id="addSound"><i data-icon="add" data-size="18"></i>Add a sound file…</button>

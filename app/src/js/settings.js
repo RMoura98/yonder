@@ -1350,6 +1350,8 @@ async function init() {
     const note = document.getElementById("pauseMediaNote");
     if (note) note.textContent = t("Needs playerctl. Resumes afterwards, only what Yonder paused.");
   }
+  // Trackpad haptics use NSHapticFeedbackManager, so only macOS offers them.
+  if (platform === "macos") $("#hapticsBox").hidden = false;
   // Windows can't draw text beside a tray icon, so it gets the countdown drawn into the icon instead.
   if (platform === "windows") {
     $("#trayTitleRow").hidden = true;

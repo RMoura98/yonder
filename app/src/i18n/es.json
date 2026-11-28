@@ -543,5 +543,8 @@
   "Get up, roll your shoulders, walk for a minute.": "Levántate, mueve los hombros, camina un minuto.",
   "Blank reminder": "Recordatorio en blanco",
   "Write your own": "Escribe el tuyo",
-  "Already added": "Ya añadido"
+  "Already added": "Ya añadido",
+  "Trackpad": "Trackpad",
+  "Haptic taps during breaks": "Toques hápticos durante los descansos",
+  "A soft tap when a break starts, a tick on its last 3 seconds and a double pulse at the end. Felt while your finger rests on the trackpad.": "Un toque suave cuando empieza un descanso, un tic en sus últimos 3 segundos y un doble pulso al final. Se nota mientras el dedo descansa sobre el trackpad."
 }

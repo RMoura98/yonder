@@ -543,5 +543,8 @@
   "Get up, roll your shoulders, walk for a minute.": "立ち上がって肩を回し、1分ほど歩きましょう。",
   "Blank reminder": "空のリマインダー",
   "Write your own": "自分で作成",
-  "Already added": "追加済み"
+  "Already added": "追加済み",
+  "Trackpad": "トラックパッド",
+  "Haptic taps during breaks": "休憩中の触覚フィードバック",
+  "A soft tap when a break starts, a tick on its last 3 seconds and a double pulse at the end. Felt while your finger rests on the trackpad.": "休憩の開始時にやさしいタップ、最後の 3 秒間にティック、終了時にダブルパルス。指をトラックパッドに置いているときに感じられます。"
 }
